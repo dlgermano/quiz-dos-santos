@@ -1,4 +1,4 @@
-# Prompts para o Higgsfield: 68 santos, duas séries
+# Prompts para o Higgsfield: 69 santos, duas séries
 
 Modelo `gpt_image_2_5`, qualidade `high`, resolução `1k`, proporção 3:4.
 
@@ -86,3 +86,4 @@ Modelo `gpt_image_2_5`, qualidade `high`, resolução `1k`, proporção 3:4.
 | 66 | longuinho | São Longuinho | Saint Longinus, Roman soldier on foot, holding a long lance with blood drops on the tip, one hand raised to his eye, rays of light around the eye | lança, olho (sem dragão nem cavalo, para não virar São Jorge) | a long lance with drops of blood on its tip, and a single eye surrounded by rays of light |
 | 67 | joaopaulo | São João Paulo II | Saint John Paul II, pope in white cassock, holding a silver papal staff topped with a crucifix, blue shield with a golden cross and the letter M | báculo com crucifixo, brasão com cruz e M (só aqui pode ter a letra M) | a silver papal staff topped with a crucifix, and a blue shield with a golden cross and the letter M |
 | 68 | rafael | São Rafael Arcanjo | Saint Raphael the Archangel, large wings, pilgrim staff, holding a large fish | asas, peixe (sem balança, para não virar São Miguel) | a pair of large white angel wings, and a large fish |
+| 69 | josemaria | São Josemaria Escrivá | Saint Josemaría Escrivá, 20th-century Spanish priest with round glasses, black cassock, holding a single gilded wooden rose and a closed book, a round seal with a plain cross inside a circle on the wall behind him | cruz dentro de um círculo, rosa dourada, livro | a round seal showing a plain cross inside a circle, a single gilded wooden rose, and a closed book |

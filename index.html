@@ -819,6 +819,11 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     { id: "rafael", name: "São Rafael Arcanjo", feast: "29 de setembro", hue: 186,
       why: "O peixe: guiou o jovem Tobias e o ensinou a usar o fel do peixe para curar a cegueira do pai (Tb 6). As asas são de arcanjo. Seu nome significa “Deus cura”.",
       draw: () => g("translate(132,214) scale(.8)", wing()) + g("translate(168,214) scale(-.8,.8)", wing()) + g("translate(150,270) scale(1.5)", fish()) },
+    { id: "josemaria", name: "São Josemaria Escrivá", feast: "26 de junho", hue: 244,
+      why: "A cruz dentro do círculo é o selo do Opus Dei, que fundou em 1928 para ensinar que o trabalho e a vida comum são caminho de santidade. A rosa de madeira dourada é a rosa de Rialp, que encontrou em 1937 ao atravessar os Pireneus e tomou como sinal de Deus. O livro é “Caminho”, sua obra mais conhecida.",
+      draw: () => g("translate(150,190)", `<circle r="46" fill="${C.white}"/>` + cross(C.dkbrown, 84, 56, 9)) +
+        g("translate(106,286) scale(1.5)", pathL("M0,10 Q5,26 0,40", C.dkgreen, 3) + `<circle r="13" fill="${C.gold}"/><path d="M-6,-1 Q0,-9 6,-1 Q4,6 -3,4 Q-2,-1 2,-1" fill="none" stroke-width="2"/>`) +
+        g("translate(192,306) scale(.75)", openBook(C.dkbrown)) },
   ];
 
   // ---------- Window ----------

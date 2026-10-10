@@ -13,12 +13,14 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   confere(!!q, "A: window.__quiz não existe");
   if (q) {
     const ids = q.SAINTS.map(s => s.id);
-    confere(ids.length === 68, `A: esperava 68 santos, achei ${ids.length}`);
+    confere(ids.length === 69, `A: esperava 69 santos, achei ${ids.length}`);
+    const jm = q.SAINTS.find(s => s.id === "josemaria");
+    confere(jm && jm.sex === "m" && q.levelOf("josemaria") === "medio" && jm.feast === "26 de junho", "A: São Josemaria deveria existir, ser homem, do nível medio e ter festa em 26 de junho");
     confere(new Set(ids).size === ids.length, "A: há ids repetidos");
     confere(q.SAINTS.every(s => s.sex === "m" || s.sex === "f"), "A: há santo sem sex válido");
     const f = q.SAINTS.filter(s => s.sex === "f").map(s => s.id).sort();
     confere(f.join() === MULHERES.slice().sort().join(), `A: lista de mulheres difere: ${f.join(" ")}`);
-    confere(q.SAINTS.filter(s => s.sex === "m").length === 50, "A: esperava 50 homens");
+    confere(q.SAINTS.filter(s => s.sex === "m").length === 51, "A: esperava 51 homens");
     confere(q.SAINTS.every(s => s.name && s.feast && s.why), "A: há santo sem nome, festa ou explicação");
     confere(q.SAINTS.every(s => { const v = q.windowSVG(s); return v.includes("<svg") && !/NaN|undefined/.test(v); }), "A: há desenho SVG com defeito");
   }
