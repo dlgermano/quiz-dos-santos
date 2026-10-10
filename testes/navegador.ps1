@@ -14,9 +14,9 @@ $comum = @("--headless=new", "--disable-gpu", "--hide-scrollbars", "--user-data-
 $base = "http://127.0.0.1:$porta/testes/teste.html"
 $falhou = $false
 try {
-  foreach ($url in @("$base`?acao=completo", "$base`?acao=resposta&modo=imagem&largura=390", "$base`?acao=cabe&largura=390&altura=844", "$base`?acao=cabe&largura=360&altura=740")) {
+  foreach ($url in @("$base`?acao=completo", "$base`?acao=resposta&modo=imagem&largura=390", "$base`?acao=cabe&largura=390&altura=844", "$base`?acao=cabe&largura=360&altura=740", "$base`?acao=cabe&largura=320&altura=568", "$base`?acao=cabe&largura=412&altura=915", "$base`?acao=cabe&largura=768&altura=1024", "$base`?acao=cabe&largura=844&altura=390")) {
     $saida = Join-Path $cap "dom.txt"
-    Start-Process -FilePath $edge -ArgumentList ($comum + @("--window-size=1100,1000", "--dump-dom", "`"$url`"")) -Wait -NoNewWindow -RedirectStandardOutput $saida -RedirectStandardError (Join-Path $cap "erro.txt")
+    Start-Process -FilePath $edge -ArgumentList ($comum + @("--window-size=1100,1100", "--dump-dom", "`"$url`"")) -Wait -NoNewWindow -RedirectStandardOutput $saida -RedirectStandardError (Join-Path $cap "erro.txt")
     $t = Get-Content $saida -Raw -Encoding UTF8
     if ($t -match '(?s)RESULTADO\r?\n(.*?)\r?\nFIM') {
       $linhas = $Matches[1] -split "\r?\n"

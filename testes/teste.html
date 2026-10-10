@@ -90,6 +90,10 @@ f.onload = () => {
       const art = q("#art").getBoundingClientRect(), ult = qa(".opt")[3].getBoundingClientRect();
       if (art.top < -1) prob.push(`rodada ${r + 2}: o quadro começa ${Math.round(-art.top)} px acima da tela`);
       if (ult.bottom > w.innerHeight + 1) prob.push(`rodada ${r + 2}: a última opção termina ${Math.round(ult.bottom - w.innerHeight)} px abaixo da tela`);
+      // Em celular alto de pé, o vitral tem de aproveitar a largura: pouco espaço vazio dos lados
+      if (w.innerWidth <= 720 && w.innerHeight >= 800 && art.width < 0.8 * w.innerWidth) prob.push(`rodada ${r + 2}: o vitral ocupa só ${Math.round(100 * art.width / w.innerWidth)}% da largura da tela`);
+      // Em qualquer tela, o vitral inteiro tem de caber na altura
+      if (art.bottom > w.innerHeight + 1) prob.push(`rodada ${r + 2}: o vitral termina ${Math.round(art.bottom - w.innerHeight)} px abaixo da tela`);
     }
     log.push(`cabe na tela ${w.innerWidth}x${w.innerHeight}: problemas: ${prob.length ? prob.join("; ") : "nenhum"}`);
   }
@@ -104,6 +108,7 @@ f.onload = () => {
         await falhaDeImagem();
         falhaAtrasada();
       } else if (acao === "cabe") cabeNaTela();
+      else if (acao === "inicio") { /* só abre a página, para fotografar a primeira tela */ }
       else jogar(P.get("modo") || "simbolos", P.get("nivel") || "todos", false, acao);
       if (largura) log.push(`largura ${largura}: problemas: ${d.documentElement.scrollWidth > d.documentElement.clientWidth ? "a página rola para o lado" : "nenhum"}`);
     } catch (e) { log.push("EXCECAO: " + e.message); }
