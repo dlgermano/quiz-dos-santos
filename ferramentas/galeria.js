@@ -7,7 +7,9 @@ const nivel = process.argv[2];
 const { q } = carregar();
 // "preparados" lista os santos que ainda não entraram no jogo, de todos os níveis
 if (!["facil", "medio", "dificil", "preparados"].includes(nivel)) { console.log("Uso: node ferramentas/galeria.js <facil|medio|dificil|preparados>"); process.exit(2); }
-const idsDoNivel = nivel === "preparados" ? q.SAINTS.filter(s => !q.ativo(s)).map(s => s.id) : q.poolFor(nivel);
+// Um terceiro argumento restringe a galeria a uma lista de ids separados por vírgula
+const idsDoNivel = process.argv[3] ? process.argv[3].split(",")
+  : nivel === "preparados" ? q.SAINTS.filter(s => !q.ativo(s)).map(s => s.id) : q.poolFor(nivel);
 
 // Tabela do prompts-higgsfield.md: | # | id | Santo | Figura | Conferir figura | Objetos |
 const linhas = {};
@@ -16,8 +18,12 @@ for (const l of fs.readFileSync(path.join(RAIZ, "prompts-higgsfield.md"), "utf8"
   if (c.length >= 8 && /^\d+$/.test(c[1])) linhas[c[2]] = { figura: c[5], objetos: c[6] };
 }
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
-const quadro = (serie, id) => fs.existsSync(path.join(RAIZ, "img", "originais", serie, `${id}.png`))
-  ? `<img src="img/originais/${serie}/${id}.png" loading="lazy">` : `<div class="falta">sem imagem: fica o desenho</div>`;
+const existe = (serie, nome) => fs.existsSync(path.join(RAIZ, "img", "originais", serie, `${nome}.png`));
+// Santo com foto de referência pode ter duas opções de figura (<id>_opcaoA e <id>_opcaoB) à espera da escolha
+const quadro = (serie, id) => existe(serie, id) ? `<img src="img/originais/${serie}/${id}.png" loading="lazy">`
+  : existe(serie, `${id}_opcaoA`) ? ["A", "B"].filter(l => existe(serie, `${id}_opcao${l}`)).map(l =>
+      `<div class="op"><b>Opção ${l}</b><img src="img/originais/${serie}/${id}_opcao${l}.png" loading="lazy"></div>`).join("")
+  : `<div class="falta">sem imagem</div>`;
 
 const cartoes = idsDoNivel.map(id => {
   const s = q.SAINTS.find(x => x.id === id), p = linhas[id] || { figura: "", objetos: "" };
@@ -34,7 +40,7 @@ fs.writeFileSync(saida, `<!doctype html><html lang="pt-BR"><meta charset="utf-8"
 h1{margin:0 0 12px}h2{margin:24px 0 8px;font-size:1.2rem}small{color:#5a6478;font-weight:400}
 .par{display:grid;grid-template-columns:repeat(2,minmax(0,380px));gap:16px}figure{margin:0}
 img{width:100%;height:auto;display:block;border-radius:6px}figcaption{font-size:.9rem;padding-top:6px}
-.falta{aspect-ratio:3/4;display:grid;place-items:center;border:2px dashed #c9d0db;border-radius:6px;color:#5a6478}</style>
+.op{margin-bottom:10px}.falta{aspect-ratio:3/4;display:grid;place-items:center;border:2px dashed #c9d0db;border-radius:6px;color:#5a6478}</style>
 <h1>Galeria de aprovação: nível ${nivel} (${idsDoNivel.length} santos)</h1>
 ${cartoes}</html>`);
 console.log(saida);
