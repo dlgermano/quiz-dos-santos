@@ -1,5 +1,5 @@
 """Monta uma folha de contato com vários originais lado a lado, para conferência rápida.
-Uso: py ferramentas/folha.py <serie> <saida.png> <id> [<id> ...]"""
+Uso: py ferramentas/folha.py <serie> <saida.png> <id> [<id> ...]   (um id pode vir como "outra_serie/id")"""
 import sys
 from pathlib import Path
 
@@ -18,9 +18,10 @@ def main() -> None:
     caneta = ImageDraw.Draw(folha)
     for n, ident in enumerate(ids):
         x, y = (n % COLUNAS) * LADO, (n // COLUNAS) * (ALTO + FAIXA)
-        with Image.open(RAIZ / "img" / "originais" / serie / f"{ident}.png") as im:
+        pasta, _, nome = ident.rpartition("/")
+        with Image.open(RAIZ / "img" / "originais" / (pasta or serie) / f"{nome}.png") as im:
             folha.paste(im.convert("RGB").resize((LADO, ALTO), Image.LANCZOS), (x, y + FAIXA))
-        caneta.text((x + 6, y + 5), f"{serie}/{ident}", fill="black")
+        caneta.text((x + 6, y + 5), f"{pasta or serie}/{nome}", fill="black")
     saida.parent.mkdir(parents=True, exist_ok=True)
     folha.save(saida)
     print(saida)
