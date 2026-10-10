@@ -1,11 +1,13 @@
 // Monta a galeria de aprovação de um nível, com os originais das duas séries lado a lado.
-// Uso: node ferramentas/galeria.js <facil|medio|dificil>
+// Uso: node ferramentas/galeria.js <facil|medio|dificil|preparados>
 const fs = require("fs"), path = require("path");
 const { carregar, RAIZ } = require("../testes/carregar");
 
 const nivel = process.argv[2];
 const { q } = carregar();
-if (!["facil", "medio", "dificil"].includes(nivel)) { console.log("Uso: node ferramentas/galeria.js <facil|medio|dificil>"); process.exit(2); }
+// "preparados" lista os santos que ainda não entraram no jogo, de todos os níveis
+if (!["facil", "medio", "dificil", "preparados"].includes(nivel)) { console.log("Uso: node ferramentas/galeria.js <facil|medio|dificil|preparados>"); process.exit(2); }
+const idsDoNivel = nivel === "preparados" ? q.SAINTS.filter(s => !q.ativo(s)).map(s => s.id) : q.poolFor(nivel);
 
 // Tabela do prompts-higgsfield.md: | # | id | Santo | Figura | Conferir figura | Objetos |
 const linhas = {};
@@ -17,7 +19,7 @@ const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
 const quadro = (serie, id) => fs.existsSync(path.join(RAIZ, "img", "originais", serie, `${id}.png`))
   ? `<img src="img/originais/${serie}/${id}.png" loading="lazy">` : `<div class="falta">sem imagem: fica o desenho</div>`;
 
-const cartoes = q.poolFor(nivel).map(id => {
+const cartoes = idsDoNivel.map(id => {
   const s = q.SAINTS.find(x => x.id === id), p = linhas[id] || { figura: "", objetos: "" };
   return `<section><h2>${esc(s.name)} <small>${id}</small></h2><div class="par">
     <figure>${quadro("santos", id)}<figcaption><b>Imagem.</b> Conferir: ${esc(p.figura)}</figcaption></figure>
@@ -33,6 +35,6 @@ h1{margin:0 0 12px}h2{margin:24px 0 8px;font-size:1.2rem}small{color:#5a6478;fon
 .par{display:grid;grid-template-columns:repeat(2,minmax(0,380px));gap:16px}figure{margin:0}
 img{width:100%;height:auto;display:block;border-radius:6px}figcaption{font-size:.9rem;padding-top:6px}
 .falta{aspect-ratio:3/4;display:grid;place-items:center;border:2px dashed #c9d0db;border-radius:6px;color:#5a6478}</style>
-<h1>Galeria de aprovação: nível ${nivel} (${q.poolFor(nivel).length} santos)</h1>
+<h1>Galeria de aprovação: nível ${nivel} (${idsDoNivel.length} santos)</h1>
 ${cartoes}</html>`);
 console.log(saida);

@@ -5,7 +5,7 @@ const falhas = [];
 let total = 0;
 const confere = (cond, msg) => { total++; if (!cond) falhas.push(msg); };
 
-const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia helena joana edwiges rosalima faustina bernadete teresaavila teresacalcuta bakhita madalena".split(" ");
+const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia helena joana edwiges rosalima faustina bernadete teresaavila teresacalcuta bakhita madalena ana monica veronica dulce margaridamaria marta isabel catarinasena efigenia paulina gianna brigida escolastica doroteia edithstein".split(" ");
 
 // A. Dados
 {
@@ -13,17 +13,47 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   confere(!!q, "A: window.__quiz não existe");
   if (q) {
     const ids = q.SAINTS.map(s => s.id);
-    confere(ids.length === 69, `A: esperava 69 santos, achei ${ids.length}`);
+    confere(ids.length === 119, `A: esperava 119 santos no total, achei ${ids.length}`);
+    confere(new Set(ids).size === ids.length, "A: há ids repetidos");
+    confere(ids.every(id => /^[a-z]+$/.test(id)), "A: há id com letra maiúscula, acento ou espaço");
     const jm = q.SAINTS.find(s => s.id === "josemaria");
     confere(jm && jm.sex === "m" && q.levelOf("josemaria") === "medio" && jm.feast === "26 de junho", "A: São Josemaria deveria existir, ser homem, do nível medio e ter festa em 26 de junho");
-    confere(new Set(ids).size === ids.length, "A: há ids repetidos");
     confere(q.SAINTS.every(s => s.sex === "m" || s.sex === "f"), "A: há santo sem sex válido");
     const f = q.SAINTS.filter(s => s.sex === "f").map(s => s.id).sort();
     confere(f.join() === MULHERES.slice().sort().join(), `A: lista de mulheres difere: ${f.join(" ")}`);
-    confere(q.SAINTS.filter(s => s.sex === "m").length === 51, "A: esperava 51 homens");
-    confere(q.SAINTS.every(s => s.name && s.feast && s.why), "A: há santo sem nome, festa ou explicação");
+    confere(q.SAINTS.filter(s => s.sex === "m").length === 86, "A: esperava 86 homens");
+    confere(q.SAINTS.every(s => s.name && s.feast && s.why && s.why.length > 60), "A: há santo sem nome, festa ou explicação");
+    confere(new Set(q.SAINTS.map(s => s.name)).size === ids.length, "A: há nomes repetidos");
     confere(q.SAINTS.every(s => { const v = q.windowSVG(s); return v.includes("<svg") && !/NaN|undefined/.test(v); }), "A: há desenho SVG com defeito");
+    const porNivel = n => q.SAINTS.filter(s => q.levelOf(s.id) === n).length;
+    confere(porNivel("facil") === 35 && porNivel("medio") === 48 && porNivel("dificil") === 36, `A: níveis no total deveriam ser 35/48/36, achei ${porNivel("facil")}/${porNivel("medio")}/${porNivel("dificil")}`);
   }
+}
+
+// P. Santos preparados: ficam escondidos até terem as duas imagens aprovadas
+{
+  const { q } = carregar();
+  if (q.ativo) {
+    const prontos = q.SAINTS.filter(s => q.ativo(s)), espera = q.SAINTS.filter(s => !q.ativo(s));
+    confere(prontos.length + espera.length === 119, "P: contagem de ativos e preparados não fecha");
+    confere(espera.every(s => !s.draw), "P: santo com desenho não pode estar escondido");
+    const todos = q.poolFor("todos");
+    confere(todos.length === prontos.length && espera.every(s => !todos.includes(s.id)), "P: santo sem imagens apareceu no nível Todos");
+    for (const [nivel] of q.LEVELS) confere(q.poolFor(nivel).every(id => q.ativo(q.SAINTS.find(s => s.id === id))), `P: santo escondido apareceu no nível ${nivel}`);
+    const novo = espera.find(s => s.id === "ana");
+    if (novo) {
+      confere(q.levelOf("ana") === "facil" && !q.poolFor("facil").includes("ana"), "P: Santa Ana deveria ser do nível facil e estar escondida");
+      q.COM_FIGURA.push("ana");
+      confere(!q.poolFor("facil").includes("ana"), "P: só com a figura, o santo deveria continuar escondido");
+      q.COM_SIMBOLOS.push("ana");
+      confere(q.poolFor("facil").includes("ana") && q.poolFor("todos").includes("ana"), "P: com as duas imagens, o santo deveria aparecer");
+      q.COM_FIGURA.pop(); q.COM_SIMBOLOS.pop();
+    }
+    for (let k = 0; k < 300; k++) {
+      const w = q.wrongFor("apolonia", "dificil", "imagem");
+      if (w.some(id => !todos.includes(id))) { confere(false, "P: o sorteio do modo imagem devolveu santo escondido"); break; }
+    }
+  } else confere(false, "P: ativo não existe");
 }
 
 // E. Partida inteira por nível (modo padrão)

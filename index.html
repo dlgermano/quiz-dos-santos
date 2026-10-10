@@ -853,6 +853,107 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
       draw: () => g("translate(150,190)", `<circle r="46" fill="${C.white}"/>` + cross(C.dkbrown, 84, 56, 9)) +
         g("translate(106,286) scale(1.5)", pathL("M0,10 Q5,26 0,40", C.dkgreen, 3) + `<circle r="13" fill="${C.gold}"/><path d="M-6,-1 Q0,-9 6,-1 Q4,6 -3,4 Q-2,-1 2,-1" fill="none" stroke-width="2"/>`) +
         g("translate(192,306) scale(.75)", openBook(C.dkbrown)) },
+    // Preparados em 10/10/2026: sem desenho de reserva; só aparecem no jogo quando tiverem as duas imagens aprovadas
+    { id: "ana", name: "Santa Ana", feast: "26 de julho", hue: 13,
+      why: "O livro aberto e a menina Maria: a tradição mostra Ana ensinando a filha a ler as Escrituras. É a mãe de Nossa Senhora e avó de Jesus, padroeira das avós." },
+    { id: "monica", name: "Santa Mônica", feast: "27 de agosto", hue: 60,
+      why: "O lenço e as lágrimas: chorou e rezou durante anos pela conversão do filho, Santo Agostinho. A correia de couro é a do hábito agostiniano. É padroeira das mães." },
+    { id: "veronica", name: "Santa Verônica", feast: "12 de julho", hue: 107,
+      why: "O véu com o rosto de Cristo: segundo a tradição, enxugou o rosto de Jesus no caminho do Calvário, e a imagem ficou gravada no pano. É a sexta estação da Via-Sacra." },
+    { id: "dulce", name: "Santa Dulce dos Pobres", feast: "13 de agosto", hue: 154,
+      why: "A sanfona, que tocava para animar operários e doentes, e os pães que distribuía aos pobres de Salvador. Começou seu hospital num galinheiro do convento. Foi a primeira santa nascida no Brasil." },
+    { id: "margaridamaria", name: "Santa Margarida Maria Alacoque", feast: "16 de outubro", hue: 201,
+      why: "O Sagrado Coração de Jesus, em chamas, cercado pela coroa de espinhos e com a cruz no alto, como lhe apareceu no convento de Paray-le-Monial. Dela vem a devoção das nove primeiras sextas-feiras." },
+    { id: "gabriel", name: "São Gabriel Arcanjo", feast: "29 de setembro", hue: 248,
+      why: "As asas de arcanjo, o lírio da Anunciação e o cetro de mensageiro: foi ele quem anunciou a Maria que seria a mãe de Jesus (Lc 1,26). Seu nome significa “Deus é forte”." },
+    { id: "reismagos", name: "Santos Reis Magos", feast: "6 de janeiro", hue: 295,
+      why: "As três coroas, os presentes de ouro, incenso e mirra e a estrela que os guiou até Belém (Mt 2). A tradição os chama de Gaspar, Melquior e Baltasar; no Brasil são festejados nas Folias de Reis." },
+    { id: "joaobosco", name: "São João Bosco", feast: "31 de janeiro", hue: 342,
+      why: "O navio ancorado entre duas colunas vem do seu sonho mais famoso: a Igreja, em meio à tempestade, encontra segurança entre a Eucaristia e Nossa Senhora. Fundou os salesianos para educar meninos pobres." },
+    { id: "carloacutis", name: "São Carlo Acutis", feast: "12 de outubro", hue: 29,
+      why: "O computador, com que montou um site sobre os milagres eucarísticos, a mochila de adolescente e a hóstia: chamava a Eucaristia de “minha autoestrada para o céu”. Morreu aos 15 anos, em 2006." },
+    { id: "vicentepaulo", name: "São Vicente de Paulo", feast: "27 de setembro", hue: 76,
+      why: "A criança enjeitada e o pão: recolhia os bebês abandonados nas ruas de Paris e organizou a ajuda aos pobres. É o padroeiro das obras de caridade." },
+    { id: "marta", name: "Santa Marta", feast: "29 de julho", hue: 123,
+      why: "A caldeirinha de água benta com o hissope, com que, segundo a lenda, venceu um dragão na Provença, e a concha de cozinha: foi ela quem serviu Jesus em sua casa, em Betânia (Lc 10,38). É padroeira das donas de casa." },
+    { id: "isabel", name: "Santa Isabel da Hungria", feast: "17 de novembro", hue: 170,
+      why: "A coroa de princesa, os pães que levava escondidos aos pobres e as rosas em que eles se transformaram quando a surpreenderam. Viúva aos 20 anos, entrou para a Ordem Terceira Franciscana." },
+    { id: "catarinasena", name: "Santa Catarina de Sena", feast: "29 de abril", hue: 217,
+      why: "O anel do casamento místico com Cristo, o coração que, segundo seu relato, Jesus trocou com o dela, e o lírio sobre o livro de doutora da Igreja. Convenceu o papa a voltar de Avinhão para Roma." },
+    { id: "efigenia", name: "Santa Efigênia", feast: "21 de setembro", hue: 264,
+      why: "A igreja em chamas na mão: quiseram incendiar o convento que ela fundou, e o fogo se apagou por sua oração. A coroa no chão lembra que era princesa da Etiópia, convertida por São Mateus. É muito venerada nas irmandades negras do Brasil." },
+    { id: "paulina", name: "Santa Paulina", feast: "9 de julho", hue: 311,
+      why: "O casebre de madeira e o crucifixo: em 1890, em Nova Trento (SC), começou num casebre a cuidar de uma mulher com câncer; dali nasceu a Congregação das Irmãzinhas da Imaculada Conceição. Foi canonizada em 2002." },
+    { id: "gianna", name: "Santa Gianna Beretta Molla", feast: "28 de abril", hue: 358,
+      why: "O estetoscópio de médica e o berço: pediatra e mãe de família, recusou em 1962 um tratamento que tiraria a vida da filha que esperava, e morreu dias depois do parto. É padroeira das mães e dos médicos." },
+    { id: "joaquim", name: "São Joaquim", feast: "26 de julho", hue: 45,
+      why: "O cesto com duas pombas, oferta dos pobres no Templo, e o cajado de pastor. É o pai de Nossa Senhora e avô de Jesus, festejado junto com Santa Ana." },
+    { id: "luisgonzaga", name: "São Luís Gonzaga", feast: "21 de junho", hue: 92,
+      why: "A coroa no chão, porque renunciou ao título de marquês para ser jesuíta; o lírio da pureza e o crucifixo. Morreu aos 23 anos cuidando de doentes da peste em Roma. É padroeiro da juventude." },
+    { id: "camilo", name: "São Camilo de Lélis", feast: "14 de julho", hue: 139,
+      why: "A cruz vermelha no hábito preto, sinal dos Camilianos, a ordem que fundou para cuidar dos doentes. É padroeiro dos enfermos, dos hospitais e dos profissionais de saúde." },
+    { id: "martinholima", name: "São Martinho de Lima", feast: "3 de novembro", hue: 186,
+      why: "A vassoura, porque fazia os serviços mais humildes do convento, e o cão, o gato e o rato comendo no mesmo prato, sinal da paz que criava ao redor. Irmão dominicano em Lima, filho de uma negra liberta, é padroeiro da justiça social." },
+    { id: "raimundononato", name: "São Raimundo Nonato", feast: "31 de agosto", hue: 233,
+      why: "O cadeado: preso na África por resgatar cativos, teve os lábios trancados para não pregar. A palma com três coroas representa castidade, pregação e martírio. É padroeiro das parteiras e das grávidas." },
+    { id: "vianney", name: "São João Maria Vianney", feast: "4 de agosto", hue: 280,
+      why: "A estola roxa e o confessionário: o Cura d’Ars passava até 16 horas por dia atendendo confissões. É o padroeiro dos párocos." },
+    { id: "tarcisio", name: "São Tarcísio", feast: "15 de agosto", hue: 327,
+      why: "A teca com a Eucaristia apertada contra o peito: menino da Roma do século III, foi morto ao proteger as hóstias que levava aos presos. É padroeiro dos coroinhas." },
+    { id: "joaodiego", name: "São Juan Diego", feast: "9 de dezembro", hue: 14,
+      why: "O manto (tilma) com a imagem de Nossa Senhora de Guadalupe e as rosas que caíram dele diante do bispo, no México, em 1531. É o primeiro santo indígena das Américas." },
+    { id: "simaostock", name: "São Simão Stock", feast: "16 de maio", hue: 61,
+      why: "O escapulário marrom que, segundo a tradição carmelita, recebeu de Nossa Senhora do Carmo em 1251. É uma das devoções mais difundidas no Brasil." },
+    { id: "dimas", name: "São Dimas", feast: "25 de março", hue: 108,
+      why: "A cruz com cordas: é o bom ladrão crucificado ao lado de Jesus, a quem pediu “lembra-te de mim” e ouviu “hoje estarás comigo no Paraíso” (Lc 23,43)." },
+    { id: "onofre", name: "Santo Onofre", feast: "12 de junho", hue: 155,
+      why: "O saiote de folhas do eremita que viveu décadas no deserto do Egito, e a coroa e o cetro no chão: a tradição diz que era filho de rei. No Brasil é invocado para que nunca falte o pão." },
+    { id: "tomasaquino", name: "São Tomás de Aquino", feast: "28 de janeiro", hue: 202,
+      why: "O sol de ouro no peito, sinal da sabedoria que ilumina, a pena e os livros da Suma Teológica. Frade dominicano, é doutor da Igreja e padroeiro dos estudantes." },
+    { id: "elias", name: "Santo Elias", feast: "20 de julho", hue: 249,
+      why: "O carro de fogo que o levou ao céu e o manto que deixou cair para o discípulo Eliseu (2Rs 2,11). Profeta do Monte Carmelo, é o pai espiritual dos carmelitas." },
+    { id: "carlosborromeu", name: "São Carlos Borromeu", feast: "4 de novembro", hue: 296,
+      why: "A corda de penitente no pescoço, com que saiu descalço em procissão durante a peste de Milão, o crucifixo e o barrete vermelho de cardeal." },
+    { id: "brigida", name: "Santa Brígida da Irlanda", feast: "1º de fevereiro", hue: 343,
+      why: "A cruz de junco trançado, que fez para explicar a fé a um moribundo, a vaca, porque distribuía leite e manteiga aos pobres, e a chama que as monjas de Kildare mantinham acesa. É padroeira da Irlanda." },
+    { id: "escolastica", name: "Santa Escolástica", feast: "10 de fevereiro", hue: 30,
+      why: "A pomba, forma em que São Bento viu a alma da irmã subir ao céu, o báculo de abadessa e a nuvem de chuva: ela rezou, e a tempestade impediu o irmão de ir embora." },
+    { id: "doroteia", name: "Santa Doroteia", feast: "6 de fevereiro", hue: 77,
+      why: "O cesto com maçãs e rosas: a caminho do martírio, zombaram dela pedindo frutas do paraíso, e em pleno inverno um menino entregou o cesto ao zombador." },
+    { id: "edithstein", name: "Santa Teresa Benedita da Cruz (Edith Stein)", feast: "9 de agosto", hue: 124,
+      why: "A estrela de Davi amarela, porque nasceu judia e foi morta em Auschwitz em 1942; a cruz do nome que escolheu como carmelita; e o arame farpado do campo. Filósofa, é copadroeira da Europa." },
+    { id: "filipe", name: "São Filipe", feast: "3 de maio", hue: 171,
+      why: "A cruz alta do martírio e os pães: foi a ele que Jesus perguntou onde comprar pão para a multidão, antes de multiplicar os pães (Jo 6,5)." },
+    { id: "tiagomenor", name: "São Tiago Menor", feast: "3 de maio", hue: 218,
+      why: "O maço de pisoeiro, bastão com que foi morto em Jerusalém, e o livro da carta que leva seu nome. É chamado “Menor” para se distinguir do outro apóstolo Tiago." },
+    { id: "joaodedeus", name: "São João de Deus", feast: "8 de março", hue: 265,
+      why: "A romã com uma cruz, emblema de Granada, cidade onde fundou seu hospital, e o cesto com que pedia esmolas para os doentes. É padroeiro dos hospitais e dos enfermeiros." },
+    { id: "januario", name: "São Januário", feast: "19 de setembro", hue: 312,
+      why: "As duas ampolas com seu sangue, guardadas na catedral de Nápoles, onde o sangue seco se liquefaz em datas do ano. Bispo de Benevento, foi martirizado em 305." },
+    { id: "bonifacio", name: "São Bonifácio", feast: "5 de junho", hue: 359,
+      why: "O livro atravessado pela espada, com que tentou se proteger ao ser morto, e o carvalho cortado: derrubou a árvore consagrada a Thor para mostrar que nada aconteceria. É o apóstolo da Alemanha." },
+    { id: "nepomuceno", name: "São João Nepomuceno", feast: "16 de maio", hue: 46,
+      why: "A ponte de Praga, de onde foi lançado ao rio em 1393 por não revelar ao rei um segredo de confissão, e as cinco estrelas que, segundo a tradição, brilharam sobre a água." },
+    { id: "frassati", name: "São Pier Giorgio Frassati", feast: "4 de julho", hue: 93,
+      why: "O piolet, a corda e a montanha: alpinista, escreveu numa foto de escalada “Verso l’alto”, para o alto. Estudante de Turim, gastava o que tinha com os pobres e morreu aos 24 anos, em 1925." },
+    { id: "charbel", name: "São Charbel", feast: "24 de julho", hue: 140,
+      why: "A lamparina e o capuz preto: monge maronita do Líbano, viveu 23 anos como eremita. Conta-se que sua lamparina, cheia de água por brincadeira, acendeu assim mesmo." },
+    { id: "cupertino", name: "São José de Cupertino", feast: "18 de setembro", hue: 187,
+      why: "As sandálias no ar: são muitos os relatos de que se elevava do chão em oração. Como teve grande dificuldade nos estudos, é padroeiro dos estudantes em prova e dos aviadores." },
+    { id: "foucauld", name: "São Charles de Foucauld", feast: "1º de dezembro", hue: 234,
+      why: "O coração vermelho com a cruz, que costurou na túnica branca, e as dunas do Saara, onde viveu entre os tuaregues. Foi canonizado em 2022." },
+    { id: "joaodacruz", name: "São João da Cruz", feast: "14 de dezembro", hue: 281,
+      why: "A cruz rústica do nome que escolheu, e o monte sob a noite estrelada, imagens de seus poemas “Noite Escura” e “Subida do Monte Carmelo”. Reformou o Carmelo com Santa Teresa d’Ávila." },
+    { id: "inacioantioquia", name: "Santo Inácio de Antioquia", feast: "17 de outubro", hue: 328,
+      why: "Os dois leões: bispo de Antioquia, foi levado a Roma e entregue às feras por volta do ano 107. No caminho escreveu: “sou trigo de Deus, moído pelos dentes das feras”." },
+    { id: "tomasbecket", name: "São Tomás Becket", feast: "29 de dezembro", hue: 15,
+      why: "A mitra partida por uma espada: arcebispo de Cantuária, foi morto na própria catedral em 1170 por cavaleiros do rei Henrique II." },
+    { id: "brandao", name: "São Brandão", feast: "16 de maio", hue: 62,
+      why: "O barco sobre a baleia: a lenda da sua viagem pelo Atlântico conta que os monges celebraram a Páscoa no dorso de uma baleia, pensando que fosse uma ilha. É padroeiro dos navegantes." },
+    { id: "amaro", name: "Santo Amaro", feast: "15 de janeiro", hue: 109,
+      why: "A muleta, o báculo de abade e o livro da Regra: discípulo de São Bento, é invocado nas doenças dos ossos e das articulações. Dá nome a muitas cidades e bairros do Brasil." },
+    { id: "ivo", name: "Santo Ivo", feast: "19 de maio", hue: 156,
+      why: "O rolo de pergaminho com selo e o tinteiro: juiz e advogado na Bretanha do século XIII, defendia os pobres sem cobrar. É padroeiro dos advogados e dos juízes." },
   ];
 
   // ---------- Window ----------
@@ -963,7 +1064,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
         </g>
         <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${L}" stroke-width="5.5"/>
         <path d="${inner}" fill="none" stroke="${L}" stroke-width="4"/>
-        <g filter="url(#fig-${id})"><g stroke="${L}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">${saint.draw()}</g></g>
+        <g filter="url(#fig-${id})"><g stroke="${L}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">${saint.draw ? saint.draw() : ""}</g></g>
         <rect x="0" y="0" width="300" height="410" fill="url(#lt-${id})"/>
         <rect x="0" y="0" width="300" height="410" fill="url(#ray-${id})"/>
       </g>
@@ -976,13 +1077,15 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
 
   // ---------- Game ----------
   const ROUNDS = 10;
-  const EASY = "pedro paulo francisco jorge teresinha antonio sebastiao luzia jose miguel barbara joao clara rita judas cristovao expedito nicolau pio cosme edwiges teresacalcuta joaopaulo bento madalena".split(" ");
-  const HARD = "ambrosio gregorio apolonia rosalima xavier antao kolbe ferrer bakhita eloi huberto goncalo isidoro bartolomeu barnabe rafael".split(" ");
+  const EASY = "pedro paulo francisco jorge teresinha antonio sebastiao luzia jose miguel barbara joao clara rita judas cristovao expedito nicolau pio cosme edwiges teresacalcuta joaopaulo bento madalena ana monica veronica dulce margaridamaria gabriel reismagos joaobosco carloacutis vicentepaulo".split(" ");
+  const HARD = "ambrosio gregorio apolonia rosalima xavier antao kolbe ferrer bakhita eloi huberto goncalo isidoro bartolomeu barnabe rafael brigida escolastica doroteia edithstein filipe tiagomenor joaodedeus januario bonifacio nepomuceno frassati charbel cupertino foucauld joaodacruz inacioantioquia tomasbecket brandao amaro ivo".split(" ");
   const levelOf = id => EASY.includes(id) ? "facil" : HARD.includes(id) ? "dificil" : "medio";
-  const WOMEN = "teresinha luzia catarina barbara clara rita cecilia apolonia helena joana edwiges rosalima faustina bernadete teresaavila teresacalcuta bakhita madalena".split(" ");
+  const WOMEN = "teresinha luzia catarina barbara clara rita cecilia apolonia helena joana edwiges rosalima faustina bernadete teresaavila teresacalcuta bakhita madalena ana monica veronica dulce margaridamaria marta isabel catarinasena efigenia paulina gianna brigida escolastica doroteia edithstein".split(" ");
   SAINTS.forEach(s => { s.sex = WOMEN.includes(s.id) ? "f" : "m"; });
   const LEVELS = [["facil", "Fácil"], ["medio", "Médio"], ["dificil", "Difícil"], ["todos", "Todos"]];
-  const poolFor = lv => SAINTS.map(s => s.id).filter(id => lv === "todos" || levelOf(id) === lv);
+  // Santo preparado (sem desenho de reserva) só entra no jogo quando tem as duas imagens aprovadas
+  const ativo = s => !!s.draw || (COM_FIGURA.includes(s.id) && COM_SIMBOLOS.includes(s.id));
+  const poolFor = lv => SAINTS.filter(ativo).map(s => s.id).filter(id => lv === "todos" || levelOf(id) === lv);
   let level = "facil";
   try { const v = localStorage.getItem("quiz-santos-nivel"); if (LEVELS.some(l => l[0] === v)) level = v; } catch (e) {}
   const MODES = [["simbolos", "Símbolos"], ["imagem", "Imagem"]];
@@ -1006,7 +1109,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     if (md !== "imagem") return shuffle(pool).slice(0, 3);
     const same = id => byId[id].sex === byId[ans].sex;
     const inLevel = shuffle(pool.filter(same));
-    const extra = shuffle(SAINTS.map(s => s.id).filter(id => id !== ans && same(id) && !inLevel.includes(id)));
+    const extra = shuffle(poolFor("todos").filter(id => id !== ans && same(id) && !inLevel.includes(id)));
     return inLevel.concat(extra).slice(0, 3);
   }
 
@@ -1143,7 +1246,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   });
 
   // Gancho para os testes (testes/verifica.js e testes/teste.html)
-  window.__quiz = { SAINTS, LEVELS, MODES, COM_FIGURA, COM_SIMBOLOS, poolFor, levelOf, wrongFor, imgFor, artFor, windowSVG, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
+  window.__quiz = { SAINTS, LEVELS, MODES, COM_FIGURA, COM_SIMBOLOS, ativo, poolFor, levelOf, wrongFor, imgFor, artFor, windowSVG, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
 
   function start(data) {
     if (data && data.st && Array.isArray(data.st.order)) {
