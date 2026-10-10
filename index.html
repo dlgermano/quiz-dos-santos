@@ -64,6 +64,11 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
 #art { aspect-ratio: 3 / 4; display: grid; place-items: center; }
 #art svg, #art img { display: block; height: 100%; width: auto; max-width: 100%; filter: drop-shadow(0 8px 22px rgba(0,0,0,.32)); }
 #art img { object-fit: contain; border-radius: 6px; }
+@media (max-width: 720px) {
+  /* No celular o quadro ocupa até 40% da altura da tela, para sobrar espaço para as 4 opções */
+  .window { width: min(100%, 360px, calc(40vh * .75)); }
+  .hint { display: none; }
+}
 .window .cap { text-align: center; font-size: .85rem; color: var(--muted); margin-top: 8px; }
 
 .panel { display: grid; gap: 16px; min-width: 0; }
@@ -1002,7 +1007,9 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     render();
     const nb = $("next"); if (nb) nb.focus();
   }
-  function next() { st.i++; if (st.i < ROUNDS) setupRound(); else render(); }
+  // No celular, cada rodada nova começa com o quadro no alto da tela, para caber junto com as opções
+  const toTop = () => { if (window.matchMedia?.("(max-width: 720px)").matches) $("stage").scrollIntoView?.(); };
+  function next() { st.i++; if (st.i < ROUNDS) { setupRound(); toTop(); } else render(); }
   function setLevel(k) {
     level = k;
     try { localStorage.setItem("quiz-santos-nivel", level); } catch (e) {}
@@ -1041,7 +1048,8 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     const pic = art.querySelector("img,svg");
     pic.classList.add("in");
     // Rede ruim: se a imagem não carregar, cai para o desenho
-    if (pic.tagName === "IMG") pic.onerror = () => { art.innerHTML = windowSVG(saint); };
+    // O erro pode chegar atrasado, com a rodada já trocada: só vale se esta imagem ainda está no quadro
+    if (pic.tagName === "IMG") pic.onerror = () => { if (pic.isConnected) art.innerHTML = windowSVG(saint); };
   }
 
   function render() {

@@ -6,13 +6,15 @@ $porta = 8765
 $cap = Join-Path $raiz "testes\capturas"
 New-Item -ItemType Directory -Force $cap | Out-Null
 $perfil = Join-Path $env:TEMP "quiz-santos-edge"
+# Perfil novo a cada execução: o cache do navegador já serviu uma cópia antiga do teste.html
+if (Test-Path $perfil) { Remove-Item -Recurse -Force $perfil -ErrorAction SilentlyContinue }
 $servidor = Start-Process -FilePath "py" -ArgumentList "-m", "http.server", $porta, "--bind", "127.0.0.1", "--directory", "`"$raiz`"" -PassThru -WindowStyle Hidden
 Start-Sleep -Seconds 2
 $comum = @("--headless=new", "--disable-gpu", "--hide-scrollbars", "--user-data-dir=`"$perfil`"", "--virtual-time-budget=10000")
 $base = "http://127.0.0.1:$porta/testes/teste.html"
 $falhou = $false
 try {
-  foreach ($url in @("$base`?acao=completo", "$base`?acao=resposta&modo=imagem&largura=390")) {
+  foreach ($url in @("$base`?acao=completo", "$base`?acao=resposta&modo=imagem&largura=390", "$base`?acao=cabe&largura=390&altura=844", "$base`?acao=cabe&largura=360&altura=740")) {
     $saida = Join-Path $cap "dom.txt"
     Start-Process -FilePath $edge -ArgumentList ($comum + @("--window-size=1100,1000", "--dump-dom", "`"$url`"")) -Wait -NoNewWindow -RedirectStandardOutput $saida -RedirectStandardError (Join-Path $cap "erro.txt")
     $t = Get-Content $saida -Raw -Encoding UTF8
@@ -26,7 +28,8 @@ try {
     @("simbolos-pergunta", "1100,760", "acao=pergunta&modo=simbolos&nivel=facil"),
     @("imagem-resposta", "1100,760", "acao=resposta&modo=imagem&nivel=facil"),
     @("imagem-celular", "700,1400", "acao=resposta&modo=imagem&nivel=facil&largura=390"),
-    @("simbolos-celular", "700,1400", "acao=pergunta&modo=simbolos&largura=390"))
+    @("simbolos-celular", "700,1400", "acao=pergunta&modo=simbolos&largura=390"),
+    @("cabe-celular", "700,900", "acao=cabe&largura=390&altura=844"))
   foreach ($f in $fotos) {
     Start-Process -FilePath $edge -ArgumentList ($comum + @("--window-size=$($f[1])", "--screenshot=`"$cap\$($f[0]).png`"", "`"$base`?$($f[2])`"")) -Wait
   }

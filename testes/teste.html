@@ -7,6 +7,8 @@ const P = new URLSearchParams(location.search);
 const acao = P.get("acao") || "completo", largura = P.get("largura");
 const f = document.getElementById("f"), log = [];
 if (largura) f.style.width = largura + "px";
+const altura = P.get("altura");
+if (altura) f.style.height = altura + "px";
 f.onload = () => {
   const w = f.contentWindow, d = f.contentDocument, erros = [], Q = w.__quiz;
   w.addEventListener("error", e => erros.push(e.message));
@@ -66,6 +68,32 @@ f.onload = () => {
     log.push(`falha de imagem: problemas: ${caiu && q(".name") ? "nenhum" : "o quadro não caiu para o desenho ou a rodada travou"}`);
   }
 
+  // Erro de imagem que chega atrasado, depois de a rodada avançar, não pode trocar o quadro da rodada nova
+  function falhaAtrasada() {
+    d.getElementById("modo-simbolos").click();
+    const velha = q("#art img");
+    qa(".opt")[0].click(); q("#next").click();
+    const st = Q.state(), esperado = Q.imgFor(st.order[st.i], "simbolos");
+    if (velha) velha.dispatchEvent(new w.Event("error"));
+    const atual = q("#art img");
+    const ok = !!velha && !!atual && atual.getAttribute("src") === esperado && !q("#art svg");
+    log.push(`falha atrasada de imagem: problemas: ${ok ? "nenhum" : "o quadro da rodada nova foi trocado pelo desenho da rodada anterior"}`);
+  }
+
+  // No celular, ao avançar de rodada, o quadro e as 4 opções precisam caber na tela sem rolar
+  function cabeNaTela() {
+    d.getElementById("modo-imagem").click();
+    d.getElementById("lvl-todos").click();
+    const prob = [];
+    for (let r = 0; r < 3; r++) {
+      qa(".opt")[0].click(); q("#next").click();
+      const art = q("#art").getBoundingClientRect(), ult = qa(".opt")[3].getBoundingClientRect();
+      if (art.top < -1) prob.push(`rodada ${r + 2}: o quadro começa ${Math.round(-art.top)} px acima da tela`);
+      if (ult.bottom > w.innerHeight + 1) prob.push(`rodada ${r + 2}: a última opção termina ${Math.round(ult.bottom - w.innerHeight)} px abaixo da tela`);
+    }
+    log.push(`cabe na tela ${w.innerWidth}x${w.innerHeight}: problemas: ${prob.length ? prob.join("; ") : "nenhum"}`);
+  }
+
   (async () => {
     try {
       if (acao === "completo") {
@@ -74,7 +102,9 @@ f.onload = () => {
         q("#again").click();
         log.push(`jogar de novo: problemas: ${q("#round").textContent === "1" && q("#hits").textContent === "0" && qa(".opt").length === 4 ? "nenhum" : "não zerou"}`);
         await falhaDeImagem();
-      } else jogar(P.get("modo") || "simbolos", P.get("nivel") || "todos", false, acao);
+        falhaAtrasada();
+      } else if (acao === "cabe") cabeNaTela();
+      else jogar(P.get("modo") || "simbolos", P.get("nivel") || "todos", false, acao);
       if (largura) log.push(`largura ${largura}: problemas: ${d.documentElement.scrollWidth > d.documentElement.clientWidth ? "a página rola para o lado" : "nenhum"}`);
     } catch (e) { log.push("EXCECAO: " + e.message); }
     log.push(`erros de script: problemas: ${erros.length ? erros.join(" | ") : "nenhum"}`);
