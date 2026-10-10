@@ -1,0 +1,1070 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz dos Santos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<style>
+/* Layout: a stained-glass window on the left, the question and choices on the right; stacks on phones */
+:root {
+  --bg: #e4e8ee;
+  --surface: #f4f6f9;
+  --fg: #1a2030;
+  --muted: #5a6478;
+  --line: #c9d0db;
+  --accent: #8a5d0c;
+  --ok: #1f7a45;
+  --ok-bg: #dcf0e3;
+  --bad: #b3261e;
+  --bad-bg: #f7dedb;
+  --display: "Uncial Antiqua", "Palatino Linotype", Georgia, serif;
+  --body: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1320; --surface: #161d2e; --fg: #ebe5d8; --muted: #9aa3b6; --line: #2a3349;
+    --accent: #e3b44c; --ok: #6fd39a; --ok-bg: #133524; --bad: #f08a80; --bad-bg: #3e1a18;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1320; --surface: #161d2e; --fg: #ebe5d8; --muted: #9aa3b6; --line: #2a3349;
+  --accent: #e3b44c; --ok: #6fd39a; --ok-bg: #133524; --bad: #f08a80; --bad-bg: #3e1a18;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 17px; line-height: 1.5; }
+.wrap { max-width: 980px; margin: 0 auto; padding: 24px 16px 40px; display: grid; gap: 20px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; text-wrap: balance; }
+.score { font-variant-numeric: tabular-nums; color: var(--muted); display: flex; gap: 16px; }
+.score b { color: var(--fg); }
+.dots { display: flex; gap: 6px; flex-wrap: wrap; }
+.dot { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--line); }
+.dot.ok { background: var(--ok); border-color: var(--ok); }
+.dot.bad { background: var(--bad); border-color: var(--bad); }
+.dot.now { border-color: var(--accent); border-width: 2.5px; }
+
+.levels { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; }
+.lvl {
+  font: inherit; font-size: .92rem; cursor: pointer; color: var(--fg); background: var(--surface);
+  border: 1.5px solid var(--line); border-radius: 999px; padding: 5px 14px;
+}
+.lvl span { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; margin-left: 2px; }
+.lvl[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.lvl[aria-pressed="true"] span { color: var(--bg); opacity: .8; }
+.lvl:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.stage { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 32px; align-items: start; }
+@media (max-width: 720px) { .stage { grid-template-columns: minmax(0, 1fr); gap: 20px; } }
+.window { width: 100%; max-width: 360px; margin: 0 auto; }
+.window svg { display: block; width: 100%; height: auto; filter: drop-shadow(0 8px 22px rgba(0,0,0,.32)); }
+.window .cap { text-align: center; font-size: .85rem; color: var(--muted); margin-top: 8px; }
+
+.panel { display: grid; gap: 16px; min-width: 0; }
+.eyebrow { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+.q { font-size: 1.45rem; font-weight: 500; margin: 0; text-wrap: balance; line-height: 1.25; }
+.hint { color: var(--muted); margin: 0; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 460px) { .opts { grid-template-columns: 1fr; } }
+.opt {
+  font: inherit; font-size: 1.05rem; text-align: left; cursor: pointer;
+  background: var(--surface); color: var(--fg); border: 1.5px solid var(--line); border-radius: 10px;
+  padding: 12px 14px; display: flex; gap: 10px; align-items: center; min-height: 54px;
+  transition: border-color .15s, transform .1s;
+}
+.opt:hover:not(:disabled) { border-color: var(--accent); }
+.opt:active:not(:disabled) { transform: translateY(1px); }
+.opt:focus-visible, .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.opt .k { font-variant-numeric: tabular-nums; font-size: .8rem; color: var(--muted); border: 1px solid var(--line); border-radius: 5px; padding: 0 6px; flex: none; }
+.opt:disabled { cursor: default; }
+.opt.ok { background: var(--ok-bg); border-color: var(--ok); }
+.opt.bad { background: var(--bad-bg); border-color: var(--bad); }
+.opt.dim { opacity: .55; }
+
+.reveal { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 8px; }
+.verdict { font-weight: 700; }
+.verdict.ok { color: var(--ok); }
+.verdict.bad { color: var(--bad); }
+.name { font-family: var(--display); font-size: 1.5rem; line-height: 1.2; }
+.feast { color: var(--muted); font-size: .95rem; font-variant-numeric: tabular-nums; }
+.why { margin: 0; max-width: 62ch; }
+.btn {
+  font: inherit; font-weight: 700; cursor: pointer; justify-self: start;
+  background: var(--accent); color: var(--bg); border: none; border-radius: 10px; padding: 11px 20px;
+}
+.end { display: grid; gap: 14px; }
+.big { font-family: var(--display); font-size: 3rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.missed { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+.missed li { max-width: 62ch; }
+@media (prefers-reduced-motion: no-preference) {
+  .window svg.in { animation: glow .5s ease-out; }
+  @keyframes glow { from { opacity: .35; transform: scale(.985); } to { opacity: 1; transform: none; } }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Quiz dos Santos</h1>
+    <div class="score"><span>Rodada <b id="round">1</b>/<span id="total">10</span></span><span>Acertos <b id="hits">0</b></span></div>
+    <div class="dots" id="dots" aria-hidden="true"></div>
+    <div class="levels" id="levels" role="group" aria-label="Nível"></div>
+  </header>
+
+  <main class="stage" id="stage">
+    <div class="window">
+      <div id="art"></div>
+      <div class="cap">Vitral com os atributos tradicionais do santo</div>
+    </div>
+    <section class="panel" id="panel" aria-live="polite"></section>
+  </main>
+</div>
+
+<script>
+(() => {
+  const L = "#231d1a";
+  const C = {
+    gold: "#e9b949", silver: "#d3dbe1", iron: "#6f777d", red: "#c4302b", green: "#4f9a4a", dkgreen: "#2f6b3a",
+    white: "#f6f0e1", brown: "#8a5a32", dkbrown: "#5b3a22", blue: "#3d6fb6", skin: "#f0c9a0", orange: "#ef8a2c",
+    yellow: "#ffd84a", black: "#2e2a2a", stone: "#cdbb9e", wood: "#c99a5b"
+  };
+  const g = (t, s) => `<g transform="${t}">${s}</g>`;
+  const lineL = (x1, y1, x2, y2, c, w) =>
+    `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${L}" stroke-width="${w + 5}"/>` +
+    `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}"/>`;
+  const pathL = (d, c, w) =>
+    `<path d="${d}" fill="none" stroke="${L}" stroke-width="${w + 5}"/><path d="${d}" fill="none" stroke="${c}" stroke-width="${w}"/>`;
+
+  // ---------- Attributes ----------
+  const key = c => `<rect x="-5" y="-30" width="10" height="92" fill="${c}"/>
+    <rect x="5" y="34" width="20" height="10" fill="${c}"/><rect x="5" y="50" width="14" height="10" fill="${c}"/>
+    <circle cx="0" cy="-48" r="20" fill="${c}"/><circle cx="0" cy="-48" r="8" fill="${L}"/>`;
+
+  const sword = (blade = C.silver, hilt = C.gold) => `<polygon points="-7,40 -7,-62 0,-84 7,-62 7,40" fill="${blade}"/>
+    <line x1="0" y1="-60" x2="0" y2="36" stroke-width="1.5"/>
+    <rect x="-30" y="38" width="60" height="10" rx="3" fill="${hilt}"/>
+    <rect x="-5" y="48" width="10" height="28" fill="${C.dkbrown}"/><circle cx="0" cy="82" r="8" fill="${hilt}"/>`;
+
+  const openBook = (cover = C.red) => {
+    let lines = "";
+    for (let i = 0; i < 4; i++) {
+      const y = -12 + i * 10;
+      lines += `<path d="M-48,${y} Q-26,${y - 8} -8,${y + 2}" fill="none" stroke-width="1.4"/>`;
+      lines += `<path d="M48,${y} Q26,${y - 8} 8,${y + 2}" fill="none" stroke-width="1.4"/>`;
+    }
+    return `<path d="M-60,-22 L-60,36 Q-30,28 0,40 Q30,28 60,36 L60,-22 Z" fill="${cover}"/>
+      <path d="M0,-22 Q-28,-34 -56,-26 L-56,30 Q-28,22 0,34 Z" fill="${C.white}"/>
+      <path d="M0,-22 Q28,-34 56,-26 L56,30 Q28,22 0,34 Z" fill="${C.white}"/>${lines}`;
+  };
+
+  const closedBook = c => `<rect x="-52" y="-14" width="104" height="30" rx="4" fill="${c}"/>
+    <rect x="-46" y="-6" width="96" height="12" fill="${C.white}"/>
+    <line x1="-40" y1="0" x2="44" y2="0" stroke-width="1.2"/>`;
+
+  const child = () => `<circle cx="0" cy="-30" r="18" fill="${C.gold}"/>
+    <path d="M-17,26 Q-20,-10 0,-14 Q20,-10 17,26 Z" fill="${C.white}"/>
+    <circle cx="0" cy="-28" r="11" fill="${C.skin}"/>
+    <path d="M-14,0 Q-24,-6 -22,-16" fill="none" stroke-width="5"/><path d="M-14,0 Q-24,-6 -22,-16" fill="none" stroke="${C.skin}" stroke-width="2"/>`;
+
+  const blossom = (x, y, s = 1) => g(`translate(${x},${y}) scale(${s})`,
+    [-34, 0, 34].map(a => `<ellipse cx="0" cy="-13" rx="5.5" ry="13" transform="rotate(${a})" fill="${C.white}"/>`).join("") +
+    `<circle cx="0" cy="-3" r="3.5" fill="${C.yellow}"/>`);
+  const lily = (h = 150) =>
+    pathL(`M0,0 Q5,${-h / 2} 0,${-h + 6}`, C.green, 4) +
+    `<ellipse cx="-12" cy="${-h * 0.3}" rx="15" ry="5" transform="rotate(-30 -12 ${-h * 0.3})" fill="${C.green}"/>
+     <ellipse cx="13" cy="${-h * 0.5}" rx="15" ry="5" transform="rotate(30 13 ${-h * 0.5})" fill="${C.green}"/>` +
+    pathL(`M2,${-h * 0.62} Q-10,${-h * 0.72} -15,${-h + 34}`, C.green, 3) +
+    pathL(`M2,${-h * 0.7} Q12,${-h * 0.78} 15,${-h + 26}`, C.green, 3) +
+    blossom(0, -h + 6) + blossom(-15, -h + 34, .85) + blossom(15, -h + 26, .85);
+
+  const rose = () => `<ellipse cx="-12" cy="8" rx="9" ry="4" transform="rotate(25 -12 8)" fill="${C.green}"/>
+    <ellipse cx="12" cy="8" rx="9" ry="4" transform="rotate(-25 12 8)" fill="${C.green}"/>
+    <circle r="13" fill="${C.red}"/><path d="M-6,-1 Q0,-9 6,-1 Q4,6 -3,4 Q-2,-1 2,-1" fill="none" stroke-width="2"/>`;
+
+  const arrow = (len = 120) => lineL(0, 0, len, 0, C.brown, 3) +
+    `<polygon points="${len},-8 ${len + 22},0 ${len},8" fill="${C.silver}"/>
+     <polygon points="4,0 -10,-11 12,-11 22,0" fill="${C.red}"/><polygon points="4,0 -10,11 12,11 22,0" fill="${C.red}"/>`;
+
+  const palm = () => `<path d="M0,0 Q18,-60 2,-124 Q-28,-62 0,0 Z" fill="${C.green}"/>
+    <path d="M0,0 Q-4,-60 2,-124" fill="none" stroke-width="2"/>` +
+    [-100, -80, -60, -40, -20].map(y => `<path d="M${-1 + y * 0.01},${y} l-12,-10 M${y * 0.01},${y} l10,-12" fill="none" stroke-width="1.4"/>`).join("");
+
+  const eyePlate = () => `<ellipse cx="0" cy="8" rx="58" ry="18" fill="${C.gold}"/>
+    <ellipse cx="0" cy="4" rx="44" ry="11" fill="#f3d683"/>` +
+    [-18, 18].map(x => `<path d="M${x - 15},-2 Q${x},-15 ${x + 15},-2 Q${x},11 ${x - 15},-2 Z" fill="${C.white}"/>
+      <circle cx="${x}" cy="-2" r="5.5" fill="${C.blue}"/><circle cx="${x}" cy="-2" r="2" fill="${L}"/>`).join("");
+
+  const wheel = (r) => {
+    let s = "";
+    for (let i = 0; i < 14; i++) s += `<polygon points="-6,${-r + 2} 0,${-r - 17} 6,${-r + 2}" transform="rotate(${i * 360 / 14})" fill="${C.silver}"/>`;
+    for (let i = 0; i < 6; i++) s += `<rect x="-4" y="${-(r - 4)}" width="8" height="${r - 4}" transform="rotate(${i * 60})" fill="${C.brown}"/>`;
+    // rim as a ring with a break on the right
+    s += `<path d="M${r - 6},-12 A${r - 6},${r - 6} 0 1 0 ${r - 6},12" fill="none" stroke="${L}" stroke-width="17"/>
+      <path d="M${r - 6},-12 A${r - 6},${r - 6} 0 1 0 ${r - 6},12" fill="none" stroke="${C.brown}" stroke-width="11"/>`;
+    return s + `<circle r="10" fill="${C.gold}"/>`;
+  };
+
+  const crown = () => `<polygon points="-30,12 -30,-10 -17,2 0,-20 17,2 30,-10 30,12" fill="${C.gold}"/>
+    <rect x="-30" y="6" width="60" height="10" fill="${C.gold}"/>
+    <circle cx="-15" cy="11" r="3.5" fill="${C.red}"/><circle cx="0" cy="11" r="3.5" fill="${C.blue}"/><circle cx="15" cy="11" r="3.5" fill="${C.red}"/>`;
+
+  const flame = (s = 1) => g(`scale(${s})`, `<path d="M0,0 Q-15,-14 -5,-34 Q0,-20 6,-30 Q18,-12 0,0 Z" fill="${C.orange}"/>
+    <path d="M0,-2 Q-7,-9 -2,-18 Q1,-11 4,-15 Q9,-7 0,-2 Z" fill="${C.yellow}" stroke-width="1.5"/>`);
+
+  const grill = () => {
+    let s = `<rect x="-60" y="-36" width="120" height="72" fill="none" stroke="${L}" stroke-width="11"/>
+      <rect x="-60" y="-36" width="120" height="72" fill="none" stroke="${C.iron}" stroke-width="5"/>`;
+    for (let x = -42; x <= 42; x += 14) s += lineL(x, -36, x, 36, C.iron, 3);
+    s += lineL(60, 0, 98, 0, C.iron, 4) + `<circle cx="104" cy="0" r="7" fill="none" stroke-width="6"/><circle cx="104" cy="0" r="7" fill="none" stroke="${C.iron}" stroke-width="2.5"/>`;
+    s += lineL(-56, 36, -66, 60, C.iron, 4) + lineL(56, 36, 66, 60, C.iron, 4);
+    return s;
+  };
+
+  const saw = () => {
+    let teeth = "";
+    for (let x = 40; x >= -56; x -= 8) teeth += ` ${x},10 ${x - 4},17`;
+    return `<polygon points="-56,-14 40,-9 40,10${teeth} -56,10" fill="${C.silver}"/>
+      <path d="M38,-14 L74,-16 Q84,0 74,18 L38,16 Z" fill="${C.wood}"/>
+      <ellipse cx="60" cy="1" rx="8" ry="7" fill="${L}"/>`;
+  };
+  const tsquare = () => `<path d="M0,0 L0,-84 L13,-84 L13,-13 L66,-13 L66,0 Z" fill="${C.wood}"/>` +
+    [-70, -56, -42, -28].map(y => `<line x1="0" y1="${y}" x2="6" y2="${y}" stroke-width="1.5"/>`).join("");
+
+  const scales = () => lineL(0, 52, 0, -46, C.gold, 5) + lineL(-64, -38, 64, -38, C.gold, 5) +
+    `<circle cx="0" cy="-50" r="7" fill="${C.gold}"/><path d="M-26,62 Q0,44 26,62 Z" fill="${C.gold}"/>` +
+    [[-64, 0], [64, 0]].map(([x]) =>
+      `<line x1="${x}" y1="-38" x2="${x - 22}" y2="14" stroke-width="2"/><line x1="${x}" y1="-38" x2="${x + 22}" y2="14" stroke-width="2"/>
+       <path d="M${x - 26},14 Q${x},38 ${x + 26},14 Z" fill="${C.gold}"/>`).join("");
+
+  const wing = () => {
+    let s = "";
+    const cols = [C.white, "#bcd3ee", C.white, "#bcd3ee", C.white, "#bcd3ee"];
+    for (let i = 0; i < 6; i++) s += `<ellipse cx="0" cy="-58" rx="13" ry="60" transform="rotate(${-48 - i * 13})" fill="${cols[i]}"/>`;
+    return s;
+  };
+
+  const chalice = () => pathL("M0,-38 Q-18,-58 2,-72 Q22,-86 4,-102", C.green, 6) +
+    `<ellipse cx="2" cy="-106" rx="9" ry="6" fill="${C.green}"/><circle cx="5" cy="-108" r="1.5" fill="${L}"/>
+     <path d="M-30,-40 L30,-40 Q28,2 0,8 Q-28,2 -30,-40 Z" fill="${C.gold}"/>
+     <rect x="-5" y="8" width="10" height="34" fill="${C.gold}"/><ellipse cx="0" cy="24" rx="10" ry="6" fill="${C.gold}"/>
+     <path d="M-30,52 Q0,32 30,52 Z" fill="${C.gold}"/>`;
+
+  const bird = (c, beak = C.orange, eye = L) => `<polygon points="-22,2 -44,-8 -42,12" fill="${c}"/>
+    <ellipse cx="0" cy="0" rx="24" ry="14" fill="${c}"/><circle cx="20" cy="-11" r="11" fill="${c}"/>
+    <polygon points="29,-13 42,-9 29,-6" fill="${beak}"/>
+    <path d="M-14,-4 Q4,-26 16,-4 Q2,5 -14,-4 Z" fill="${c}"/><circle cx="23" cy="-13" r="2" fill="${eye}"/>`;
+
+  const rooster = () => `<ellipse cx="-34" cy="-14" rx="8" ry="22" transform="rotate(-30 -34 -14)" fill="${C.dkgreen}"/>
+    <ellipse cx="-38" cy="-4" rx="7" ry="20" transform="rotate(-55 -38 -4)" fill="${C.red}"/>` +
+    bird(C.orange, C.gold) +
+    `<circle cx="16" cy="-23" r="4.5" fill="${C.red}"/><circle cx="22" cy="-24" r="4.5" fill="${C.red}"/><circle cx="27" cy="-20" r="4" fill="${C.red}"/>
+     <ellipse cx="28" cy="-2" rx="3.5" ry="6" fill="${C.red}"/>` +
+    lineL(-4, 13, -6, 30, C.gold, 2) + lineL(6, 13, 8, 30, C.gold, 2);
+
+  const tau = () => `<rect x="-8" y="-58" width="16" height="128" fill="${C.brown}"/><rect x="-50" y="-70" width="100" height="18" fill="${C.brown}"/>`;
+  const cord = () => pathL("M-66,0 Q-33,-16 0,0 T66,0", "#eadcbc", 5) +
+    [[-33, -8], [0, 0], [33, 8]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="7" fill="#eadcbc"/>`).join("") +
+    pathL("M66,0 q6,14 0,30", "#eadcbc", 5);
+
+  const dragon = () => pathL("M-90,40 Q-50,0 -10,28 T76,12", C.green, 20) +
+    `<polygon points="-90,40 -110,52 -96,30" fill="${C.green}"/>
+     <path d="M-30,18 L-50,-46 L-18,-24 L4,-60 L18,8 Z" fill="${C.dkgreen}"/>
+     <ellipse cx="86" cy="6" rx="20" ry="13" fill="${C.green}"/>
+     <polygon points="96,6 114,-4 112,16" fill="${C.red}"/><circle cx="84" cy="0" r="3.5" fill="${C.yellow}"/>` +
+    [-58, -36, 20, 44].map(x => `<polygon points="${x - 6},${x < 0 ? 8 : 10} ${x},${x < 0 ? -6 : -6} ${x + 6},${x < 0 ? 10 : 12}" fill="${C.dkgreen}"/>`).join("");
+  const lance = () => lineL(0, 0, 150, 92, C.brown, 5) + `<polygon points="146,82 172,106 154,98 158,92" fill="${C.silver}"/>`;
+  const shield = () => `<path d="M-32,-32 L32,-32 L32,0 Q32,32 0,48 Q-32,32 -32,0 Z" fill="${C.white}"/>
+    <rect x="-6" y="-32" width="12" height="76" fill="${C.red}" stroke="none"/><rect x="-32" y="-10" width="64" height="12" fill="${C.red}" stroke="none"/>
+    <path d="M-32,-32 L32,-32 L32,0 Q32,32 0,48 Q-32,32 -32,0 Z" fill="none"/>`;
+
+  const cross = (c, h, w, t = 14) => `<rect x="${-t / 2}" y="${-h / 2}" width="${t}" height="${h}" fill="${c}"/>
+    <rect x="${-w / 2}" y="${-h / 2 + h * 0.22}" width="${w}" height="${t}" fill="${c}"/>`;
+
+  const tower = () => {
+    let s = `<rect x="-32" y="-78" width="64" height="150" fill="${C.stone}"/>`;
+    for (let i = 0; i < 4; i++) s += `<rect x="${-32 + i * 18}" y="-92" width="10" height="16" fill="${C.stone}"/>`;
+    s += `<rect x="-36" y="-80" width="72" height="8" fill="${C.stone}"/>`;
+    [-16, 0, 16].forEach(x => s += `<path d="M${x - 5},-20 L${x - 5},-38 Q${x},-46 ${x + 5},-38 L${x + 5},-20 Z" fill="${C.yellow}"/>`);
+    s += `<path d="M-10,72 L-10,48 Q0,36 10,48 L10,72 Z" fill="${C.dkbrown}"/>`;
+    [8, 28].forEach(y => s += `<line x1="-32" y1="${y}" x2="32" y2="${y}" stroke-width="1.4"/>`);
+    return s;
+  };
+  const bolt = () => `<polygon points="10,-60 -18,-4 2,-4 -12,52 26,-14 6,-14 22,-60" fill="${C.yellow}"/>`;
+
+  const lamb = () => {
+    let s = "";
+    [[-26, 22], [-12, 24], [14, 24], [26, 22]].forEach(([x, y]) => s += `<rect x="${x - 3}" y="${y - 8}" width="6" height="22" fill="${C.black}"/>`);
+    [[-26, 0], [-10, -8], [8, -8], [24, 0], [-16, 10], [4, 12], [20, 10], [-2, 2]].forEach(([x, y]) => s += `<circle cx="${x}" cy="${y}" r="14" fill="${C.white}"/>`);
+    s += `<ellipse cx="40" cy="-16" rx="13" ry="10" fill="#efe4cc"/><ellipse cx="32" cy="-24" rx="7" ry="3.5" transform="rotate(-30 32 -24)" fill="#efe4cc"/>
+      <circle cx="44" cy="-18" r="1.8" fill="${L}"/>`;
+    return s;
+  };
+  const banner = () => lineL(0, 0, 0, -132, C.gold, 3) + lineL(-10, -118, 10, -118, C.gold, 3) +
+    `<path d="M2,-112 L62,-108 L50,-96 L62,-84 L2,-88 Z" fill="${C.white}"/>
+     <rect x="24" y="-108" width="6" height="20" fill="${C.red}" stroke="none"/><rect x="16" y="-101" width="22" height="6" fill="${C.red}" stroke="none"/>`;
+  const scroll = (txt) => `<path d="M-74,0 L74,0 L66,9 L74,18 L-74,18 L-66,9 Z" fill="${C.white}"/>
+    <text x="0" y="13.5" text-anchor="middle" font-family="Georgia, serif" font-size="11" letter-spacing="1.5" fill="${L}" stroke="none">${txt}</text>`;
+
+  const monstrance = () => {
+    let rays = "";
+    for (let i = 0; i < 24; i++) {
+      const long = i % 2 === 0 ? 74 : 58;
+      rays += `<polygon points="-4,0 0,${-long} 4,0" transform="rotate(${i * 15})" fill="${C.gold}" stroke-width="2"/>`;
+    }
+    return g("translate(0,-30)", rays + `<circle r="38" fill="${C.gold}"/><circle r="24" fill="${C.white}"/>
+      <line x1="0" y1="-10" x2="0" y2="10" stroke-width="2"/><line x1="-8" y1="-3" x2="8" y2="-3" stroke-width="2"/>
+      ${g("translate(0,-86)", cross(C.gold, 22, 16, 5))}`) +
+      `<rect x="-6" y="8" width="12" height="54" fill="${C.gold}"/><ellipse cx="0" cy="32" rx="13" ry="7" fill="${C.gold}"/>
+       <path d="M-40,78 Q0,50 40,78 Z" fill="${C.gold}"/>`;
+  };
+
+  const tree = () => `<path d="M-14,90 L-10,-90 L10,-90 L14,90 Z" fill="${C.brown}"/>
+    <path d="M-10,-40 L-40,-64 L-34,-70 L-8,-52 Z" fill="${C.brown}"/><path d="M10,-10 L38,-30 L42,-22 L10,4 Z" fill="${C.brown}"/>
+    <path d="M-4,-70 q4,12 0,24 M4,20 q-4,14 0,30" fill="none" stroke-width="1.5"/>`;
+
+  // ---------- More attributes ----------
+  const heart = c => `<path d="M0,22 C-30,0 -30,-26 -12,-26 C-4,-26 0,-18 0,-14 C0,-18 4,-26 12,-26 C30,-26 30,0 0,22 Z" fill="${c}"/>`;
+  const mitre = () => `<path d="M-26,30 L-26,-8 Q-24,-38 0,-56 Q24,-38 26,-8 L26,30 Z" fill="${C.white}"/>
+    <rect x="-5" y="-50" width="10" height="80" fill="${C.gold}"/><rect x="-26" y="18" width="52" height="12" fill="${C.gold}"/>
+    <rect x="-3" y="-34" width="6" height="18" fill="${C.red}" stroke="none"/><rect x="-9" y="-28" width="18" height="6" fill="${C.red}" stroke="none"/>`;
+  const crozier = () => lineL(0, 100, 0, -56, C.gold, 5) + pathL("M0,-56 Q-2,-96 26,-92 Q46,-82 32,-62 Q20,-52 12,-66", C.gold, 5);
+  const crownThorns = (r = 30) => {
+    let s = `<circle r="${r}" fill="none" stroke-width="12"/><circle r="${r}" fill="none" stroke="${C.dkbrown}" stroke-width="6"/>`;
+    for (let i = 0; i < 16; i++) s += `<line x1="0" y1="${-r - 3}" x2="0" y2="${-r - 13}" transform="rotate(${i * 22.5})" stroke-width="2.5"/>`;
+    return s;
+  };
+  const fig = () => `<path d="M0,-12 L2,-20" fill="none" stroke-width="3"/><path d="M0,-12 Q-12,-6 -10,6 Q-6,14 0,14 Q6,14 10,6 Q12,-6 0,-12 Z" fill="#6a3a6e"/>`;
+  const axe = (len = 170) => lineL(0, 0, 0, -len, C.brown, 5) +
+    `<path d="M3,${-len + 6} L36,${-len - 12} Q44,${-len + 18} 36,${-len + 46} L3,${-len + 28} Z" fill="${C.silver}"/>
+     <polygon points="-3,${-len + 10} -20,${-len + 18} -3,${-len + 24}" fill="${C.silver}"/>`;
+  const faceMedal = () => `<circle r="38" fill="${C.gold}"/><circle r="29" fill="${C.skin}"/>
+    <path d="M-29,-2 Q-30,-30 0,-30 Q30,-30 29,-2 Q20,-20 0,-20 Q-20,-20 -29,-2 Z" fill="${C.dkbrown}"/>
+    <path d="M-20,4 Q-18,30 0,30 Q18,30 20,4 Q12,16 0,16 Q-12,16 -20,4 Z" fill="${C.dkbrown}"/>
+    <circle cx="-9" cy="-4" r="2.4" fill="${L}"/><circle cx="9" cy="-4" r="2.4" fill="${L}"/><path d="M0,-2 L-2,8 L2,8" fill="none" stroke-width="1.5"/>`;
+  const waves = (w = 90, n = 3) => {
+    let s = "";
+    for (let k = 0; k < n; k++) {
+      const y = k * 16;
+      let d = `M${-w},${y}`;
+      for (let x = -w; x < w; x += 30) d += ` q7.5,-9 15,0 t15,0`;
+      s += pathL(d, k % 2 ? "#7fb0e0" : C.blue, 4);
+    }
+    return s;
+  };
+  const scrollW = (txt, w) => `<path d="M${-w},0 L${w},0 L${w - 8},9 L${w},18 L${-w},18 L${-w + 8},9 Z" fill="${C.white}"/>
+    <text x="0" y="13.5" text-anchor="middle" font-family="Georgia, serif" font-size="11" letter-spacing="1.5" fill="${L}" stroke="none">${txt}</text>`;
+  const star8 = (r = 18) => {
+    let p = [];
+    for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8 - Math.PI / 2, rr = i % 2 ? r * .42 : r; p.push(`${(Math.cos(a) * rr).toFixed(1)},${(Math.sin(a) * rr).toFixed(1)}`); }
+    return `<polygon points="${p.join(" ")}" fill="${C.yellow}"/>`;
+  };
+  const rosary = (rx = 34, ry = 40, c = C.dkbrown) => {
+    let s = `<ellipse rx="${rx}" ry="${ry}" fill="none" stroke-width="1.5"/>`;
+    for (let i = 0; i < 22; i++) { const a = i / 22 * Math.PI * 2; s += `<circle cx="${(Math.sin(a) * rx).toFixed(1)}" cy="${(-Math.cos(a) * ry).toFixed(1)}" r="${i % 6 === 0 ? 4.5 : 3.2}" fill="${c}" stroke-width="1.5"/>`; }
+    s += `<line x1="0" y1="${ry}" x2="0" y2="${ry + 16}" stroke-width="1.5"/>` + g(`translate(0,${ry + 28})`, cross(C.gold, 24, 16, 5));
+    return s;
+  };
+  const torch = () => lineL(0, 0, 34, -26, C.brown, 4) + g("translate(36,-26) rotate(40)", flame(.8));
+  const dog = (item = "") => `<path d="M-30,-4 Q-46,-20 -40,-30" fill="none" stroke-width="8"/><path d="M-30,-4 Q-46,-20 -40,-30" fill="none" stroke="${C.white}" stroke-width="4"/>` +
+    [[-24, 10], [-12, 12], [12, 12], [24, 10]].map(([x, y]) => `<rect x="${x - 3.5}" y="${y}" width="7" height="20" fill="${C.white}"/>`).join("") +
+    `<ellipse cx="0" cy="0" rx="32" ry="15" fill="${C.white}"/><ellipse cx="-10" cy="-4" rx="9" ry="6" fill="${C.black}"/>
+     <circle cx="32" cy="-14" r="13" fill="${C.white}"/><ellipse cx="45" cy="-9" rx="10" ry="6.5" fill="${C.white}"/>
+     <ellipse cx="26" cy="-12" rx="5" ry="10" transform="rotate(15 26 -12)" fill="${C.black}"/>
+     <circle cx="36" cy="-17" r="2" fill="${L}"/><circle cx="54" cy="-10" r="2.6" fill="${L}"/>` + g("translate(52,-4)", item);
+  const bread = () => `<ellipse cx="6" cy="0" rx="12" ry="7" fill="${C.wood}"/><path d="M0,-3 l3,5 M6,-4 l3,5" fill="none" stroke-width="1.4"/>`;
+  const skull = () => `<path d="M-22,4 Q-26,-28 0,-30 Q26,-28 22,4 L15,9 L15,20 L-15,20 L-15,9 Z" fill="#efe6d2"/>
+    <ellipse cx="-9" cy="-4" rx="6" ry="7" fill="${L}"/><ellipse cx="9" cy="-4" rx="6" ry="7" fill="${L}"/>
+    <polygon points="0,4 -3,11 3,11" fill="${L}"/><path d="M-9,14 V20 M-3,14 V20 M3,14 V20 M9,14 V20" fill="none" stroke-width="1.5"/>`;
+  const galero = () => [-1, 1].map(sx => {
+      let t = ""; for (let k = 0; k < 4; k++) t += `<line x1="${sx * (50 - k * 4)}" y1="${4 + k * 14}" x2="${sx * (52 - k * 4)}" y2="${18 + k * 14}" stroke="${C.red}" stroke-width="3"/>`;
+      return pathL(`M${sx * 46},2 Q${sx * 58},30 ${sx * 50},62`, C.red, 2) + t;
+    }).join("") +
+    `<ellipse cx="0" cy="0" rx="60" ry="13" fill="${C.red}"/><path d="M-28,-2 Q-26,-32 0,-32 Q26,-32 28,-2 Z" fill="${C.red}"/>`;
+  const shamrock = () => pathL("M0,0 Q6,30 -4,56", C.dkgreen, 4) +
+    [0, 120, 240].map(a => g(`rotate(${a}) translate(0,-20)`, heart(C.green))).join("");
+  const snake = () => pathL("M-60,8 Q-40,-14 -20,8 T20,8 T56,2", C.green, 7) +
+    `<ellipse cx="62" cy="0" rx="10" ry="7" fill="${C.green}"/><circle cx="64" cy="-2" r="1.6" fill="${L}"/><path d="M72,0 l8,-3 M72,0 l8,3" fill="none" stroke="${C.red}" stroke-width="1.6"/>`;
+  const goldBalls = () => [[-22, 14], [22, 14], [0, -22]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="17" fill="${C.gold}"/><circle cx="${x - 5}" cy="${y - 6}" r="4" fill="#fff3c4" stroke="none"/>`).join("");
+  const organ = () => {
+    let s = `<rect x="-58" y="0" width="116" height="56" fill="${C.wood}"/><rect x="-46" y="14" width="92" height="12" fill="${C.dkbrown}"/>`;
+    for (let i = 0; i < 9; i++) {
+      const x = -50 + i * 11.5, h = 40 + (4 - Math.abs(i - 4)) * 16;
+      s += `<rect x="${x}" y="${-h}" width="9" height="${h}" fill="${C.silver}"/><rect x="${x + 2.5}" y="${-h + 10}" width="4" height="5" fill="${L}"/>`;
+    }
+    return s;
+  };
+  const pincers = () => pathL("M-34,70 Q-24,10 8,-40", C.iron, 5) + pathL("M34,70 Q24,10 -8,-40", C.iron, 5) +
+    `<circle cx="0" cy="6" r="5" fill="${C.iron}"/>` +
+    g("translate(0,-52)", `<path d="M-10,0 Q-12,-20 0,-18 Q12,-20 10,0 L6,16 L2,5 L-2,5 L-6,16 Z" fill="${C.white}"/>`);
+  const candle = () => `<rect x="-6" y="-62" width="12" height="110" fill="${C.white}"/>` + g("translate(0,-62)", flame(.75));
+  const pilgrimHat = () => `<ellipse cx="0" cy="0" rx="56" ry="14" fill="${C.brown}"/><path d="M-26,-2 Q-24,-30 0,-32 Q24,-30 26,-2 Z" fill="${C.brown}"/>` +
+    g("translate(0,-12) scale(.35)", `<path d="M0,30 L-40,-10 Q0,-50 40,-10 Z" fill="#f3d2b2"/>`);
+  const shell = () => {
+    let s = `<rect x="-12" y="26" width="24" height="10" fill="#f3d2b2"/><path d="M0,32 L-44,-10 Q0,-56 44,-10 Z" fill="#f3d2b2"/>`;
+    for (let i = 1; i < 6; i++) { const a = -Math.PI + i * Math.PI / 6; s += `<line x1="0" y1="30" x2="${(Math.cos(a) * 40).toFixed(1)}" y2="${(-12 + Math.sin(a) * 34).toFixed(1)}" stroke-width="1.8"/>`; }
+    return s;
+  };
+  const pilgrimStaff = () => lineL(0, 100, 0, -100, C.brown, 5) +
+    `<circle cx="10" cy="-62" r="9" fill="${C.orange}"/><circle cx="10" cy="-44" r="13" fill="${C.orange}"/><line x1="3" y1="-80" x2="8" y2="-71" stroke-width="2"/>`;
+  const moneyBag = () => `<path d="M-30,32 Q-42,-6 -12,-16 L-16,-30 L16,-30 L12,-16 Q42,-6 30,32 Z" fill="${C.wood}"/>
+    <path d="M-14,-18 L14,-18" fill="none" stroke-width="4"/><text x="0" y="16" text-anchor="middle" font-family="Georgia, serif" font-size="22" font-weight="700" fill="${L}" stroke="none">$</text>`;
+  const coins = () => [[0, 0], [16, 4], [8, -8], [30, 10]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="10" ry="6" fill="${C.gold}"/>`).join("");
+  const lionHead = () => {
+    let p = [];
+    for (let i = 0; i < 28; i++) { const a = i * Math.PI / 14, r = i % 2 ? 31 : 44; p.push(`${(Math.cos(a) * r).toFixed(1)},${(Math.sin(a) * r).toFixed(1)}`); }
+    return `<polygon points="${p.join(" ")}" fill="#c9802c"/><circle r="25" fill="#ecb760"/>
+      <circle cx="-9" cy="-5" r="2.6" fill="${L}"/><circle cx="9" cy="-5" r="2.6" fill="${L}"/>
+      <polygon points="-6,5 6,5 0,12" fill="${C.dkbrown}"/><path d="M0,12 Q-6,18 -11,15 M0,12 Q6,18 11,15" fill="none" stroke-width="2"/>`;
+  };
+  const oxHead = () => pathL("M-16,-20 Q-40,-26 -40,-46", "#f1e6c8", 6) + pathL("M16,-20 Q40,-26 40,-46", "#f1e6c8", 6) +
+    `<ellipse cx="-26" cy="-12" rx="11" ry="6" fill="${C.brown}"/><ellipse cx="26" cy="-12" rx="11" ry="6" fill="${C.brown}"/>
+     <path d="M-20,-24 L20,-24 Q24,8 14,30 L-14,30 Q-24,8 -20,-24 Z" fill="${C.brown}"/>
+     <ellipse cx="0" cy="24" rx="16" ry="11" fill="#d9a77a"/><circle cx="-5" cy="24" r="2" fill="${L}"/><circle cx="5" cy="24" r="2" fill="${L}"/>
+     <circle cx="-9" cy="-6" r="2.6" fill="${L}"/><circle cx="9" cy="-6" r="2.6" fill="${L}"/>`;
+  const iconPaint = () => `<rect x="-26" y="-34" width="52" height="68" fill="${C.gold}"/><rect x="-19" y="-27" width="38" height="54" fill="#f2d48a"/>
+    <circle cx="0" cy="-10" r="12" fill="${C.gold}"/><path d="M-17,27 Q-16,-6 0,-6 Q16,-6 17,27 Z" fill="${C.blue}"/><circle cx="0" cy="-10" r="7" fill="${C.skin}"/>`;
+  const eagle = () => `<path d="M-6,-6 L-78,-40 L-70,-24 L-82,-18 L-66,-6 L-74,4 L-54,6 L-20,14 Z" fill="#a8742f"/>
+    <path d="M6,-6 L78,-40 L70,-24 L82,-18 L66,-6 L74,4 L54,6 L20,14 Z" fill="#a8742f"/>
+    <polygon points="-12,30 0,52 12,30" fill="#a8742f"/><ellipse cx="0" cy="8" rx="18" ry="28" fill="#c88c3a"/>
+    <circle cx="0" cy="-28" r="13" fill="${C.white}"/><path d="M6,-30 Q22,-28 16,-16 Q14,-22 6,-22 Z" fill="${C.yellow}"/><circle cx="3" cy="-31" r="2" fill="${L}"/>`;
+  const xCross = () => `<rect x="-9" y="-96" width="18" height="192" transform="rotate(42)" fill="${C.wood}"/><rect x="-9" y="-96" width="18" height="192" transform="rotate(-42)" fill="${C.wood}"/>`;
+  const fish = () => `<polygon points="-30,0 -50,-16 -50,16" fill="#8fb3cf"/><ellipse cx="0" cy="0" rx="34" ry="15" fill="#b9d3e6"/>
+    <circle cx="20" cy="-3" r="2.6" fill="${L}"/><path d="M8,-12 Q14,0 8,12" fill="none" stroke-width="1.6"/>`;
+  const stones = () => [[-38, 14, 18], [-6, 16, 22], [30, 14, 18], [-22, -10, 16], [14, -12, 18], [-2, -32, 14]].map(([x, y, r]) =>
+    `<path d="M${x - r},${y} L${x - r * .5},${y - r * .8} L${x + r * .6},${y - r * .7} L${x + r},${y + r * .1} L${x + r * .4},${y + r * .8} L${x - r * .6},${y + r * .7} Z" fill="${["#a7a9ad", "#8d9094", "#bfc1c4"][Math.abs(x) % 3]}"/>`).join("");
+  const cloakHalf = () => `<path d="M-6,-50 Q-36,-52 -54,-34 Q-62,10 -48,52 Q-26,58 -4,50 Z" fill="${C.red}"/>
+    <path d="M-30,-40 Q-38,0 -30,46 M-16,-44 Q-20,0 -16,48" fill="none" stroke-width="1.6"/>`;
+  const goose = () => `<polygon points="-26,0 -42,-10 -38,10" fill="${C.white}"/><ellipse cx="0" cy="4" rx="28" ry="15" fill="${C.white}"/>` +
+    pathL("M18,-2 Q30,-20 22,-40", C.white, 7) + `<circle cx="24" cy="-42" r="9" fill="${C.white}"/><polygon points="31,-44 46,-40 31,-37" fill="${C.orange}"/><circle cx="26" cy="-45" r="1.8" fill="${L}"/>
+    <path d="M-10,0 Q4,-10 14,2" fill="none" stroke-width="2"/>`;
+  const beehive = () => {
+    let s = "";
+    [[0, 44, 52], [0, 26, 50], [0, 8, 44], [0, -10, 36], [0, -26, 26], [0, -40, 14]].forEach(([x, y, w]) => s += `<rect x="${-w}" y="${y - 10}" width="${w * 2}" height="20" rx="10" fill="#d9b25a"/>`);
+    return s + `<path d="M-10,54 L-10,38 Q0,28 10,38 L10,54 Z" fill="${L}"/>`;
+  };
+  const bee = () => `<ellipse cx="-3" cy="-7" rx="6" ry="4" fill="${C.white}" stroke-width="1.5"/><ellipse cx="4" cy="-7" rx="6" ry="4" fill="${C.white}" stroke-width="1.5"/>
+    <ellipse rx="9" ry="6" fill="${C.yellow}" stroke-width="2"/><path d="M-2,-6 V6 M4,-5 V5" fill="none" stroke-width="2.4"/>`;
+  const tiara = () => `<path d="M-30,44 Q-36,-8 0,-48 Q36,-8 30,44 Z" fill="${C.white}"/>` +
+    [[36, 31], [10, 27], [-16, 20]].map(([y, w]) => `<path d="M${-w},${y} L${-w},${y - 8} L${-w / 2},${y - 3} L0,${y - 12} L${w / 2},${y - 3} L${w},${y - 8} L${w},${y} Z" fill="${C.gold}"/>`).join("") +
+    g("translate(0,-58)", cross(C.gold, 22, 16, 5));
+  const dove = () => bird(C.white, C.orange) + `<path d="M-14,-4 Q-4,-34 16,-30 Q8,-14 10,-4 Z" fill="${C.white}"/>`;
+  const nail = () => `<polygon points="-3,-36 3,-36 1.5,34 0,42 -1.5,34" fill="${C.iron}"/><rect x="-8" y="-42" width="16" height="7" rx="2" fill="${C.iron}"/>`;
+  const glovedHand = () => [[-17, 36], [-7, 42], [3, 40], [13, 34]].map(([x, h]) => `<rect x="${x - 4.5}" y="${-h}" width="9" height="${h}" rx="4.5" fill="${C.skin}"/>`).join("") +
+    `<ellipse cx="-26" cy="10" rx="6" ry="14" transform="rotate(-35 -26 10)" fill="${C.skin}"/>
+     <path d="M-22,-12 L18,-12 Q22,20 14,40 L-16,40 Q-24,20 -22,-12 Z" fill="${C.dkbrown}"/>
+     <rect x="-18" y="38" width="34" height="12" fill="${C.dkbrown}"/>`;
+  const fleur = (c = C.gold) => `<path d="M0,-30 Q13,-12 0,12 Q-13,-12 0,-30 Z" fill="${c}"/>
+    <path d="M-3,6 Q-28,-2 -22,-22 Q-12,-10 -4,-2 Z" fill="${c}"/><path d="M3,6 Q28,-2 22,-22 Q12,-10 4,-2 Z" fill="${c}"/>
+    <rect x="-14" y="4" width="28" height="7" fill="${c}"/><path d="M-6,11 L-8,24 L0,18 L8,24 L6,11 Z" fill="${c}"/>`;
+  const helmet = () => `<ellipse cx="0" cy="-42" rx="9" ry="16" fill="${C.red}"/><path d="M-26,26 L-26,-8 Q-26,-36 0,-38 Q26,-36 26,-8 L26,26 Z" fill="${C.silver}"/>
+    <rect x="-20" y="-6" width="40" height="5" fill="${L}"/><path d="M0,-36 V24" fill="none" stroke-width="2"/>
+    <circle cx="-12" cy="10" r="1.8" fill="${L}"/><circle cx="-12" cy="17" r="1.8" fill="${L}"/><circle cx="12" cy="10" r="1.8" fill="${L}"/><circle cx="12" cy="17" r="1.8" fill="${L}"/>`;
+  const jar = () => `<ellipse cx="0" cy="-34" rx="14" ry="5" fill="${C.wood}"/><path d="M-17,-30 L17,-30 Q10,0 17,30 L-17,30 Q-10,0 -17,-30 Z" fill="${C.white}"/>
+    <rect x="-14" y="-10" width="28" height="18" fill="${C.blue}"/><path d="M-6,-1 L6,-1 M0,-7 V5" fill="none" stroke="${C.white}" stroke-width="2.4"/>`;
+  const mortar = () => lineL(-6, -14, 26, -54, C.wood, 6) + `<path d="M-32,-12 L32,-12 Q30,24 0,26 Q-30,24 -32,-12 Z" fill="#c08a4a"/><rect x="-16" y="24" width="32" height="8" fill="#c08a4a"/>`;
+  const shoe = () => `<path d="M-32,10 L-32,-8 Q-30,-16 -20,-16 L-8,-8 Q14,-6 30,4 Q34,10 30,12 Z" fill="${C.brown}"/><path d="M-32,12 L30,12" fill="none" stroke-width="4"/>`;
+  const church = () => `<rect x="-40" y="-6" width="56" height="44" fill="${C.stone}"/><polygon points="-46,-4 -12,-34 22,-4" fill="${C.red}"/>
+    <rect x="16" y="-46" width="24" height="84" fill="${C.stone}"/><polygon points="12,-44 28,-80 44,-44" fill="${C.red}"/>
+    <path d="M-20,38 L-20,20 Q-12,12 -4,20 L-4,38 Z" fill="${C.dkbrown}"/><path d="M24,-20 L24,-30 Q28,-35 32,-30 L32,-20 Z" fill="${C.yellow}"/>` +
+    g("translate(28,-90)", cross(C.gold, 18, 12, 4));
+  const roseCrown = () => `<circle r="32" fill="none" stroke-width="10"/><circle r="32" fill="none" stroke="${C.green}" stroke-width="5"/>` +
+    Array.from({ length: 9 }, (_, i) => { const a = i / 9 * Math.PI * 2; return g(`translate(${(Math.cos(a) * 32).toFixed(1)},${(Math.sin(a) * 32).toFixed(1)}) scale(.62)`, `<circle r="13" fill="${C.red}"/><path d="M-6,-1 Q0,-9 6,-1 Q4,6 -3,4" fill="none" stroke-width="2"/>`); }).join("");
+  const anchor = () => `<circle cx="0" cy="-62" r="10" fill="none" stroke-width="10"/><circle cx="0" cy="-62" r="10" fill="none" stroke="${C.iron}" stroke-width="4"/>` +
+    lineL(0, -52, 0, 46, C.iron, 7) + lineL(-28, -34, 28, -34, C.iron, 6) + pathL("M-44,20 Q-40,52 0,52 Q40,52 44,20", C.iron, 7) +
+    `<polygon points="-52,26 -44,6 -34,26" fill="${C.iron}"/><polygon points="52,26 44,6 34,26" fill="${C.iron}"/>`;
+  const crab = () => [-1, 1].map(s => [0, 1, 2].map(i => pathL(`M${s * 16},${4 + i * 6} Q${s * 40},${i * 10} ${s * 48},${20 + i * 10}`, "#d8573a", 3)).join("") +
+      pathL(`M${s * 18},-6 Q${s * 34},-24 ${s * 22},-40`, "#d8573a", 5) +
+      `<path d="M${s * 22},-40 Q${s * 34},-56 ${s * 18},-64 L${s * 14},-50 Q${s * 22},-48 ${s * 14},-42 Z" fill="#d8573a"/>`).join("") +
+    `<ellipse cx="0" cy="6" rx="28" ry="18" fill="#d8573a"/><circle cx="-8" cy="-12" r="3" fill="${L}"/><circle cx="8" cy="-12" r="3" fill="${L}"/>`;
+  const mercyRays = () => `<polygon points="0,0 -58,128 -8,128" fill="#eef2fb"/><polygon points="0,0 8,128 58,128" fill="${C.red}"/>` +
+    `<circle r="14" fill="${C.gold}"/>` + g("translate(0,2) scale(.42)", heart(C.red));
+  const grotto = () => `<path d="M-74,62 Q-84,-46 0,-76 Q84,-46 74,62 Z" fill="#9aa0a6"/>
+    <path d="M-40,62 Q-44,-4 -4,-20 Q30,-8 40,62 Z" fill="#4a4f55"/>
+    <path d="M30,-56 Q40,-66 52,-54 L52,-24 L30,-24 Z" fill="#4a4f55"/>` +
+    g("translate(41,-26)", `<path d="M-7,0 Q-8,-22 0,-22 Q8,-22 7,0 Z" fill="${C.white}"/><circle cx="0" cy="-24" r="4" fill="${C.skin}"/><line x1="-6" y1="-10" x2="6" y2="-10" stroke="${C.blue}" stroke-width="2.5"/>`);
+  const quill = () => `<path d="M0,60 Q-8,0 18,-64 Q30,-20 0,60 Z" fill="${C.white}"/><path d="M0,60 Q8,0 18,-64" fill="none" stroke-width="1.6"/>` +
+    [-40, -24, -8, 8, 24].map(y => `<path d="M${6 + (-y) * .12},${y} l-10,8" fill="none" stroke-width="1.2"/>`).join("") +
+    `<polygon points="-2,58 2,58 0,74" fill="${L}"/>`;
+
+  // ---------- Attributes, third set ----------
+  const crownC = c => `<polygon points="-30,12 -30,-10 -17,2 0,-20 17,2 30,-10 30,12" fill="${c}"/>
+    <rect x="-30" y="6" width="60" height="10" fill="${c}"/><circle cx="0" cy="11" r="3.5" fill="${C.gold}"/>`;
+  const pig = () => pathL("M-34,-4 q-10,-6 -6,-14 q6,-2 4,6", "#f2a7b0", 2.5) +
+    [[-22, 10], [-10, 12], [12, 12], [24, 10]].map(([x, y]) => `<rect x="${x - 4}" y="${y}" width="8" height="18" fill="#e891a0"/>`).join("") +
+    `<ellipse cx="0" cy="0" rx="36" ry="20" fill="#f2a7b0"/><circle cx="34" cy="-8" r="15" fill="#f2a7b0"/>
+     <polygon points="26,-20 32,-34 38,-20" fill="#e891a0"/><ellipse cx="48" cy="-4" rx="7" ry="8" fill="#e891a0"/>
+     <circle cx="46" cy="-6" r="1.5" fill="${L}"/><circle cx="50" cy="-2" r="1.5" fill="${L}"/><circle cx="36" cy="-12" r="2" fill="${L}"/>`;
+  const bell = () => `<rect x="-6" y="-38" width="12" height="12" rx="3" fill="${C.gold}"/>
+    <path d="M-24,20 Q-24,-24 0,-28 Q24,-24 24,20 L30,26 L-30,26 Z" fill="${C.gold}"/>
+    <path d="M-14,-10 Q-16,6 -16,20" fill="none" stroke="#fff3c4" stroke-width="3"/><circle cx="0" cy="31" r="6" fill="${C.gold}"/>`;
+  const sari = () => `<path d="M-52,-44 Q0,-60 52,-44 L48,50 Q0,40 -48,50 Z" fill="${C.white}"/>
+    <path d="M-40,-40 Q-44,0 -38,44 M-12,-50 Q-16,0 -12,40 M18,-50 Q20,0 16,40" fill="none" stroke-width="1.3"/>` +
+    [30, 38, 44].map((y, i) => `<path d="M-48,${y} Q0,${y - 10} 48,${y}" fill="none" stroke="#3d74c4" stroke-width="${i ? 3 : 6}"/>`).join("");
+  const stripedCloth = () => {
+    let s = `<rect x="-40" y="-34" width="80" height="68" fill="#d9dde2"/>`;
+    for (let x = -32; x < 40; x += 16) s += `<rect x="${x}" y="-34" width="8" height="68" fill="#5c6f8c" stroke="none"/>`;
+    return s + `<rect x="-40" y="-34" width="80" height="68" fill="none"/><rect x="-28" y="-20" width="42" height="16" fill="${C.white}"/>
+      <text x="-7" y="-8" text-anchor="middle" font-family="Georgia, serif" font-size="11" fill="${L}" stroke="none">16670</text>`;
+  };
+  const trumpet = () => pathL("M-70,14 L44,-8", C.gold, 7) + `<rect x="-78" y="10" width="10" height="8" fill="${C.gold}"/>
+    <path d="M40,-12 L80,-38 Q90,-8 80,22 L42,-2 Z" fill="${C.gold}"/><path d="M80,-38 Q90,-8 80,22" fill="none" stroke="#fff3c4" stroke-width="2"/>
+    <path d="M-20,6 L-6,40 L10,32 L16,46 L22,0 Z" fill="${C.red}"/>`;
+  const chainLink = (x, y, vertical) => vertical
+    ? `<rect x="${x - 4}" y="${y - 12}" width="8" height="24" rx="4" fill="none" stroke-width="8"/><rect x="${x - 4}" y="${y - 12}" width="8" height="24" rx="4" fill="none" stroke="${C.iron}" stroke-width="3.5"/>`
+    : `<ellipse cx="${x}" cy="${y}" rx="14" ry="8" fill="none" stroke-width="8"/><ellipse cx="${x}" cy="${y}" rx="14" ry="8" fill="none" stroke="${C.iron}" stroke-width="3.5"/>`;
+  const brokenChains = () => {
+    let s = "";
+    [-86, -64, -42].forEach((x, i) => s += chainLink(x, 0, i % 2 === 1));
+    [42, 64, 86].forEach((x, i) => s += chainLink(x, 0, i % 2 === 1));
+    s += pathL("M-28,-6 Q-18,-14 -12,-4", C.iron, 3.5) + pathL("M28,6 Q18,14 12,4", C.iron, 3.5);
+    return s + `<polygon points="-4,-18 2,-6 -6,-4 4,10" fill="none" stroke="${C.yellow}" stroke-width="3"/>`;
+  };
+  const anvil = () => `<path d="M-52,-20 L36,-20 Q60,-18 72,-6 L38,-4 L28,2 L28,14 L44,30 L-36,30 L-20,14 L-20,2 L-52,-6 Z" fill="${C.iron}"/>
+    <path d="M-48,-16 L34,-16" fill="none" stroke="#9aa1a6" stroke-width="2.5"/>`;
+  const hammer = () => `<rect x="-4" y="-10" width="8" height="70" rx="3" fill="${C.wood}"/><rect x="-22" y="-26" width="44" height="18" rx="3" fill="${C.iron}"/>`;
+  const horseshoe = () => pathL("M-22,-26 Q-30,22 0,24 Q30,22 22,-26", C.iron, 9) +
+    [[-22, -10], [-20, 8], [22, -10], [20, 8]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.8" fill="${L}"/>`).join("");
+  const stag = () => [-1, 1].map(s => pathL(`M${s * 10},-14 Q${s * 30},-40 ${s * 26},-74 M${s * 22},-42 Q${s * 42},-48 ${s * 50},-62 M${s * 26},-60 Q${s * 38},-66 ${s * 42},-82`, "#e6d3ad", 4)).join("") +
+    `<ellipse cx="-20" cy="-6" rx="12" ry="6" transform="rotate(-25 -20 -6)" fill="#a46a3a"/><ellipse cx="20" cy="-6" rx="12" ry="6" transform="rotate(25 20 -6)" fill="#a46a3a"/>
+     <path d="M-15,-14 L15,-14 Q18,16 7,38 L-7,38 Q-18,16 -15,-14 Z" fill="#a46a3a"/>
+     <ellipse cx="0" cy="34" rx="8" ry="6" fill="${L}"/><circle cx="-7" cy="0" r="2.4" fill="${L}"/><circle cx="7" cy="0" r="2.4" fill="${L}"/>` +
+    g("translate(0,-62)", Array.from({ length: 12 }, (_, i) => `<line x1="0" y1="0" x2="0" y2="-26" transform="rotate(${i * 30})" stroke="${C.yellow}" stroke-width="2"/>`).join("") + cross(C.gold, 34, 22, 6));
+  const viola = () => `<rect x="-5" y="-92" width="10" height="70" fill="${C.dkbrown}"/><rect x="-9" y="-108" width="18" height="20" rx="3" fill="${C.dkbrown}"/>
+    <circle cx="0" cy="-8" r="24" fill="#d49a52"/><circle cx="0" cy="30" r="32" fill="#d49a52"/>
+    <rect x="-24" y="-12" width="48" height="16" fill="#d49a52" stroke="none"/><circle cx="0" cy="10" r="9" fill="${L}"/>
+    <rect x="-12" y="38" width="24" height="6" fill="${C.dkbrown}"/>` +
+    [-4, -1.3, 1.3, 4].map(x => `<line x1="${x}" y1="-104" x2="${x}" y2="40" stroke="#f3e7cf" stroke-width=".9"/>`).join("");
+  const paperPill = () => `<rect x="-11" y="-5" width="22" height="10" rx="5" fill="${C.white}"/><path d="M-4,-5 Q-1,0 -4,5" fill="none" stroke-width="1.2"/>`;
+  const paperSheet = () => `<path d="M-38,-30 L34,-34 L38,30 L-34,34 Z" fill="${C.white}"/>` +
+    [-18, -8, 2, 12].map(y => `<path d="M-24,${y} L24,${y - 2}" fill="none" stroke-width="1.2"/>`).join("") +
+    g("translate(0,24)", cross(C.blue, 12, 9, 2.5));
+  const sand = () => `<path d="M-104,20 Q-50,6 0,14 Q50,22 104,10 L104,90 L-104,90 Z" fill="#e8cf98"/>
+    <path d="M-60,44 q8,-8 16,0 t16,0 t16,0 M-30,62 q8,-8 16,0 t16,0 t16,0 t16,0" fill="none" stroke-width="2"/>`;
+  const plough = () => lineL(-70, -40, -20, 20, C.wood, 5) + lineL(-54, -48, -6, 8, C.wood, 5) + lineL(-24, 16, 70, 16, C.wood, 6) +
+    `<path d="M-30,10 L-4,10 L-12,36 L-40,30 Z" fill="${C.iron}"/><circle cx="56" cy="28" r="14" fill="${C.wood}"/><circle cx="56" cy="28" r="4" fill="${L}"/>`;
+  const wheat = () => {
+    let s = "";
+    [-16, -8, 0, 8, 16].forEach((x, i) => {
+      s += pathL(`M${x * .3},40 Q${x * .5},0 ${x},-34`, "#d8b04a", 2);
+      for (let k = 0; k < 4; k++) s += `<ellipse cx="${x - 3}" cy="${-34 - k * 7}" rx="3" ry="6" transform="rotate(-25 ${x - 3} ${-34 - k * 7})" fill="#e7c25a" stroke-width="1.5"/><ellipse cx="${x + 3}" cy="${-34 - k * 7}" rx="3" ry="6" transform="rotate(25 ${x + 3} ${-34 - k * 7})" fill="#e7c25a" stroke-width="1.5"/>`;
+    });
+    return s + `<rect x="-12" y="8" width="24" height="8" fill="${C.red}"/>`;
+  };
+  const curvedKnife = () => `<rect x="-62" y="-6" width="32" height="14" rx="5" fill="${C.wood}"/>
+    <path d="M-30,-6 Q20,-36 62,-20 Q24,-8 -30,8 Z" fill="${C.silver}"/><path d="M-26,-2 Q16,-26 52,-20" fill="none" stroke="#fff" stroke-width="1.5"/>`;
+  const alabaster = () => `<ellipse cx="0" cy="-48" rx="7" ry="6" fill="${C.gold}"/><path d="M-20,-24 Q0,-50 20,-24 Z" fill="${C.gold}"/>
+    <rect x="-20" y="-26" width="40" height="8" fill="${C.gold}"/>
+    <path d="M-16,-18 L16,-18 Q34,4 22,34 L-22,34 Q-34,4 -16,-18 Z" fill="#f3ead8"/>
+    <rect x="-27" y="6" width="54" height="7" fill="${C.gold}"/><rect x="-18" y="34" width="36" height="9" rx="2" fill="${C.gold}"/>
+    <path d="M-12,-12 Q-20,8 -14,28" fill="none" stroke="#fff" stroke-width="3"/>`;
+  const olive = () => pathL("M-60,50 Q-10,10 50,-56", C.dkbrown, 3) +
+    [[-40, 30, -30], [-30, 18, 60], [-14, 10, -40], [-4, -6, 50], [12, -14, -40], [20, -30, 40], [34, -36, -50], [44, -50, 30]]
+      .map(([x, y, a]) => `<ellipse cx="${x}" cy="${y}" rx="15" ry="4.5" transform="rotate(${a} ${x} ${y})" fill="#94ad74"/>`).join("") +
+    [[-22, 30], [6, 6], [28, -16]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="#3f5a2a"/>`).join("");
+  const pot = () => `<path d="M-46,-6 Q-56,-6 -56,4 M46,-6 Q56,-6 56,4" fill="none" stroke-width="6"/>
+    <path d="M-40,-10 L40,-10 Q38,30 0,32 Q-38,30 -40,-10 Z" fill="#b8673a"/><rect x="-44" y="-16" width="88" height="10" rx="3" fill="#b8673a"/>
+    <path d="M-26,0 Q-28,16 -18,24" fill="none" stroke="#e3a37a" stroke-width="3"/>`;
+  const eyeRays = () => Array.from({ length: 12 }, (_, i) => `<line x1="0" y1="-20" x2="0" y2="-30" transform="rotate(${i * 30})" stroke="${C.yellow}" stroke-width="2.4"/>`).join("") +
+    `<path d="M-20,0 Q0,-16 20,0 Q0,16 -20,0 Z" fill="${C.white}"/><circle r="7" fill="#6b4a2a"/><circle r="2.6" fill="${L}"/>`;
+  const longLance = () => lineL(-80, 90, 60, -70, C.brown, 5) + `<path d="M56,-66 L84,-100 L70,-56 Z" fill="${C.silver}"/>` +
+    [[78, -84], [74, -70], [80, -60]].map(([x, y]) => `<path d="M${x},${y} q-4,7 0,10 q4,-3 0,-10 Z" fill="${C.red}" stroke-width="1.5"/>`).join("");
+  const ferula = () => lineL(0, 110, 0, -50, C.silver, 5) +
+    `<path d="M-4,-52 L-6,-94 L6,-94 L4,-52 Z" fill="${C.silver}"/><path d="M-28,-82 Q0,-72 28,-82 L28,-74 Q0,-64 -28,-74 Z" fill="${C.silver}"/>
+     <path d="M-2,-86 Q-12,-76 -8,-62 Q0,-58 4,-66 Q8,-80 -2,-86 Z" fill="${C.iron}" stroke-width="1.5"/>`;
+  const jp2Shield = () => `<path d="M-38,-40 L38,-40 L38,4 Q38,40 0,56 Q-38,40 -38,4 Z" fill="${C.blue}"/>
+    <rect x="-12" y="-40" width="10" height="70" fill="${C.gold}" stroke="none"/><rect x="-38" y="-14" width="76" height="10" fill="${C.gold}" stroke="none"/>
+    <text x="16" y="34" text-anchor="middle" font-family="Georgia, serif" font-size="26" font-weight="700" fill="${C.gold}" stroke="none">M</text>
+    <path d="M-38,-40 L38,-40 L38,4 Q38,40 0,56 Q-38,40 -38,4 Z" fill="none"/>`;
+
+  // ---------- Saints ----------
+  // Glass hue per window; each draw() lays attributes around the medallion centred at (150,235).
+  const SAINTS = [
+    { id: "pedro", name: "São Pedro", feast: "29 de junho", hue: 222,
+      why: "As duas chaves, uma de ouro e outra de prata, são as chaves do Reino dos Céus (Mt 16,19). O galo lembra as três negações antes de o galo cantar (Lc 22,60).",
+      draw: () => g("translate(150,222) rotate(-32)", key(C.gold)) + g("translate(150,222) rotate(32) scale(-1,1)", key(C.silver)) + g("translate(96,312) scale(.72)", rooster()) },
+    { id: "paulo", name: "São Paulo", feast: "29 de junho", hue: 2,
+      why: "A espada do martírio (como cidadão romano, foi decapitado em Roma) e o livro aberto das Epístolas que escreveu às comunidades.",
+      draw: () => g("translate(150,214) rotate(12)", sword()) + g("translate(150,300) scale(.95)", openBook(C.red)) },
+    { id: "francisco", name: "São Francisco de Assis", feast: "4 de outubro", hue: 28,
+      why: "O Tau, sinal que adotou como assinatura; os pássaros a quem pregou; e o cordão com três nós: pobreza, castidade e obediência.",
+      draw: () => g("translate(150,236) scale(.9)", tau()) + g("translate(88,190) scale(.8)", bird("#a9714a")) +
+        g("translate(214,176) scale(-.75,.75)", bird("#d8c4a6")) + g("translate(150,318) scale(.95)", cord()) },
+    { id: "jorge", name: "São Jorge", feast: "23 de abril", hue: 262,
+      why: "O dragão vencido sob a lança, e o escudo branco com a cruz vermelha do soldado cristão da Capadócia.",
+      draw: () => g("translate(140,268) scale(.82)", dragon()) + g("translate(78,170) scale(.82)", lance()) + g("translate(98,178) scale(.8)", shield()) },
+    { id: "teresinha", name: "Santa Teresinha do Menino Jesus", feast: "1º de outubro", hue: 335,
+      why: "O crucifixo coberto de rosas. Prometeu passar o céu fazendo o bem na terra e “fazer cair uma chuva de rosas”.",
+      draw: () => g("translate(150,236)", cross(C.brown, 190, 110, 18)) +
+        [[150, 196, 1], [128, 198, .85], [172, 198, .85], [150, 228, .9], [150, 262, .85], [92, 300, .8], [210, 290, .75], [118, 336, .65], [196, 332, .65]]
+          .map(([x, y, s]) => g(`translate(${x},${y}) scale(${s})`, rose())).join("") },
+    { id: "antonio", name: "Santo Antônio", feast: "13 de junho", hue: 198,
+      why: "O Menino Jesus sentado sobre o livro (apareceu-lhe enquanto rezava; Antônio é doutor da Igreja) e o lírio, sinal de pureza.",
+      draw: () => g("translate(132,300)", closedBook(C.dkbrown)) + g("translate(132,262)", child()) + g("translate(212,336)", lily(170)) },
+    { id: "sebastiao", name: "São Sebastião", feast: "20 de janeiro", hue: 168,
+      why: "As flechas. Soldado romano, foi amarrado a uma árvore e alvejado por ordem do imperador Diocleciano.",
+      draw: () => g("translate(150,236)", tree()) + g("translate(62,190) rotate(18) scale(.72)", arrow()) +
+        g("translate(238,236) rotate(165) scale(.72)", arrow()) + g("translate(72,300) rotate(-14) scale(.7)", arrow()) +
+        g("translate(232,166) rotate(150) scale(.66)", arrow()) },
+    { id: "luzia", name: "Santa Luzia", feast: "13 de dezembro", hue: 240,
+      why: "Os olhos sobre o prato: é a padroeira da visão, e seu nome vem de lux, luz. A palma é o sinal do martírio.",
+      draw: () => g("translate(196,330) rotate(22)", palm()) + g("translate(140,244) scale(1.05)", eyePlate()) },
+    { id: "catarina", name: "Santa Catarina de Alexandria", feast: "25 de novembro", hue: 292,
+      why: "A roda dentada que se partiu quando a tocaram, a espada com que foi morta e a coroa de princesa de Alexandria.",
+      draw: () => g("translate(150,244)", wheel(52)) + g("translate(150,160) scale(.95)", crown()) +
+        g("translate(214,318) rotate(40) scale(.55)", sword()) },
+    { id: "lourenco", name: "São Lourenço", feast: "10 de agosto", hue: 20,
+      why: "A grelha sobre o fogo onde foi martirizado. Diácono de Roma, é padroeiro dos cozinheiros.",
+      draw: () => g("translate(140,222) scale(.95)", grill()) +
+        [[96, 312], [124, 318], [152, 314], [180, 318]].map(([x, y]) => g(`translate(${x},${y})`, flame(1.15))).join("") +
+        g("translate(116,176) rotate(-60) scale(.55)", palm()) },
+    { id: "jose", name: "São José", feast: "19 de março", hue: 85,
+      why: "A vara florida, sinal de que foi escolhido como esposo de Maria, e as ferramentas do carpinteiro de Nazaré.",
+      draw: () => g("translate(112,342)", lily(196)) + g("translate(184,232) rotate(-22) scale(.9)", saw()) + g("translate(160,330) scale(.9)", tsquare()) },
+    { id: "miguel", name: "São Miguel Arcanjo", feast: "29 de setembro", hue: 185,
+      why: "As asas de arcanjo e a balança com que, segundo a tradição, pesa as almas no Juízo. Seu nome significa “Quem é como Deus?”.",
+      draw: () => g("translate(132,226) scale(.85)", wing()) + g("translate(168,226) scale(-.85,.85)", wing()) +
+        g("translate(150,250)", scales()) },
+    { id: "bento", name: "São Bento", feast: "11 de julho", hue: 208,
+      why: "O cálice envenenado do qual saiu uma serpente quando ele o abençoou, e o corvo que levou embora o pão envenenado.",
+      draw: () => g("translate(124,262)", chalice()) + g("translate(206,312) scale(-.8,.8)", bird(C.black, C.gold, C.white)) +
+        `<ellipse cx="168" cy="304" rx="9" ry="6" fill="${C.wood}"/>` },
+    { id: "barbara", name: "Santa Bárbara", feast: "4 de dezembro", hue: 350,
+      why: "A torre de três janelas (a Santíssima Trindade) onde o pai a prendeu, e o raio que o atingiu. É invocada contra tempestades.",
+      draw: () => g("translate(136,254)", tower()) + g("translate(212,190)", bolt()) + g("translate(212,336) rotate(10) scale(.75)", palm()) },
+    { id: "joao", name: "São João Batista", feast: "24 de junho", hue: 140,
+      why: "O cordeiro com a cruz e a faixa Ecce Agnus Dei, “Eis o Cordeiro de Deus” (Jo 1,29), as palavras com que apontou Jesus.",
+      draw: () => g("translate(128,276)", banner()) + g("translate(146,270) scale(1.1)", lamb()) + g("translate(150,318)", scroll("ECCE AGNUS DEI")) },
+    { id: "clara", name: "Santa Clara de Assis", feast: "11 de agosto", hue: 48,
+      why: "O ostensório com a hóstia: segundo a tradição, ela o ergueu diante dos soldados que atacavam o convento em Assis, e eles fugiram.",
+      draw: () => g("translate(150,250)", monstrance()) },
+    { id: "rita", name: "Santa Rita de Cássia", feast: "22 de maio", hue: 318,
+      why: "A coroa de espinhos: recebeu na testa a chaga de um espinho da coroa de Cristo. As rosas e os figos que floresceram em pleno inverno, pouco antes de sua morte.",
+      draw: () => g("translate(150,178)", crownThorns(32)) + g("translate(116,272) scale(1.6)", rose()) + g("translate(170,300) scale(1.25)", rose()) +
+        g("translate(204,238) scale(1.2)", fig()) + g("translate(222,270) scale(1.1)", fig()) },
+    { id: "judas", name: "São Judas Tadeu", feast: "28 de outubro", hue: 150,
+      why: "A medalha com o rosto de Jesus (a imagem de Edessa), a chama do Espírito Santo recebida em Pentecostes e o machado do martírio. É invocado nas causas impossíveis.",
+      draw: () => g("translate(132,244)", faceMedal()) + g("translate(132,184) scale(1.2)", flame()) + g("translate(206,336)", axe(178)) },
+    { id: "cristovao", name: "São Cristóvão", feast: "25 de julho", hue: 196,
+      why: "Atravessou um rio carregando o Menino Jesus nos ombros, e o cajado em que se apoiava floresceu. É padroeiro dos motoristas e viajantes.",
+      draw: () => lineL(204, 330, 196, 156, C.brown, 6) + g("translate(196,160) rotate(-30) scale(.45)", palm()) + g("translate(196,160) rotate(30) scale(.45)", palm()) +
+        g("translate(130,236) scale(1.25)", child()) + g("translate(150,300)", waves(80, 3)) },
+    { id: "expedito", name: "Santo Expedito", feast: "19 de abril", hue: 8,
+      why: "O corvo grita cras (amanhã) e ele, pisando-o, ergue a cruz com a palavra hodie (hoje): não deixar a conversão para depois. É invocado nas causas urgentes.",
+      draw: () => g("translate(112,238)", cross(C.wood, 170, 76, 14)) + g("translate(112,186)", scrollW("HODIE", 38)) +
+        g("translate(206,282) scale(-.9,.9)", bird(C.black, C.gold, C.white)) + g("translate(200,314)", scrollW("CRAS", 30)) },
+    { id: "agostinho", name: "Santo Agostinho", feast: "28 de agosto", hue: 32,
+      why: "O coração em chamas, atravessado pelo amor de Deus (“nosso coração vive inquieto enquanto não repousa em Ti”), a mitra de bispo de Hipona e o livro de doutor da Igreja.",
+      draw: () => g("translate(150,180) scale(.8)", mitre()) + g("translate(150,250) scale(1.9)", heart(C.red)) +
+        g("translate(120,212) scale(.7)", flame()) + g("translate(150,206) scale(.8)", flame()) + g("translate(180,212) scale(.7)", flame()) +
+        g("translate(92,286) rotate(-28) scale(.6)", arrow()) + g("translate(150,324) scale(.6)", openBook(C.dkbrown)) },
+    { id: "inacio", name: "Santo Inácio de Loyola", feast: "31 de julho", hue: 228,
+      why: "O monograma IHS (as primeiras letras do nome de Jesus em grego) dentro de um sol, emblema da Companhia de Jesus que fundou, e o livro dos Exercícios Espirituais.",
+      draw: () => g("translate(150,206)", Array.from({ length: 24 }, (_, i) => `<polygon points="-4,0 0,${i % 2 ? -56 : -72} 4,0" transform="rotate(${i * 15})" fill="${C.gold}" stroke-width="2"/>`).join("") +
+          `<circle r="40" fill="${C.gold}"/><text x="0" y="10" text-anchor="middle" font-family="Georgia, serif" font-size="28" font-weight="700" fill="${C.red}" stroke="none">IHS</text>` + g("translate(0,-22)", cross(C.red, 16, 12, 3))) +
+        g("translate(150,310) scale(.85)", openBook(C.dkbrown)) },
+    { id: "domingos", name: "São Domingos de Gusmão", feast: "8 de agosto", hue: 260,
+      why: "O cão com uma tocha na boca: sua mãe sonhou com ele antes do nascimento, sinal da pregação que incendiaria o mundo. A estrela e o rosário, que a tradição diz ter recebido de Maria.",
+      draw: () => g("translate(150,168) scale(1.1)", star8()) + g("translate(124,290) scale(1.1)", dog(torch())) + g("translate(206,206) scale(.7)", rosary()) },
+    { id: "jeronimo", name: "São Jerônimo", feast: "30 de setembro", hue: 12,
+      why: "O chapéu vermelho de cardeal, o livro da Vulgata (traduziu a Bíblia para o latim) e a caveira, lembrança da penitência no deserto.",
+      draw: () => g("translate(150,176)", galero()) + g("translate(150,250) scale(.9)", openBook(C.red)) + g("translate(150,312) scale(.95)", skull()) },
+    { id: "patricio", name: "São Patrício", feast: "17 de março", hue: 130,
+      why: "O trevo de três folhas com que explicava a Santíssima Trindade, o báculo de bispo e as serpentes que, segundo a lenda, expulsou da Irlanda.",
+      draw: () => g("translate(124,218) scale(1.5)", shamrock()) + g("translate(212,236)", crozier()) + g("translate(136,320) scale(.85)", snake()) },
+    { id: "nicolau", name: "São Nicolau", feast: "6 de dezembro", hue: 355,
+      why: "As três bolas de ouro: os três sacos de ouro que deu às escondidas para o dote de três moças pobres. A mitra de bispo de Mira. Sua fama de presentear inspirou o Papai Noel.",
+      draw: () => g("translate(150,196) scale(1.15)", mitre()) + g("translate(150,296) scale(1.05)", goldBalls()) },
+    { id: "cecilia", name: "Santa Cecília", feast: "22 de novembro", hue: 280,
+      why: "O órgão: diz a tradição que, enquanto tocavam os instrumentos no seu casamento, ela cantava a Deus no coração. É padroeira da música. As rosas são da coroa trazida por um anjo.",
+      draw: () => g("translate(150,264)", organ()) + g("translate(96,178) scale(1.1)", rose()) + g("translate(204,178) scale(1.1)", rose()) },
+    { id: "apolonia", name: "Santa Apolônia", feast: "9 de fevereiro", hue: 205,
+      why: "A tenaz segurando um dente: arrancaram-lhe os dentes antes do martírio em Alexandria. É padroeira dos dentistas.",
+      draw: () => g("translate(140,250) scale(1.1)", pincers()) + g("translate(214,336) rotate(12) scale(.75)", palm()) },
+    { id: "bras", name: "São Brás", feast: "3 de fevereiro", hue: 22,
+      why: "As duas velas cruzadas da bênção da garganta, dada no dia da sua festa: conta-se que salvou um menino que se engasgava com uma espinha de peixe.",
+      draw: () => g("translate(150,250) rotate(-24)", candle()) + g("translate(150,250) rotate(24)", candle()) +
+        `<path d="M150,262 L126,250 L128,276 Z M150,262 L174,250 L172,276 Z" fill="${C.red}"/><circle cx="150" cy="262" r="6" fill="${C.red}"/>` },
+    { id: "roque", name: "São Roque", feast: "16 de agosto", hue: 92,
+      why: "O cão que lhe levava pão todos os dias quando, doente de peste, se isolou num bosque, e o chapéu de peregrino. É invocado contra epidemias.",
+      draw: () => g("translate(150,180)", pilgrimHat()) + g("translate(124,290) scale(1.15)", dog(bread())) },
+    { id: "tiago", name: "São Tiago Maior", feast: "25 de julho", hue: 214,
+      why: "A concha de vieira e o cajado com cabaça dos peregrinos do Caminho de Santiago de Compostela, onde fica o seu túmulo.",
+      draw: () => g("translate(132,248) scale(1.55)", shell()) + g("translate(210,240)", pilgrimStaff()) },
+    { id: "mateus", name: "São Mateus", feast: "21 de setembro", hue: 40,
+      why: "A bolsa de moedas lembra que era cobrador de impostos antes de seguir Jesus; o livro é o Evangelho que escreveu.",
+      draw: () => g("translate(116,226) scale(1.3)", moneyBag()) + g("translate(118,300)", coins()) + g("translate(196,300) scale(.7)", openBook(C.blue)) },
+    { id: "marcos", name: "São Marcos", feast: "25 de abril", hue: 0,
+      why: "O leão alado, símbolo do seu Evangelho, que começa com a voz que clama no deserto. É padroeiro de Veneza.",
+      draw: () => g("translate(124,224) scale(.75)", wing()) + g("translate(176,224) scale(-.75,.75)", wing()) +
+        g("translate(150,220) scale(1.15)", lionHead()) + g("translate(150,314) scale(.8)", openBook(C.red)) },
+    { id: "lucas", name: "São Lucas", feast: "18 de outubro", hue: 172,
+      why: "O touro alado, símbolo do seu Evangelho, que começa com o sacrifício de Zacarias no Templo. Segundo a tradição, pintou o primeiro ícone de Maria.",
+      draw: () => g("translate(102,214) scale(.65)", wing()) + g("translate(150,214) scale(-.65,.65)", wing()) +
+        g("translate(126,222) scale(1.1)", oxHead()) + g("translate(200,296)", iconPaint()) },
+    { id: "joaoev", name: "São João Evangelista", feast: "27 de dezembro", hue: 236,
+      why: "A águia, símbolo do seu Evangelho, que voa mais alto ao falar do Verbo de Deus. O livro é o Evangelho; também escreveu o Apocalipse.",
+      draw: () => g("translate(150,214) scale(1.2)", eagle()) + g("translate(150,318) scale(.75)", openBook(C.red)) },
+    { id: "andre", name: "Santo André", feast: "30 de novembro", hue: 210,
+      why: "A cruz em forma de X onde foi martirizado na Grécia, e o peixe: era pescador, irmão de Pedro e o primeiro a seguir Jesus.",
+      draw: () => g("translate(150,226) scale(.85)", xCross()) + g("translate(150,316)", fish()) },
+    { id: "estevao", name: "Santo Estêvão", feast: "26 de dezembro", hue: 345,
+      why: "As pedras: foi o primeiro mártir, apedrejado em Jerusalém (At 7). A palma do martírio e o livro dos Evangelhos, que proclamava como diácono.",
+      draw: () => g("translate(150,302) scale(1.1)", stones()) + g("translate(110,262) rotate(-18) scale(.85)", palm()) + g("translate(196,206) scale(.6)", openBook(C.red)) },
+    { id: "martinho", name: "São Martinho de Tours", feast: "11 de novembro", hue: 46,
+      why: "A capa cortada ao meio com a espada para dividi-la com um mendigo no frio. O ganso lembra a lenda de que denunciou seu esconderijo quando quiseram fazê-lo bispo.",
+      draw: () => g("translate(140,232)", cloakHalf()) + g("translate(160,232) scale(-1,1)", cloakHalf()) +
+        g("translate(150,226) rotate(-35) scale(.8)", sword()) + g("translate(212,326) scale(.7)", goose()) },
+    { id: "ambrosio", name: "Santo Ambrósio", feast: "7 de dezembro", hue: 28,
+      why: "A colmeia e as abelhas: um enxame pousou em sua boca quando era bebê, sinal de que seria um pregador de palavras doces como mel. Foi bispo de Milão.",
+      draw: () => g("translate(132,262)", beehive()) + g("translate(206,176) scale(.7)", mitre()) +
+        [[200, 248], [214, 290], [86, 196], [184, 316]].map(([x, y]) => g(`translate(${x},${y})`, bee())).join("") },
+    { id: "gregorio", name: "São Gregório Magno", feast: "3 de setembro", hue: 224,
+      why: "A tiara papal e a pomba do Espírito Santo, que lhe soprava ao ouvido o que escrever. O canto gregoriano leva o seu nome.",
+      draw: () => g("translate(132,262) scale(1.15)", tiara()) + g("translate(210,190) scale(-.85,.85)", dove()) },
+    { id: "helena", name: "Santa Helena", feast: "18 de agosto", hue: 300,
+      why: "A Santa Cruz que encontrou em Jerusalém, os cravos da crucificação e a coroa de imperatriz, mãe de Constantino.",
+      draw: () => g("translate(132,238)", cross(C.wood, 200, 104, 16)) + g("translate(132,330) scale(.9)", crown()) +
+        g("translate(200,214) rotate(18)", nail()) + g("translate(212,272) rotate(-14)", nail()) + g("translate(196,326) rotate(70)", nail()) },
+    { id: "pio", name: "São Pio de Pietrelcina", feast: "23 de setembro", hue: 24,
+      why: "As meias-luvas que escondiam os estigmas, as chagas de Cristo que carregou nas mãos por 50 anos, e o terço, que chamava de sua arma.",
+      draw: () => g("translate(132,232) scale(1.5)", glovedHand()) + g("translate(208,240) scale(.8)", rosary()) },
+    { id: "joana", name: "Santa Joana d’Arc", feast: "30 de maio", hue: 218,
+      why: "O estandarte com flores-de-lis da França, que levava nas batalhas, e o elmo da armadura com que libertou a cidade de Orléans.",
+      draw: () => lineL(96, 340, 96, 140, C.brown, 4) + `<path d="M100,146 L184,152 L172,190 L184,228 L100,222 Z" fill="${C.white}"/>` +
+        g("translate(132,190) scale(.75)", fleur()) + g("translate(196,290) scale(1.15)", helmet()) },
+    { id: "cosme", name: "São Cosme e São Damião", feast: "26 de setembro (no Brasil, 27)", hue: 190,
+      why: "Os frascos de remédio e o almofariz: eram irmãos gêmeos, médicos que tratavam os doentes sem cobrar. No Brasil, a festa tem distribuição de doces às crianças.",
+      draw: () => g("translate(106,240)", jar()) + g("translate(150,250) scale(.9)", jar()) + g("translate(200,296) scale(.9)", mortar()) },
+    { id: "edwiges", name: "Santa Edwiges", feast: "16 de outubro", hue: 330,
+      why: "Os sapatos que levava nas mãos: andava descalça por penitência. A igrejinha lembra os mosteiros que fundou. É padroeira dos endividados.",
+      draw: () => g("translate(132,232)", church()) + g("translate(176,300) scale(.9)", shoe()) + g("translate(188,322) scale(.9)", shoe()) },
+    { id: "rosalima", name: "Santa Rosa de Lima", feast: "23 de agosto", hue: 340,
+      why: "A coroa de rosas, sob a qual escondia uma coroa de espinhos por penitência, e a âncora da esperança em Deus. Foi a primeira santa das Américas.",
+      draw: () => g("translate(150,182)", roseCrown()) + g("translate(150,290) scale(.95)", anchor()) },
+    { id: "xavier", name: "São Francisco Xavier", feast: "3 de dezembro", hue: 200,
+      why: "O caranguejo com o crucifixo: perdeu o crucifixo no mar durante uma tempestade, e um caranguejo o devolveu na praia. Foi missionário na Índia e no Japão.",
+      draw: () => g("translate(150,214)", cross(C.gold, 70, 40, 7)) + g("translate(150,260) scale(1.15)", crab()) + g("translate(150,312)", waves(80, 2)) },
+    { id: "faustina", name: "Santa Faustina Kowalska", feast: "5 de outubro", hue: 232,
+      why: "Os raios pálido e vermelho da imagem de Jesus Misericordioso, revelada a ela, e o Diário onde registrou a mensagem da Divina Misericórdia.",
+      draw: () => g("translate(150,152)", mercyRays()) + g("translate(150,318) scale(.75)", openBook(C.dkbrown)) },
+    { id: "bernadete", name: "Santa Bernadete", feast: "16 de abril", hue: 206,
+      why: "A gruta de Massabielle, em Lourdes, onde viu Nossa Senhora dezoito vezes, a fonte que brotou ali e o terço que rezava.",
+      draw: () => g("translate(150,240)", grotto()) + g("translate(116,248) scale(.55)", rosary()) + g("translate(150,318)", waves(70, 2)) },
+    { id: "teresaavila", name: "Santa Teresa d’Ávila", feast: "15 de outubro", hue: 26,
+      why: "A pena e o livro de doutora da Igreja, e o dardo de fogo com que um anjo lhe atravessou o coração (a transverberação).",
+      draw: () => g("translate(196,226)", quill()) + g("translate(128,300) scale(.9)", openBook(C.red)) +
+        g("translate(76,200) rotate(25) scale(.6)", arrow()) + g("translate(160,240) rotate(115) scale(.8)", flame()) },
+    { id: "antao", name: "Santo Antão", feast: "17 de janeiro", hue: 30,
+      why: "O porco e o sino: os monges antoninos criavam porcos que andavam soltos com sininhos, e usavam a gordura para tratar doentes. Pai dos monges do deserto, é padroeiro dos animais.",
+      draw: () => g("translate(196,190) scale(1.1)", bell()) + g("translate(130,286) scale(1.15)", pig()) },
+    { id: "teresacalcuta", name: "Santa Teresa de Calcutá", feast: "5 de setembro", hue: 212,
+      why: "O sári branco com três listras azuis, hábito das Missionárias da Caridade, que fundou para servir os mais pobres em Calcutá, e o terço.",
+      draw: () => g("translate(138,236) scale(1.2)", sari()) + g("translate(212,264) scale(.75)", rosary()) },
+    { id: "kolbe", name: "São Maximiliano Kolbe", feast: "14 de agosto", hue: 4,
+      why: "As duas coroas, branca (pureza) e vermelha (martírio), que Maria lhe ofereceu numa visão quando criança, e o uniforme listrado de Auschwitz, onde deu a vida no lugar de um pai de família. 16670 era o seu número de prisioneiro.",
+      draw: () => g("translate(116,172) scale(.95)", crownC(C.white)) + g("translate(186,172) scale(.95)", crownC(C.red)) + g("translate(150,268) scale(1.2)", stripedCloth()) },
+    { id: "ferrer", name: "São Vicente Férrer", feast: "5 de abril", hue: 250,
+      why: "A trombeta do Juízo Final: pregador dominicano que percorreu a Europa chamando à conversão, era chamado de “anjo do Apocalipse”.",
+      draw: () => g("translate(140,214) rotate(-14) scale(1.05)", trumpet()) + g("translate(150,310) scale(.8)", openBook(C.dkbrown)) },
+    { id: "bakhita", name: "Santa Josefina Bakhita", feast: "8 de fevereiro", hue: 176,
+      why: "As correntes partidas: escravizada na infância no Sudão, foi libertada e se tornou religiosa canossiana na Itália. É padroeira das vítimas do tráfico humano.",
+      draw: () => g("translate(150,226) scale(1.05)", brokenChains()) + g("translate(150,300) scale(.9)", cross(C.wood, 70, 44, 9)) },
+    { id: "eloi", name: "Santo Elói", feast: "1º de dezembro", hue: 18,
+      why: "A bigorna, o martelo e a ferradura: foi ourives e ferreiro antes de ser bispo de Noyon. É padroeiro dos ourives, ferreiros e metalúrgicos.",
+      draw: () => g("translate(140,282) scale(1.15)", anvil()) + g("translate(108,186) rotate(-35)", hammer()) + g("translate(196,190) scale(1.1)", horseshoe()) },
+    { id: "huberto", name: "Santo Huberto", feast: "3 de novembro", hue: 120,
+      why: "O veado com uma cruz luminosa entre os chifres, que lhe apareceu numa caçada e o converteu. É padroeiro dos caçadores.",
+      draw: () => g("translate(150,262) scale(1.25)", stag()) },
+    { id: "goncalo", name: "São Gonçalo de Amarante", feast: "10 de janeiro", hue: 330,
+      why: "A viola: conta a tradição popular que tocava e dançava para afastar as pessoas do pecado. No Brasil, é lembrado nas danças de São Gonçalo e invocado como santo casamenteiro.",
+      draw: () => g("translate(150,250) rotate(-24) scale(1.05)", viola()) },
+    { id: "galvao", name: "São Frei Galvão", feast: "25 de outubro", hue: 200,
+      why: "As pílulas de papel com uma oração a Nossa Senhora, distribuídas até hoje no Mosteiro da Luz, em São Paulo. Foi o primeiro santo nascido no Brasil.",
+      draw: () => g("translate(150,206) scale(1.1)", paperSheet()) +
+        [[100, 292, 20], [132, 304, -10], [166, 296, 35], [198, 306, -25], [120, 326, 5], [180, 330, 15]].map(([x, y, a]) => g(`translate(${x},${y}) rotate(${a})`, paperPill())).join("") },
+    { id: "anchieta", name: "São José de Anchieta", feast: "9 de junho", hue: 190,
+      why: "A pena escrevendo na areia: compôs na praia de Iperoig um longo poema à Virgem Maria, guardando os versos de memória. Jesuíta, é chamado de Apóstolo do Brasil.",
+      draw: () => g("translate(150,176)", waves(100, 2)) + g("translate(150,236)", sand()) + g("translate(176,224) rotate(25)", quill()) },
+    { id: "isidoro", name: "Santo Isidoro Lavrador", feast: "15 de maio", hue: 78,
+      why: "O arado e o feixe de trigo: era lavrador em Madri, e conta-se que os anjos aravam por ele enquanto rezava. É padroeiro dos agricultores.",
+      draw: () => g("translate(132,290)", plough()) + g("translate(196,206) scale(1.1)", wheat()) },
+    { id: "bartolomeu", name: "São Bartolomeu", feast: "24 de agosto", hue: 356,
+      why: "A faca curva de esfolar, instrumento do seu martírio, e o livro do apóstolo. Os Evangelhos também o chamam de Natanael.",
+      draw: () => g("translate(150,206) rotate(-10) scale(1.2)", curvedKnife()) + g("translate(150,296) scale(.95)", openBook(C.red)) },
+    { id: "madalena", name: "Santa Maria Madalena", feast: "22 de julho", hue: 340,
+      why: "O vaso de alabastro com o perfume com que, segundo a tradição, ungiu os pés de Jesus. Foi a primeira testemunha da Ressurreição, chamada de apóstola dos apóstolos.",
+      draw: () => g("translate(150,246) scale(1.6)", alabaster()) },
+    { id: "barnabe", name: "São Barnabé", feast: "11 de junho", hue: 100,
+      why: "O ramo de oliveira, sinal da paz e da reconciliação, e o livro do Evangelho. Foi companheiro de Paulo nas viagens missionárias; seu nome quer dizer “filho da consolação”.",
+      draw: () => g("translate(140,220) scale(1.15)", olive()) + g("translate(160,306) scale(.8)", openBook(C.blue)) },
+    { id: "benedito", name: "São Benedito", feast: "4 de abril (no Brasil, também 5 de outubro)", hue: 36,
+      why: "A panela e as flores: era cozinheiro do convento, e os alimentos que levava escondidos para os pobres se transformaram em flores. Filho de africanos escravizados, é muito venerado no Brasil.",
+      draw: () => g("translate(150,292) scale(1.15)", pot()) +
+        [[118, 236, 1], [150, 222, 1.1], [182, 236, 1], [134, 210, .8], [168, 206, .8]].map(([x, y, s]) => blossom(x, y, s)).join("") +
+        g("translate(104,254) scale(.8)", rose()) + g("translate(196,254) scale(.8)", rose()) },
+    { id: "longuinho", name: "São Longuinho", feast: "15 de março", hue: 268,
+      why: "A lança com que o soldado romano abriu o lado de Cristo na cruz; conta a tradição que o sangue curou a sua vista, por isso o olho. No Brasil, é invocado para achar objetos perdidos.",
+      draw: () => g("translate(150,250) scale(.95)", longLance()) + g("translate(116,190) scale(1.2)", eyeRays()) },
+    { id: "joaopaulo", name: "São João Paulo II", feast: "22 de outubro", hue: 216,
+      why: "O báculo papal com o crucifixo, que levava nas celebrações, e o seu brasão: a cruz e o M de Maria, do lema Totus Tuus (“Todo teu”).",
+      draw: () => g("translate(196,236)", ferula()) + g("translate(120,240) scale(1.05)", jp2Shield()) },
+    { id: "rafael", name: "São Rafael Arcanjo", feast: "29 de setembro", hue: 186,
+      why: "O peixe: guiou o jovem Tobias e o ensinou a usar o fel do peixe para curar a cegueira do pai (Tb 6). As asas são de arcanjo. Seu nome significa “Deus cura”.",
+      draw: () => g("translate(132,214) scale(.8)", wing()) + g("translate(168,214) scale(-.8,.8)", wing()) + g("translate(150,270) scale(1.5)", fish()) },
+  ];
+
+  // ---------- Window ----------
+  function rand(seed) { let s = seed; return () => (s = (s * 9301 + 49297) % 233280) / 233280; }
+  // Irregular glass pieces: a Voronoi diagram of jittered seeds, corners rounded so the lead reads as hand-cut came
+  function clipHalf(poly, p, q) {
+    const mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2, dx = q[0] - p[0], dy = q[1] - p[1];
+    const side = v => (v[0] - mx) * dx + (v[1] - my) * dy;
+    const out = [];
+    for (let i = 0; i < poly.length; i++) {
+      const A = poly[i], B = poly[(i + 1) % poly.length], sa = side(A), sb = side(B);
+      if (sa <= 0) out.push(A);
+      if ((sa <= 0) !== (sb <= 0)) { const t = sa / (sa - sb); out.push([A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t]); }
+    }
+    return out;
+  }
+  function cells(seeds, box) {
+    return seeds.map((p, i) => {
+      let poly = box;
+      for (let j = 0; j < seeds.length && poly.length; j++) {
+        if (j === i) continue;
+        const q = seeds[j];
+        if (Math.abs(q[0] - p[0]) > 90 || Math.abs(q[1] - p[1]) > 90) continue;
+        poly = clipHalf(poly, p, q);
+      }
+      return { seed: p, poly };
+    }).filter(c => c.poly.length > 2);
+  }
+  function smooth(poly, it = 2) {
+    for (let k = 0; k < it; k++) {
+      const o = [];
+      for (let i = 0; i < poly.length; i++) {
+        const A = poly[i], B = poly[(i + 1) % poly.length];
+        o.push([A[0] * .75 + B[0] * .25, A[1] * .75 + B[1] * .25], [A[0] * .25 + B[0] * .75, A[1] * .25 + B[1] * .75]);
+      }
+      poly = o;
+    }
+    return "M" + poly.map(v => v[0].toFixed(1) + "," + v[1].toFixed(1)).join("L") + "Z";
+  }
+  function jitterSeeds(r, x0, y0, x1, y1, step, keep) {
+    const out = [];
+    for (let y = y0; y <= y1; y += step * .87) for (let x = x0 + ((Math.round((y - y0) / (step * .87)) % 2) ? step / 2 : 0); x <= x1; x += step) {
+      const p = [x + (r() - .5) * step * .7, y + (r() - .5) * step * .7];
+      if (!keep || keep(p)) out.push(p);
+    }
+    return out;
+  }
+
+  function windowSVG(saint) {
+    const h = saint.hue, r = rand(h * 7 + 11), id = saint.id;
+    const acc = (h + 180) % 360, CX = 150, CY = 235, R = 112;
+    const arch = "M20,392 L20,150 A130,130 0 0 1 280,150 L280,392 Z";
+    const inner = "M37,392 L37,150 A113,113 0 0 1 263,150 L263,392";
+    const dist = (p, x, y) => Math.hypot(p[0] - x, p[1] - y);
+    // distance from a point to the arch outline (approximate: sides, top arc)
+    const toEdge = p => Math.min(p[0] - 20, 280 - p[0], 392 - p[1] + 99, p[1] < 150 ? 130 - dist(p, 150, 150) : 999);
+
+    // Outer field
+    let outer = "";
+    cells(jitterSeeds(r, 4, 4, 296, 406, 27), [[0, 0], [300, 0], [300, 410], [0, 410]]).forEach(c => {
+      const p = c.seed, dm = dist(p, CX, CY), t = r();
+      let fill;
+      if (toEdge(p) < 17) fill = (Math.floor(p[0] / 9 + p[1] / 9) % 3 === 0) ? `hsl(44,80%,${50 + Math.floor(r() * 10)}%)` : `hsl(${acc},${55 + Math.floor(r() * 15)}%,${30 + Math.floor(r() * 12)}%)`;
+      else if (dm < R + 16) fill = `hsl(${44 + Math.floor(r() * 10)},${72 + Math.floor(r() * 14)}%,${48 + Math.floor(r() * 14)}%)`;
+      else if (t > .92) fill = `hsl(${acc},60%,${34 + Math.floor(r() * 14)}%)`;
+      else fill = `hsl(${h + Math.floor(r() * 20) - 10},${48 + Math.floor(r() * 24)}%,${20 + Math.floor(r() * 22)}%)`;
+      outer += `<path d="${smooth(c.poly)}" fill="${fill}"/>`;
+    });
+    // Medallion field: light glass so the symbols read
+    let med = "";
+    cells(jitterSeeds(r, CX - R, CY - R, CX + R, CY + R, 42, p => dist(p, CX, CY) < R + 26), [[CX - R - 4, CY - R - 4], [CX + R + 4, CY - R - 4], [CX + R + 4, CY + R + 4], [CX - R - 4, CY + R + 4]]).forEach(c => {
+      const d = dist(c.seed, CX, CY) / R;
+      med += `<path d="${smooth(c.poly)}" fill="hsl(${h + Math.floor(r() * 24) - 12},${36 + Math.floor(r() * 18)}%,${Math.round(88 - d * 14 - r() * 8)}%)"/>`;
+    });
+
+    const noise = (fid, freq, seed, k1, k2) => `
+      <filter id="${fid}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="${freq}" numOctaves="4" seed="${seed}"/>
+        <feColorMatrix type="matrix" values="0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0 0 0 0 1" result="n"/>
+        <feComposite in="SourceGraphic" in2="n" operator="arithmetic" k1="${k1}" k2="${k2}" k3="0" k4="0" result="m"/>
+        <feComposite in="m" in2="SourceGraphic" operator="in"/>
+      </filter>`;
+    return `<svg viewBox="0 0 300 410" role="img" aria-label="Vitral com símbolos de um santo" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <clipPath id="cp-${id}"><path d="${arch}"/></clipPath>
+        <clipPath id="cm-${id}"><circle cx="${CX}" cy="${CY}" r="${R}"/></clipPath>
+        ${noise("mot-" + id, 0.045, h % 97, 1.1, 0.55)}
+        <filter id="fig-${id}" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+          <feComponentTransfer in="SourceAlpha"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>
+          <feGaussianBlur stdDeviation="4"/><feOffset dx="2.5" dy="3.5" result="sh"/>
+          <feFlood flood-color="#3a2410" flood-opacity=".6"/><feComposite in2="sh" operator="in"/>
+          <feComposite in2="SourceAlpha" operator="in" result="inner"/>
+          <feMerge result="shaded"><feMergeNode in="SourceGraphic"/><feMergeNode in="inner"/></feMerge>
+          <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="3" seed="${(h * 3) % 89}"/>
+          <feColorMatrix type="matrix" values="0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0 0 0 0 1" result="n"/>
+          <feComposite in="shaded" in2="n" operator="arithmetic" k1="0.7" k2="0.72" k3="0" k4="0" result="m"/>
+          <feComposite in="m" in2="SourceGraphic" operator="in"/>
+        </filter>
+        <radialGradient id="lt-${id}" cx="38%" cy="22%" r="75%"><stop offset="0" stop-color="#fff" stop-opacity=".30"/><stop offset=".55" stop-color="#fff" stop-opacity=".04"/><stop offset="1" stop-color="#000" stop-opacity=".30"/></radialGradient>
+        <linearGradient id="ray-${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".45" stop-color="#fff" stop-opacity=".13"/><stop offset=".55" stop-color="#fff" stop-opacity=".02"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      </defs>
+      <g clip-path="url(#cp-${id})">
+        <rect x="0" y="0" width="300" height="410" fill="${L}"/>
+        <g filter="url(#mot-${id})" stroke="${L}" stroke-width="2.6" stroke-linejoin="round">${outer}</g>
+        <g clip-path="url(#cm-${id})">
+          <circle cx="${CX}" cy="${CY}" r="${R}" fill="${L}"/>
+          <g filter="url(#mot-${id})" stroke="${L}" stroke-width="1.5" stroke-linejoin="round">${med}</g>
+        </g>
+        <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${L}" stroke-width="5.5"/>
+        <path d="${inner}" fill="none" stroke="${L}" stroke-width="4"/>
+        <g filter="url(#fig-${id})"><g stroke="${L}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">${saint.draw()}</g></g>
+        <rect x="0" y="0" width="300" height="410" fill="url(#lt-${id})"/>
+        <rect x="0" y="0" width="300" height="410" fill="url(#ray-${id})"/>
+      </g>
+      <path d="${arch}" fill="none" stroke="#3b302a" stroke-width="13" stroke-linejoin="round"/>
+      <path d="${arch}" fill="none" stroke="#6e6258" stroke-width="3" stroke-linejoin="round" transform="translate(-1.5,-1.5)" opacity=".7"/>
+      <rect x="8" y="389" width="284" height="17" rx="3" fill="#7a6b5d" stroke="${L}" stroke-width="3"/>
+      <rect x="12" y="392" width="276" height="4" rx="2" fill="#a3937f" stroke="none"/>
+    </svg>`;
+  }
+
+  // ---------- Game ----------
+  const ROUNDS = 10;
+  const EASY = "pedro paulo francisco jorge teresinha antonio sebastiao luzia jose miguel barbara joao clara rita judas cristovao expedito nicolau pio cosme edwiges teresacalcuta joaopaulo bento madalena".split(" ");
+  const HARD = "ambrosio gregorio apolonia rosalima xavier antao kolbe ferrer bakhita eloi huberto goncalo isidoro bartolomeu barnabe rafael".split(" ");
+  const levelOf = id => EASY.includes(id) ? "facil" : HARD.includes(id) ? "dificil" : "medio";
+  const WOMEN = "teresinha luzia catarina barbara clara rita cecilia apolonia helena joana edwiges rosalima faustina bernadete teresaavila teresacalcuta bakhita madalena".split(" ");
+  SAINTS.forEach(s => { s.sex = WOMEN.includes(s.id) ? "f" : "m"; });
+  const LEVELS = [["facil", "Fácil"], ["medio", "Médio"], ["dificil", "Difícil"], ["todos", "Todos"]];
+  const poolFor = lv => SAINTS.map(s => s.id).filter(id => lv === "todos" || levelOf(id) === lv);
+  let level = "facil";
+  try { const v = localStorage.getItem("quiz-santos-nivel"); if (LEVELS.some(l => l[0] === v)) level = v; } catch (e) {}
+  const $ = id => document.getElementById(id);
+  const byId = Object.fromEntries(SAINTS.map(s => [s.id, s]));
+  const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  let st;
+  function newGame() {
+    const order = shuffle(poolFor(level)).slice(0, ROUNDS);
+    st = { order, level, i: 0, hits: 0, results: [], picked: null, opts: [] };
+    setupRound();
+  }
+  function setupRound() {
+    const ans = st.order[st.i];
+    st.opts = shuffle([ans, ...shuffle(poolFor(st.level || "todos").filter(x => x !== ans)).slice(0, 3)]);
+    st.picked = null;
+    render();
+  }
+  function pick(id) {
+    if (st.picked) return;
+    st.picked = id;
+    const ok = id === st.order[st.i];
+    if (ok) st.hits++;
+    st.results.push({ id: st.order[st.i], ok, picked: id });
+    render();
+    const nb = $("next"); if (nb) nb.focus();
+  }
+  function next() { st.i++; if (st.i < ROUNDS) setupRound(); else render(); }
+  function setLevel(k) {
+    level = k;
+    try { localStorage.setItem("quiz-santos-nivel", level); } catch (e) {}
+    $("art").dataset.id = ""; newGame();
+  }
+
+  function renderDots() {
+    let s = "";
+    for (let k = 0; k < ROUNDS; k++) {
+      const r = st.results[k];
+      s += `<span class="dot ${r ? (r.ok ? "ok" : "bad") : (k === st.i ? "now" : "")}"></span>`;
+    }
+    $("dots").innerHTML = s;
+  }
+
+  function renderLevels() {
+    $("levels").innerHTML = LEVELS.map(([k, label]) =>
+      `<button class="lvl" id="lvl-${k}" aria-pressed="${st.level === k}" data-k="${k}">${label} <span>${poolFor(k).length}</span></button>`).join("");
+    $("levels").querySelectorAll(".lvl").forEach(b => b.onclick = () => setLevel(b.dataset.k));
+  }
+
+  function render() {
+    renderLevels();
+    $("total").textContent = ROUNDS;
+    $("hits").textContent = st.hits;
+    $("round").textContent = Math.min(st.i + 1, ROUNDS);
+    renderDots();
+    const panel = $("panel");
+
+    if (st.i >= ROUNDS) {
+      const missed = st.results.filter(r => !r.ok);
+      const verdict = st.hits === ROUNDS ? "Perfeito. Você conhece bem a arte sacra." :
+        st.hits >= 7 ? "Muito bem. Poucos santos te escaparam." :
+        st.hits >= 4 ? "Bom começo. Os símbolos ficam mais fáceis com a prática." : "Os atributos dos santos têm muita história. Vale outra rodada.";
+      $("art").innerHTML = windowSVG(byId[st.results[ROUNDS - 1].id]);
+      panel.innerHTML = `<div class="end">
+        <div class="eyebrow">Resultado</div>
+        <div class="big">${st.hits}/${ROUNDS}</div>
+        <p class="q">${verdict}</p>
+        ${missed.length ? `<div><div class="eyebrow" style="margin-bottom:6px">Para rever</div><ul class="missed">${missed.map(r =>
+          `<li><b>${byId[r.id].name}</b>: ${byId[r.id].why}</li>`).join("")}</ul></div>` : ""}
+        <button class="btn" id="again">Jogar de novo</button></div>`;
+      $("again").onclick = newGame;
+      $("again").focus();
+      return;
+    }
+
+    const ans = byId[st.order[st.i]];
+    const art = $("art");
+    if (art.dataset.id !== ans.id) {
+      art.innerHTML = windowSVG(ans);
+      art.dataset.id = ans.id;
+      const svg = art.querySelector("svg"); svg.classList.add("in");
+    }
+    const answered = !!st.picked;
+    const opts = st.opts.map((id, k) => {
+      let cls = "";
+      if (answered) cls = id === ans.id ? "ok" : id === st.picked ? "bad" : "dim";
+      return `<button class="opt ${cls}" id="opt-${k}" data-id="${id}" ${answered ? "disabled" : ""}><span class="k">${k + 1}</span><span>${byId[id].name}</span></button>`;
+    }).join("");
+    const ok = st.picked === ans.id;
+    panel.innerHTML = `
+      <div class="eyebrow">Rodada ${st.i + 1} de ${ROUNDS}</div>
+      <p class="q">Que santo é representado por estes símbolos?</p>
+      <p class="hint">Na arte sacra, cada santo é reconhecido pelos seus atributos: os objetos que contam sua vida ou seu martírio.</p>
+      <div class="opts">${opts}</div>
+      ${answered ? `<div class="reveal">
+        <div class="verdict ${ok ? "ok" : "bad"}">${ok ? "Acertou!" : "Não foi dessa vez."}</div>
+        <div class="name">${ans.name}</div>
+        <div class="feast">Festa: ${ans.feast}</div>
+        <p class="why">${ans.why}</p>
+        <button class="btn" id="next">${st.i + 1 < ROUNDS ? "Próximo santo" : "Ver resultado"}</button>
+      </div>` : ""}`;
+    panel.querySelectorAll(".opt").forEach(b => b.onclick = () => pick(b.dataset.id));
+    const nb = $("next"); if (nb) nb.onclick = next;
+  }
+
+  document.addEventListener("keydown", e => {
+    if (!st || e.target.closest && e.target.closest("input,textarea")) return;
+    if (st.i < ROUNDS && !st.picked && /^[1-4]$/.test(e.key)) pick(st.opts[+e.key - 1]);
+  });
+
+  // Gancho para os testes (testes/verifica.js e testes/teste.html)
+  window.__quiz = { SAINTS, LEVELS, poolFor, levelOf, windowSVG, state: () => st, setLevel, pick, next };
+
+  function start(data) {
+    if (data && data.st && Array.isArray(data.st.order)) { st = data.st; if (st.level) level = st.level; render(); }
+    else newGame();
+  }
+  window.claude?.hot?.snapshot?.(() => ({ st }));
+  window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+</body>
+</html>
