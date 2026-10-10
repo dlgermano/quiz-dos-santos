@@ -4,11 +4,11 @@ Modelo `gpt_image_2_5`, qualidade `high`, resolução `1k`, proporção 3:4.
 
 **Série Imagem** (figura do santo). Trocar `[FIGURA]` pela coluna Figura:
 
-> Gothic cathedral stained glass window, arched top, dark lead lines, jewel-tone glass, backlit glow, plain geometric border, full figure of [FIGURA], golden halo, symmetrical composition, traditional Catholic iconography, vertical composition, no text, no letters, no watermark
+> Gothic cathedral stained glass window, arched top, dark lead lines, jewel-tone glass, backlit glow, simple border of plain colored glass squares and diamonds, no fleur-de-lis, no fleurons, full figure of [FIGURA], golden halo, symmetrical composition, traditional Catholic iconography, vertical composition, no text, no letters, no watermark
 
 **Série Símbolos** (só os objetos). Trocar `[OBJETOS]` pela coluna Objetos:
 
-> Gothic cathedral stained glass window, arched top, dark lead lines, jewel-tone glass, backlit glow, plain geometric border, large central composition showing only symbolic objects and no saint figure: [OBJETOS], symmetrical composition, traditional Catholic iconography, vertical composition, no text, no letters, no watermark
+> Gothic cathedral stained glass window, arched top, dark lead lines, jewel-tone glass, backlit glow, simple border of plain colored glass squares and diamonds, no fleur-de-lis, no fleurons, large central composition showing only symbolic objects and no saint figure: [OBJETOS], nothing else, no additional objects, no plants, plain blue glass background, symmetrical composition, traditional Catholic iconography, vertical composition, no text, no letters, no watermark
 
 **Ao conferir cada imagem:**
 

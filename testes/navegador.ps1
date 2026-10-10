@@ -23,9 +23,9 @@ try {
     } else { Write-Output "sem resultado para $url"; $falhou = $true }
   }
   $fotos = @(
-    @("simbolos-pergunta", "1100,760", "acao=pergunta&modo=simbolos"),
-    @("imagem-resposta", "1100,760", "acao=resposta&modo=imagem"),
-    @("imagem-celular", "700,1400", "acao=resposta&modo=imagem&largura=390"),
+    @("simbolos-pergunta", "1100,760", "acao=pergunta&modo=simbolos&nivel=facil"),
+    @("imagem-resposta", "1100,760", "acao=resposta&modo=imagem&nivel=facil"),
+    @("imagem-celular", "700,1400", "acao=resposta&modo=imagem&nivel=facil&largura=390"),
     @("simbolos-celular", "700,1400", "acao=pergunta&modo=simbolos&largura=390"))
   foreach ($f in $fotos) {
     Start-Process -FilePath $edge -ArgumentList ($comum + @("--window-size=$($f[1])", "--screenshot=`"$cap\$($f[0]).png`"", "`"$base`?$($f[2])`"")) -Wait
