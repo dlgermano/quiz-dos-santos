@@ -112,13 +112,14 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     <h1>Quiz dos Santos</h1>
     <div class="score"><span>Rodada <b id="round">1</b>/<span id="total">10</span></span><span>Acertos <b id="hits">0</b></span></div>
     <div class="dots" id="dots" aria-hidden="true"></div>
+    <div class="levels" id="modes" role="group" aria-label="Modo de jogo"></div>
     <div class="levels" id="levels" role="group" aria-label="Nível"></div>
   </header>
 
   <main class="stage" id="stage">
     <div class="window">
       <div id="art"></div>
-      <div class="cap">Vitral com os atributos tradicionais do santo</div>
+      <div class="cap" id="cap"></div>
     </div>
     <section class="panel" id="panel" aria-live="polite"></section>
   </main>
@@ -947,19 +948,31 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   const poolFor = lv => SAINTS.map(s => s.id).filter(id => lv === "todos" || levelOf(id) === lv);
   let level = "facil";
   try { const v = localStorage.getItem("quiz-santos-nivel"); if (LEVELS.some(l => l[0] === v)) level = v; } catch (e) {}
+  const MODES = [["simbolos", "Símbolos"], ["imagem", "Imagem"]];
+  let mode = "simbolos";
+  try { const v = localStorage.getItem("quiz-santos-modo"); if (MODES.some(m => m[0] === v)) mode = v; } catch (e) {}
   const $ = id => document.getElementById(id);
   const byId = Object.fromEntries(SAINTS.map(s => [s.id, s]));
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  // Três opções erradas. No modo Imagem são do mesmo sexo da resposta; se o nível não tiver gente suficiente, completa com outros níveis.
+  function wrongFor(ans, lv, md) {
+    const pool = poolFor(lv).filter(x => x !== ans);
+    if (md !== "imagem") return shuffle(pool).slice(0, 3);
+    const same = id => byId[id].sex === byId[ans].sex;
+    const inLevel = shuffle(pool.filter(same));
+    const extra = shuffle(SAINTS.map(s => s.id).filter(id => id !== ans && same(id) && !inLevel.includes(id)));
+    return inLevel.concat(extra).slice(0, 3);
+  }
 
   let st;
   function newGame() {
     const order = shuffle(poolFor(level)).slice(0, ROUNDS);
-    st = { order, level, i: 0, hits: 0, results: [], picked: null, opts: [] };
+    st = { order, level, mode, i: 0, hits: 0, results: [], picked: null, opts: [] };
     setupRound();
   }
   function setupRound() {
     const ans = st.order[st.i];
-    st.opts = shuffle([ans, ...shuffle(poolFor(st.level || "todos").filter(x => x !== ans)).slice(0, 3)]);
+    st.opts = shuffle([ans, ...wrongFor(ans, st.level || "todos", st.mode)]);
     st.picked = null;
     render();
   }
@@ -978,6 +991,11 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     try { localStorage.setItem("quiz-santos-nivel", level); } catch (e) {}
     $("art").dataset.id = ""; newGame();
   }
+  function setMode(k) {
+    mode = k;
+    try { localStorage.setItem("quiz-santos-modo", mode); } catch (e) {}
+    $("art").dataset.id = ""; newGame();
+  }
 
   function renderDots() {
     let s = "";
@@ -988,6 +1006,12 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     $("dots").innerHTML = s;
   }
 
+  function renderModes() {
+    $("modes").innerHTML = MODES.map(([k, label]) =>
+      `<button class="lvl" id="modo-${k}" aria-pressed="${st.mode === k}" data-k="${k}">${label}</button>`).join("");
+    $("modes").querySelectorAll(".lvl").forEach(b => b.onclick = () => setMode(b.dataset.k));
+  }
+
   function renderLevels() {
     $("levels").innerHTML = LEVELS.map(([k, label]) =>
       `<button class="lvl" id="lvl-${k}" aria-pressed="${st.level === k}" data-k="${k}">${label} <span>${poolFor(k).length}</span></button>`).join("");
@@ -995,6 +1019,8 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   }
 
   function render() {
+    renderModes();
+    $("cap").textContent = st.mode === "imagem" ? "Vitral do santo" : "Vitral com os atributos tradicionais do santo";
     renderLevels();
     $("total").textContent = ROUNDS;
     $("hits").textContent = st.hits;
@@ -1036,7 +1062,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     const ok = st.picked === ans.id;
     panel.innerHTML = `
       <div class="eyebrow">Rodada ${st.i + 1} de ${ROUNDS}</div>
-      <p class="q">Que santo é representado por estes símbolos?</p>
+      <p class="q">${st.mode === "imagem" ? "Que santo é este?" : "Que santo é representado por estes símbolos?"}</p>
       <p class="hint">Na arte sacra, cada santo é reconhecido pelos seus atributos: os objetos que contam sua vida ou seu martírio.</p>
       <div class="opts">${opts}</div>
       ${answered ? `<div class="reveal">
@@ -1056,10 +1082,14 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   });
 
   // Gancho para os testes (testes/verifica.js e testes/teste.html)
-  window.__quiz = { SAINTS, LEVELS, poolFor, levelOf, windowSVG, state: () => st, setLevel, pick, next };
+  window.__quiz = { SAINTS, LEVELS, MODES, poolFor, levelOf, wrongFor, windowSVG, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
 
   function start(data) {
-    if (data && data.st && Array.isArray(data.st.order)) { st = data.st; if (st.level) level = st.level; render(); }
+    if (data && data.st && Array.isArray(data.st.order)) {
+      st = data.st; if (st.level) level = st.level;
+      if (!MODES.some(m => m[0] === st.mode)) st.mode = "simbolos";
+      mode = st.mode; render();
+    }
     else newGame();
   }
   window.claude?.hot?.snapshot?.(() => ({ st }));

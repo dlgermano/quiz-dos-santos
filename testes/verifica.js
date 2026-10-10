@@ -40,5 +40,79 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   }
 }
 
+// B. Modos e estado antigo
+{
+  const { q } = carregar();
+  confere(q.MODES && q.MODES.map(m => m[0]).join() === "simbolos,imagem", "B: MODES ausente ou errado");
+  confere(q.mode && q.mode() === "simbolos", "B: o modo padrão deveria ser simbolos");
+  confere(q.state().mode === "simbolos", "B: st.mode deveria ser simbolos");
+  if (q.mode) {
+    confere(carregar({ "quiz-santos-modo": "imagem" }).q.mode() === "imagem", "B: modo salvo não foi lido");
+    confere(carregar({ "quiz-santos-modo": "lixo", "quiz-santos-nivel": "medio" }).q.mode() === "simbolos", "B: modo inválido deveria cair em simbolos");
+    const antigo = { st: { order: q.poolFor("facil").slice(0, 10), level: "facil", i: 0, hits: 0, results: [], picked: null, opts: q.poolFor("facil").slice(0, 4) } };
+    const r = carregar({}, antigo);
+    confere(r.q.state().mode === "simbolos" && r.q.mode() === "simbolos", "B: estado antigo sem modo deveria abrir em simbolos");
+    const b = carregar("bloqueado").q;
+    confere(b.mode() === "simbolos" && b.state().level === "facil", "B: com localStorage bloqueado deveria abrir em simbolos e facil");
+    b.setMode("imagem");
+    confere(b.state().mode === "imagem", "B: com localStorage bloqueado a troca de modo deveria funcionar");
+  }
+}
+
+// C. Sorteio das opções erradas
+{
+  const { q } = carregar();
+  const sexo = Object.fromEntries(q.SAINTS.map(s => [s.id, s.sex]));
+  if (q.wrongFor) for (const [nivel] of q.LEVELS) {
+    for (const ans of q.poolFor(nivel)) {
+      let ruim = 0;
+      for (let k = 0; k < 200; k++) {
+        const w = q.wrongFor(ans, nivel, "imagem");
+        if (w.length !== 3 || new Set(w).size !== 3 || w.includes(ans) || w.some(id => sexo[id] !== sexo[ans])) ruim++;
+      }
+      confere(ruim === 0, `C: modo imagem, ${nivel}, resposta ${ans}: ${ruim} sorteios errados em 200`);
+      const s = q.wrongFor(ans, nivel, "simbolos"), pool = q.poolFor(nivel);
+      confere(s.length === 3 && new Set(s).size === 3 && !s.includes(ans) && s.every(id => pool.includes(id)), `C: modo simbolos, ${nivel}, resposta ${ans}: sorteio errado`);
+    }
+  } else confere(false, "C: wrongFor não existe");
+  if (q.wrongFor) {
+    const w = q.wrongFor("apolonia", "dificil", "imagem");
+    confere(w.includes("rosalima") && w.includes("bakhita"), "C: no Difícil, as duas outras santas do nível deveriam sempre entrar");
+  }
+}
+
+// E2. Partida inteira no modo Imagem
+{
+  const { q, els } = carregar();
+  const sexo = Object.fromEntries(q.SAINTS.map(s => [s.id, s.sex]));
+  if (q.setMode) for (const [nivel] of q.LEVELS) {
+    q.setMode("imagem"); q.setLevel(nivel);
+    confere(els.panel.innerHTML.includes("Que santo é este?"), `E2: pergunta do modo imagem ausente em ${nivel}`);
+    confere(els.cap.textContent === "Vitral do santo", `E2: legenda do modo imagem errada em ${nivel}`);
+    for (let r = 0; r < 10; r++) {
+      const st = q.state(), ans = st.order[st.i];
+      confere(st.opts.length === 4 && new Set(st.opts).size === 4 && st.opts.includes(ans) && st.opts.every(id => sexo[id] === sexo[ans]), `E2: opções erradas em ${nivel}, rodada ${r + 1}`);
+      q.pick(ans); q.next();
+    }
+    confere(q.state().hits === 10, `E2: esperava 10 acertos em ${nivel}`);
+  } else confere(false, "E2: setMode não existe");
+}
+
+// F. Troca de modo no meio da partida
+{
+  const { q, els, storage } = carregar();
+  if (q.setMode) {
+    for (let r = 0; r < 3; r++) { q.pick(q.state().order[q.state().i]); q.next(); }
+    q.setMode("imagem");
+    const st = q.state();
+    confere(st.mode === "imagem" && st.i === 0 && st.hits === 0 && st.results.length === 0, "F: trocar de modo deveria começar partida nova");
+    confere(storage["quiz-santos-modo"] === "imagem", "F: o modo não foi salvo");
+    confere(els.panel.innerHTML.includes("Que santo é este?"), "F: a pergunta não mudou com o modo");
+    q.setMode("simbolos");
+    confere(els.panel.innerHTML.includes("Que santo é representado por estes símbolos?"), "F: a pergunta do modo simbolos não voltou");
+    confere(els.cap.textContent === "Vitral com os atributos tradicionais do santo", "F: legenda do modo simbolos errada");
+  } else confere(false, "F: setMode não existe");
+}
+
 console.log(`${total - falhas.length} de ${total} conferências passaram`);
 if (falhas.length) { console.log(falhas.join("\n")); process.exit(1); }
