@@ -1,0 +1,84 @@
+<!doctype html><meta charset="utf-8"><title>teste</title>
+<style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%;display:block}pre{position:absolute;left:-9999px}</style>
+<iframe id="f" src="../index.html"></iframe><pre id="out">PENDENTE</pre>
+<script>
+// Joga o quiz de verdade dentro do iframe, clicando nos botões da página.
+const P = new URLSearchParams(location.search);
+const acao = P.get("acao") || "completo", largura = P.get("largura");
+const f = document.getElementById("f"), log = [];
+if (largura) f.style.width = largura + "px";
+f.onload = () => {
+  const w = f.contentWindow, d = f.contentDocument, erros = [], Q = w.__quiz;
+  w.addEventListener("error", e => erros.push(e.message));
+  const q = s => d.querySelector(s), qa = s => [...d.querySelectorAll(s)];
+  const sexoPorNome = Object.fromEntries(Q.SAINTS.map(s => [s.name, s.sex]));
+  const nomeDe = o => o.querySelector("span:last-child").textContent;
+
+  function jogar(modo, nivel, teclado, pararEm) {
+    d.getElementById("modo-" + modo).click();
+    d.getElementById("lvl-" + nivel).click();
+    const vistos = new Set(), prob = [];
+    for (let r = 0; r < 10; r++) {
+      const opts = qa(".opt"), st = Q.state(), ans = st.order[st.i];
+      if (opts.length !== 4 || new Set(opts.map(nomeDe)).size !== 4) prob.push(`rodada ${r + 1}: opções erradas`);
+      if (q("#round").textContent !== String(r + 1)) prob.push(`rodada ${r + 1}: contador mostra ${q("#round").textContent}`);
+      const pic = q("#art img, #art svg");
+      const esperaImg = !!Q.imgFor(ans, modo);
+      if (!pic) prob.push(`rodada ${r + 1}: quadro vazio`);
+      else if ((pic.tagName === "IMG") !== esperaImg) prob.push(`rodada ${r + 1}: quadro deveria ser ${esperaImg ? "imagem" : "desenho"}`);
+      if (modo === "imagem" && new Set(opts.map(o => sexoPorNome[nomeDe(o)])).size !== 1) prob.push(`rodada ${r + 1}: opções de sexos diferentes`);
+      const pergunta = q(".q").textContent;
+      if (pergunta !== (modo === "imagem" ? "Que santo é este?" : "Que santo é representado por estes símbolos?")) prob.push(`rodada ${r + 1}: pergunta errada`);
+      if (pararEm === "pergunta" && r === 2) return;
+      const k = r % 4;
+      if (teclado) d.dispatchEvent(new w.KeyboardEvent("keydown", { key: String(k + 1), bubbles: true }));
+      else opts[k].click();
+      const certa = q(".opt.ok"), nome = q(".name");
+      if (!certa || !nome) { prob.push(`rodada ${r + 1}: resposta não revelada`); break; }
+      if (nomeDe(certa) !== nome.textContent) prob.push(`rodada ${r + 1}: nome revelado difere da opção certa`);
+      if (!q(".feast").textContent || q(".why").textContent.length < 30) prob.push(`rodada ${r + 1}: festa ou explicação vazia`);
+      if (vistos.has(nome.textContent)) prob.push(`rodada ${r + 1}: santo repetido`);
+      vistos.add(nome.textContent);
+      if (pararEm === "resposta" && r === 2) return;
+      q("#next").click();
+    }
+    const nota = q(".big") ? q(".big").textContent : "sem tela final";
+    const verdes = qa(".dot.ok").length, vermelhas = qa(".dot.bad").length, rever = qa(".missed li").length;
+    if (nota !== `${verdes}/10`) prob.push(`nota ${nota} não bate com ${verdes} bolinhas verdes`);
+    if (rever !== vermelhas) prob.push(`"Para rever" tem ${rever} itens e houve ${vermelhas} erros`);
+    log.push(`${modo}/${nivel} (${teclado ? "teclado" : "clique"}): nota ${nota}; problemas: ${prob.length ? prob.join("; ") : "nenhum"}`);
+  }
+
+  // Foco de revisão 4: imagem que não carrega cai para o desenho e a rodada continua respondível.
+  // Lista todos os santos como tendo imagem, troca o endereço por um que não existe e espera o erro de carga de verdade.
+  async function falhaDeImagem() {
+    const antes = Q.COM_SIMBOLOS.slice();
+    Q.COM_SIMBOLOS.push(...Q.SAINTS.map(s => s.id).filter(id => !antes.includes(id)));
+    d.getElementById("modo-simbolos").click();
+    const img = q("#art img");
+    if (img) {
+      await new Promise(ok => { img.addEventListener("error", ok, { once: true }); img.src = "img/nao-existe.webp"; setTimeout(ok, 3000); });
+      await new Promise(ok => setTimeout(ok, 50));
+    }
+    const caiu = !!img && !!q("#art svg") && !q("#art img");
+    Q.COM_SIMBOLOS.length = 0; Q.COM_SIMBOLOS.push(...antes);
+    qa(".opt")[0].click();
+    log.push(`falha de imagem: problemas: ${caiu && q(".name") ? "nenhum" : "o quadro não caiu para o desenho ou a rodada travou"}`);
+  }
+
+  (async () => {
+    try {
+      if (acao === "completo") {
+        let t = false;
+        for (const modo of ["simbolos", "imagem"]) for (const nivel of ["facil", "medio", "dificil", "todos"]) jogar(modo, nivel, t = !t);
+        q("#again").click();
+        log.push(`jogar de novo: problemas: ${q("#round").textContent === "1" && q("#hits").textContent === "0" && qa(".opt").length === 4 ? "nenhum" : "não zerou"}`);
+        await falhaDeImagem();
+      } else jogar(P.get("modo") || "simbolos", P.get("nivel") || "todos", false, acao);
+      if (largura) log.push(`largura ${largura}: problemas: ${d.documentElement.scrollWidth > d.documentElement.clientWidth ? "a página rola para o lado" : "nenhum"}`);
+    } catch (e) { log.push("EXCECAO: " + e.message); }
+    log.push(`erros de script: problemas: ${erros.length ? erros.join(" | ") : "nenhum"}`);
+    document.getElementById("out").textContent = "RESULTADO\n" + log.join("\n") + "\nFIM";
+  })();
+};
+</script>
