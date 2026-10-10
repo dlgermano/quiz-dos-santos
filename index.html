@@ -60,7 +60,10 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
 .stage { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 32px; align-items: start; }
 @media (max-width: 720px) { .stage { grid-template-columns: minmax(0, 1fr); gap: 20px; } }
 .window { width: 100%; max-width: 360px; margin: 0 auto; }
-.window svg { display: block; width: 100%; height: auto; filter: drop-shadow(0 8px 22px rgba(0,0,0,.32)); }
+/* Quadro em 3:4 fixo, para a página não pular enquanto a imagem carrega */
+#art { aspect-ratio: 3 / 4; display: grid; place-items: center; }
+#art svg, #art img { display: block; height: 100%; width: auto; max-width: 100%; filter: drop-shadow(0 8px 22px rgba(0,0,0,.32)); }
+#art img { object-fit: contain; border-radius: 6px; }
 .window .cap { text-align: center; font-size: .85rem; color: var(--muted); margin-top: 8px; }
 
 .panel { display: grid; gap: 16px; min-width: 0; }
@@ -100,7 +103,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
 .missed { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
 .missed li { max-width: 62ch; }
 @media (prefers-reduced-motion: no-preference) {
-  .window svg.in { animation: glow .5s ease-out; }
+  #art .in { animation: glow .5s ease-out; }
   @keyframes glow { from { opacity: .35; transform: scale(.985); } to { opacity: 1; transform: none; } }
 }
 </style>
@@ -951,6 +954,15 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   const MODES = [["simbolos", "Símbolos"], ["imagem", "Imagem"]];
   let mode = "simbolos";
   try { const v = localStorage.getItem("quiz-santos-modo"); if (MODES.some(m => m[0] === v)) mode = v; } catch (e) {}
+  // Santos com imagem aprovada. Quem não está na lista aparece com o desenho em SVG.
+  const COM_FIGURA = [];   // img/santos/<id>.webp
+  const COM_SIMBOLOS = []; // img/simbolos/<id>.webp
+  const imgFor = (id, md) => md === "imagem" ? (COM_FIGURA.includes(id) ? `img/santos/${id}.webp` : null)
+    : (COM_SIMBOLOS.includes(id) ? `img/simbolos/${id}.webp` : null);
+  function artFor(saint, md) {
+    const src = imgFor(saint.id, md);
+    return src ? `<img class="glass" src="${src}" width="600" height="796" alt="${md === "imagem" ? "Vitral de um santo" : "Vitral com símbolos de um santo"}">` : windowSVG(saint);
+  }
   const $ = id => document.getElementById(id);
   const byId = Object.fromEntries(SAINTS.map(s => [s.id, s]));
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -1018,6 +1030,15 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     $("levels").querySelectorAll(".lvl").forEach(b => b.onclick = () => setLevel(b.dataset.k));
   }
 
+  function showArt(saint) {
+    const art = $("art");
+    art.innerHTML = artFor(saint, st.mode);
+    const pic = art.querySelector("img,svg");
+    pic.classList.add("in");
+    // Rede ruim: se a imagem não carregar, cai para o desenho
+    if (pic.tagName === "IMG") pic.onerror = () => { art.innerHTML = windowSVG(saint); };
+  }
+
   function render() {
     renderModes();
     $("cap").textContent = st.mode === "imagem" ? "Vitral do santo" : "Vitral com os atributos tradicionais do santo";
@@ -1033,7 +1054,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
       const verdict = st.hits === ROUNDS ? "Perfeito. Você conhece bem a arte sacra." :
         st.hits >= 7 ? "Muito bem. Poucos santos te escaparam." :
         st.hits >= 4 ? "Bom começo. Os símbolos ficam mais fáceis com a prática." : "Os atributos dos santos têm muita história. Vale outra rodada.";
-      $("art").innerHTML = windowSVG(byId[st.results[ROUNDS - 1].id]);
+      showArt(byId[st.results[ROUNDS - 1].id]);
       panel.innerHTML = `<div class="end">
         <div class="eyebrow">Resultado</div>
         <div class="big">${st.hits}/${ROUNDS}</div>
@@ -1048,10 +1069,13 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
 
     const ans = byId[st.order[st.i]];
     const art = $("art");
-    if (art.dataset.id !== ans.id) {
-      art.innerHTML = windowSVG(ans);
-      art.dataset.id = ans.id;
-      const svg = art.querySelector("svg"); svg.classList.add("in");
+    const key = st.mode + ":" + ans.id;
+    if (art.dataset.id !== key) {
+      showArt(ans);
+      art.dataset.id = key;
+      // Adianta o carregamento da imagem da rodada seguinte
+      const prox = st.i + 1 < ROUNDS ? imgFor(st.order[st.i + 1], st.mode) : null;
+      if (prox && typeof Image !== "undefined") new Image().src = prox;
     }
     const answered = !!st.picked;
     const opts = st.opts.map((id, k) => {
@@ -1082,7 +1106,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   });
 
   // Gancho para os testes (testes/verifica.js e testes/teste.html)
-  window.__quiz = { SAINTS, LEVELS, MODES, poolFor, levelOf, wrongFor, windowSVG, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
+  window.__quiz = { SAINTS, LEVELS, MODES, COM_FIGURA, COM_SIMBOLOS, poolFor, levelOf, wrongFor, imgFor, artFor, windowSVG, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
 
   function start(data) {
     if (data && data.st && Array.isArray(data.st.order)) {

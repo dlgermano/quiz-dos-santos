@@ -114,5 +114,53 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   } else confere(false, "F: setMode não existe");
 }
 
+// D. O que o quadro mostra
+{
+  const { q } = carregar();
+  const pedro = q.SAINTS.find(s => s.id === "pedro");
+  if (q.artFor) {
+    const semLista = !q.COM_FIGURA.includes("pedro") && !q.COM_SIMBOLOS.includes("pedro");
+    if (semLista) confere(q.artFor(pedro, "imagem").includes("<svg") && q.artFor(pedro, "simbolos").includes("<svg"), "D: santo sem imagem deveria mostrar o desenho");
+    const fig = q.COM_FIGURA.slice(), sim = q.COM_SIMBOLOS.slice();
+    q.COM_FIGURA.push("luzia");
+    const luzia = q.SAINTS.find(s => s.id === "luzia");
+    const a = q.artFor(luzia, "imagem");
+    confere(a.includes('src="img/santos/luzia.webp"') && !a.includes("<svg"), "D: modo imagem deveria usar img/santos/luzia.webp");
+    confere(!a.includes("Luzia"), "D: o alt da imagem não pode revelar o nome do santo");
+    if (!sim.includes("luzia")) confere(q.artFor(luzia, "simbolos").includes("<svg"), "D: lista de figuras não pode afetar o modo simbolos");
+    q.COM_SIMBOLOS.push("rita");
+    const rita = q.SAINTS.find(s => s.id === "rita");
+    confere(q.artFor(rita, "simbolos").includes('src="img/simbolos/rita.webp"'), "D: modo simbolos deveria usar img/simbolos/rita.webp");
+    confere(q.imgFor("rita", "simbolos") === "img/simbolos/rita.webp" && (fig.includes("rita") || q.imgFor("rita", "imagem") === null), "D: imgFor errado");
+  } else confere(false, "D: artFor não existe");
+}
+
+// G. Arquivos das imagens aprovadas
+{
+  const fs = require("fs"), path = require("path"), { RAIZ } = require("./carregar");
+  const { q } = carregar();
+  const ids = q.SAINTS.map(s => s.id);
+  const tamanho = arq => {
+    const b = fs.readFileSync(arq);
+    if (b.toString("ascii", 12, 16) === "VP8 ") return [b.readUInt16LE(26) & 0x3fff, b.readUInt16LE(28) & 0x3fff];
+    if (b.toString("ascii", 12, 16) === "VP8X") return [b.readUIntLE(24, 3) + 1, b.readUIntLE(27, 3) + 1];
+    return [0, 0];
+  };
+  for (const [serie, lista] of [["santos", q.COM_FIGURA || []], ["simbolos", q.COM_SIMBOLOS || []]]) {
+    const dir = path.join(RAIZ, "img", serie);
+    const nomes = fs.existsSync(dir) ? fs.readdirSync(dir) : [];
+    confere(new Set(lista).size === lista.length && lista.every(id => ids.includes(id)), `G: lista de ${serie} tem id repetido ou inexistente`);
+    for (const id of lista) {
+      const nome = `${id}.webp`;
+      confere(nomes.includes(nome), `G: falta img/${serie}/${nome} (o nome precisa bater letra por letra)`);
+      if (!nomes.includes(nome)) continue;
+      const arq = path.join(dir, nome), kb = fs.statSync(arq).size / 1024, [w, h] = tamanho(arq);
+      confere(kb <= 120, `G: img/${serie}/${nome} tem ${kb.toFixed(0)} KB, o limite é 120`);
+      confere(w === 600 && h === 796, `G: img/${serie}/${nome} tem ${w}x${h}, deveria ter 600x796`);
+    }
+    for (const nome of nomes) confere(lista.includes(nome.replace(/\.webp$/, "")) && nome.endsWith(".webp"), `G: img/${serie}/${nome} está na pasta do site mas não está na lista de aprovadas`);
+  }
+}
+
 console.log(`${total - falhas.length} de ${total} conferências passaram`);
 if (falhas.length) { console.log(falhas.join("\n")); process.exit(1); }
