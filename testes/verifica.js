@@ -60,6 +60,25 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   } else confere(false, "P: ativo não existe");
 }
 
+// T. Textos depois da resposta: resumo da vida e explicação do vitral
+{
+  const { q, els } = carregar();
+  confere(q.SAINTS.every(s => typeof s.bio === "string" && s.bio.length >= 60), `T: santos sem resumo da vida: ${q.SAINTS.filter(s => !s.bio || s.bio.length < 60).map(s => s.id).join(" ")}`);
+  confere(q.SAINTS.every(s => s.bio !== s.why), "T: o resumo da vida não pode ser igual à explicação do vitral");
+  const st = q.state(), ans = q.SAINTS.find(s => s.id === st.order[st.i]);
+  q.pick(ans.id);
+  confere(!!ans.bio && els.panel.innerHTML.includes(ans.bio) && els.panel.innerHTML.includes(ans.why), "T: depois da resposta deveriam aparecer o resumo da vida e a explicação do vitral");
+  confere(els.panel.innerHTML.includes("No vitral"), "T: falta o rótulo que separa a explicação do vitral");
+}
+
+// V. Ícone do site
+{
+  const fs = require("fs"), path = require("path"), { RAIZ } = require("./carregar");
+  const html = fs.readFileSync(path.join(RAIZ, "index.html"), "utf8");
+  confere(/<link rel="icon"[^>]*href="favicon\.svg"/.test(html) && fs.existsSync(path.join(RAIZ, "favicon.svg")), "V: falta o favicon.svg ou a tag que aponta para ele");
+  confere(/<link rel="apple-touch-icon"[^>]*href="favicon-180\.png"/.test(html) && fs.existsSync(path.join(RAIZ, "favicon-180.png")), "V: falta o ícone de 180 px para celular");
+}
+
 // E. Partida inteira por nível (modo padrão)
 {
   const { q } = carregar();
