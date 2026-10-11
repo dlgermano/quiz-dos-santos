@@ -1155,7 +1155,9 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   function setMode(k) {
     mode = k;
     try { localStorage.setItem("quiz-santos-modo", mode); } catch (e) {}
-    $("art").dataset.id = ""; newGame();
+    // A partida continua: só o vitral do santo que está na tela é trocado. As opções da rodada em curso ficam como estão.
+    st.mode = mode;
+    $("art").dataset.id = ""; render();
   }
 
   function renderDots() {

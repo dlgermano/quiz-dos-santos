@@ -69,6 +69,11 @@ const relata = (nome, prob) => { linhas.push(`${nome}: problemas: ${prob.length 
       if (tem !== total) prob.push(`guardou ${tem} de ${total} imagens`);
       if (!await ate(`return !!navigator.serviceWorker.controller`, 10)) prob.push("o sw.js não assumiu a página");
     }
+    for (const modo of ["imagem", "simbolos", "imagem"]) {
+      await roda(`document.getElementById("modo-${modo}").click()`);
+      const visto = await roda(`return [document.getElementById("modo-${modo}").getAttribute("aria-pressed"), document.querySelector("#art img")?.getAttribute("src") || "sem imagem"]`);
+      if (visto[0] !== "true" || !visto[1].startsWith(modo === "imagem" ? "img/santos/" : "img/simbolos/")) prob.push(`depois de guardar, modo ${modo}: botão marcado = ${visto[0]}, quadro = ${visto[1]}`);
+    }
     relata("guardar para jogar sem internet", prob);
 
     // 2. Servidor desligado: a página abre de novo e dá para jogar nos dois modos
@@ -82,6 +87,9 @@ const relata = (nome, prob) => { linhas.push(`${nome}: problemas: ${prob.length 
       if (!await ate(`return document.getElementById("foot").textContent.startsWith("Pronto")`, 10)) prob.push("o rodapé não diz que está pronto: " + await rodape());
       for (const modo of ["simbolos", "imagem"]) {
         await roda(`document.getElementById("modo-${modo}").click(); document.getElementById("lvl-todos").click()`);
+        const visto = await roda(`return [document.getElementById("modo-${modo}").getAttribute("aria-pressed"), document.querySelector("#art img")?.getAttribute("src") || "sem imagem"]`);
+        const pasta = modo === "imagem" ? "img/santos/" : "img/simbolos/";
+        if (visto[0] !== "true" || !visto[1].startsWith(pasta)) prob.push(`modo ${modo}: botão marcado = ${visto[0]}, quadro = ${visto[1]}`);
         for (let r = 0; r < 10; r++) {
           if (!await ate(`return ${vitral}`, 10)) { prob.push(`modo ${modo}, rodada ${r + 1}: o vitral não apareceu`); break; }
           await roda(`document.querySelector(".opt").click(); document.getElementById("next").click()`);

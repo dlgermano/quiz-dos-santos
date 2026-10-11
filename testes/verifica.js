@@ -165,14 +165,30 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   const { q, els, storage } = carregar();
   if (q.setMode) {
     for (let r = 0; r < 3; r++) { q.pick(q.state().order[q.state().i]); q.next(); }
+    // Pedido do Daniel em 11/10/2026: trocar de modo não começa partida nova, só troca o vitral do santo que está na tela
+    const sexo = Object.fromEntries(q.SAINTS.map(s => [s.id, s.sex]));
+    const antes = JSON.stringify({ ...q.state(), mode: "imagem" }), santo = q.state().order[3];
     q.setMode("imagem");
     const st = q.state();
-    confere(st.mode === "imagem" && st.i === 0 && st.hits === 0 && st.results.length === 0, "F: trocar de modo deveria começar partida nova");
+    confere(JSON.stringify(st) === antes, "F: trocar de modo deveria manter a partida (ordem, rodada, acertos e opções) e mudar só o modo");
+    confere(els.art.innerHTML.includes(`src="img/santos/${santo}.webp"`), "F: o quadro deveria mostrar a figura do mesmo santo que estava na tela");
     confere(storage["quiz-santos-modo"] === "imagem", "F: o modo não foi salvo");
     confere(els.panel.innerHTML.includes("Que santo é este?"), "F: a pergunta não mudou com o modo");
     q.setMode("simbolos");
+    confere(els.art.innerHTML.includes(`src="img/simbolos/${santo}.webp"`), "F: de volta a simbolos, o quadro deveria mostrar os símbolos do mesmo santo");
     confere(els.panel.innerHTML.includes("Que santo é representado por estes símbolos?"), "F: a pergunta do modo simbolos não voltou");
     confere(els.cap.textContent === "Vitral com os atributos tradicionais do santo", "F: legenda do modo simbolos errada");
+    // Com a resposta já dada, a troca mantém a resposta e a explicação na tela
+    q.pick(santo); q.setMode("imagem");
+    confere(q.state().picked === santo && q.state().hits === 4 && els.panel.innerHTML.includes("Acertou!") && els.art.innerHTML.includes(`img/santos/${santo}.webp`), "F: trocar de modo depois de responder deveria manter a resposta na tela");
+    // A rodada seguinte já é sorteada no modo novo: opções do mesmo sexo
+    q.next();
+    const s2 = q.state(), a2 = s2.order[4];
+    confere(s2.i === 4 && s2.opts.every(id => sexo[id] === sexo[a2]) && els.art.innerHTML.includes(`img/santos/${a2}.webp`), "F: a rodada seguinte deveria seguir no modo novo");
+    // Na tela de resultado, a troca não reinicia nem quebra
+    for (let r = 4; r < 10; r++) { q.pick(q.state().order[q.state().i]); q.next(); }
+    q.setMode("simbolos");
+    confere(q.state().i === 10 && q.state().hits === 10 && els.panel.innerHTML.includes("Resultado") && els.art.innerHTML.includes("img/simbolos/"), "F: na tela de resultado, trocar de modo deveria manter o resultado");
   } else confere(false, "F: setMode não existe");
 }
 
