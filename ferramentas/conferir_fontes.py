@@ -72,6 +72,22 @@ TITULOS = {
     "joaodacruz": ("John of the Cross", "João da Cruz"), "inacioantioquia": ("Ignatius of Antioch", "Inácio de Antioquia"),
     "tomasbecket": ("Thomas Becket", "Thomas Becket"), "brandao": ("Brendan the Navigator", "São Brandão"),
     "amaro": ("Saint Maurus", "Santo Amaro"), "ivo": ("Ivo of Kermartin", "Ivo de Kermartin"),
+    "ines": ("Agnes of Rome", "Inês de Roma"),
+    "pastorinhos": ("Francisco and Jacinta Marto", "Francisco e Jacinta Marto"),
+    "tome": ("Thomas the Apostle", "Tomé (apóstolo)"),
+    "tomasmore": ("Thomas More", "Thomas More"),
+    "boaventura": ("Bonaventure", "Boaventura de Bagnoregio"),
+    "bruno": ("Bruno of Cologne", "Bruno de Colônia"),
+    "filipeneri": ("Philip Neri", "Filipe Néri"),
+    "franciscopaula": ("Francis of Paola", "Francisco de Paula"),
+    "germano": ("Germain of Paris", "Germano de Paris"),
+    "ezequielmoreno": ("Ezequiél Moreno y Díaz", "Ezequiel Moreno y Díaz"),
+    "tomasvilanova": ("Thomas of Villanova", "Tomás de Vilanova"),
+    "joaosahagun": ("John of Sahagún", "João de Sahagún"),
+    "nicolautolentino": ("Nicholas of Tolentino", "Nicolau de Tolentino"),
+    "madalenanagasaki": ("Magdalene of Nagasaki", "Madalena de Nagasaki"),
+    "simao": ("Simon the Zealot", "Simão, o Zelote"),
+    "matias": ("Saint Matthias", "Matias (apóstolo)"),
 }
 
 

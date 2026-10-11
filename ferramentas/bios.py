@@ -126,6 +126,22 @@ BIO = {
     "brandao": "Abade irlandês nascido por volta de 484. Fundou vários mosteiros, entre eles o de Clonfert, e morreu por volta de 577.",
     "amaro": "Também chamado São Mauro, nasceu em Roma por volta de 512 e foi entregue ainda menino a São Bento. Conta-se que andou sobre as águas para salvar São Plácido.",
     "ivo": "Nascido na Bretanha, na França, em 1253, estudou direito em Paris e Orléans. Tornou-se padre e morreu em 1303.",
+    "ines": "Menina de família nobre de Roma, recusou os pretendentes por querer pertencer só a Cristo. É uma das santas citadas na oração eucarística da missa.",
+    "pastorinhos": "Irmãos, pastores de Aljustrel, perto de Fátima, viram Nossa Senhora em 1917 com a prima Lúcia. Foram canonizados em 2017 e estão entre os santos mais jovens da Igreja.",
+    "tome": "Um dos doze apóstolos, também chamado Dídimo, que quer dizer gêmeo. Ao ver Jesus ressuscitado, disse: “Meu Senhor e meu Deus!”.",
+    "tomasmore": "Nascido em Londres em 1478, foi advogado, pai de família e autor do livro Utopia. Chegou a chanceler do rei Henrique VIII e foi canonizado em 1935.",
+    "boaventura": "Nascido em Bagnoregio, na Itália, por volta de 1221, estudou e ensinou em Paris. Escreveu a vida de São Francisco e morreu em 1274, durante o Concílio de Lyon.",
+    "bruno": "Nascido em Colônia, na Alemanha, por volta de 1030, foi professor famoso em Reims. Morreu em 1101, num mosteiro que fundou na Calábria, na Itália.",
+    "filipeneri": "Nascido em Florença em 1515, foi para Roma aos 18 anos e ali passou a vida, cuidando de peregrinos, doentes e jovens. Morreu em 1595.",
+    "franciscopaula": "Nascido em Paola, na Calábria, em 1416, retirou-se ainda adolescente para uma gruta. O rei da França mandou chamá-lo, e ele passou seus últimos anos naquele país.",
+    "germano": "Nascido perto de Autun, na França, por volta de 496, foi eremita e abade antes de ser bispo de Paris. Morreu em 576.",
+    "ezequielmoreno": "Nascido em Alfaro, na Espanha, em 1848, entrou para os agostinianos recoletos. Foi canonizado em 1992.",
+    "tomasvilanova": "Nascido na Espanha em 1488, foi frade agostiniano e pregador. Tornou-se arcebispo de Valência em 1545.",
+    "joaosahagun": "Nascido em Sahagún, na Espanha, foi padre e depois frade agostiniano em Salamanca. Morreu em 1479 e foi canonizado em 1690.",
+    "nicolautolentino": "Nascido na Itália por volta de 1245, foi frade agostiniano e viveu cerca de trinta anos em Tolentino. Morreu em 1305 e foi canonizado em 1446.",
+    "madalenanagasaki": "Nascida no Japão por volta de 1611, tornou-se terciária dos agostinianos recoletos. Foi canonizada em 1987, a primeira santa japonesa.",
+    "simao": "Um dos doze apóstolos, chamado também de Cananeu. Os Evangelhos guardam dele apenas o nome.",
+    "matias": "Seguia Jesus desde o batismo no Jordão. Depois da Ascensão, foi escolhido por sorteio para completar o grupo dos doze apóstolos.",
 }
 
 

@@ -5,7 +5,7 @@ const falhas = [];
 let total = 0;
 const confere = (cond, msg) => { total++; if (!cond) falhas.push(msg); };
 
-const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia helena joana edwiges rosalima faustina bernadete teresaavila teresacalcuta bakhita madalena ana monica veronica dulce margaridamaria marta isabel catarinasena efigenia paulina gianna brigida escolastica doroteia edithstein".split(" ");
+const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia helena joana edwiges rosalima faustina bernadete teresaavila teresacalcuta bakhita madalena ana monica veronica dulce margaridamaria marta isabel catarinasena efigenia paulina gianna brigida escolastica doroteia edithstein ines madalenanagasaki".split(" ");
 
 // A. Dados
 {
@@ -13,22 +13,25 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   confere(!!q, "A: window.__quiz não existe");
   if (q) {
     const ids = q.SAINTS.map(s => s.id);
-    confere(ids.length === 118, `A: esperava 118 santos no total, achei ${ids.length}`);
+    confere(ids.length === 134, `A: esperava 134 santos no total, achei ${ids.length}`);
     confere(!ids.includes("elias"), "A: Santo Elias foi recusado pelo Daniel e não deveria estar na lista");
     confere(q.levelOf("joaodacruz") === "medio", "A: São João da Cruz deveria ser do nível medio");
     confere(new Set(ids).size === ids.length, "A: há ids repetidos");
+    // Lista do Daniel de 11/10/2026: completa os Doze Apóstolos e junta os irmãos de Fátima numa entrada só
+    confere(["tome", "simao", "matias", "pastorinhos", "tomasmore", "ines"].every(id => ids.includes(id)), "A: faltam santos da lista de 11/10/2026");
+    confere(q.SAINTS.find(s => s.id === "pastorinhos")?.name === "Santos Francisco e Jacinta Marto", "A: os irmãos de Fátima deveriam ser uma entrada só");
     confere(ids.every(id => /^[a-z]+$/.test(id)), "A: há id com letra maiúscula, acento ou espaço");
     const jm = q.SAINTS.find(s => s.id === "josemaria");
     confere(jm && jm.sex === "m" && q.levelOf("josemaria") === "medio" && jm.feast === "26 de junho", "A: São Josemaria deveria existir, ser homem, do nível medio e ter festa em 26 de junho");
     confere(q.SAINTS.every(s => s.sex === "m" || s.sex === "f"), "A: há santo sem sex válido");
     const f = q.SAINTS.filter(s => s.sex === "f").map(s => s.id).sort();
     confere(f.join() === MULHERES.slice().sort().join(), `A: lista de mulheres difere: ${f.join(" ")}`);
-    confere(q.SAINTS.filter(s => s.sex === "m").length === 85, "A: esperava 85 homens");
+    confere(q.SAINTS.filter(s => s.sex === "m").length === 99, "A: esperava 99 homens");
     confere(q.SAINTS.every(s => s.name && s.feast && s.why && s.why.length > 60), "A: há santo sem nome, festa ou explicação");
     confere(new Set(q.SAINTS.map(s => s.name)).size === ids.length, "A: há nomes repetidos");
     confere(q.SAINTS.every(s => { const v = q.windowSVG(s); return v.includes("<svg") && !/NaN|undefined/.test(v); }), "A: há desenho SVG com defeito");
     const porNivel = n => q.SAINTS.filter(s => q.levelOf(s.id) === n).length;
-    confere(porNivel("facil") === 35 && porNivel("medio") === 48 && porNivel("dificil") === 35, `A: níveis no total deveriam ser 35/48/35, achei ${porNivel("facil")}/${porNivel("medio")}/${porNivel("dificil")}`);
+    confere(porNivel("facil") === 38 && porNivel("medio") === 53 && porNivel("dificil") === 43, `A: níveis no total deveriam ser 38/53/43, achei ${porNivel("facil")}/${porNivel("medio")}/${porNivel("dificil")}`);
   }
 }
 
@@ -37,7 +40,7 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   const { q } = carregar();
   if (q.ativo) {
     const prontos = q.SAINTS.filter(s => q.ativo(s)), espera = q.SAINTS.filter(s => !q.ativo(s));
-    confere(prontos.length + espera.length === 118, "P: contagem de ativos e preparados não fecha");
+    confere(prontos.length + espera.length === 134, "P: contagem de ativos e preparados não fecha");
     confere(espera.every(s => !s.draw), "P: santo com desenho não pode estar escondido");
     const todos = q.poolFor("todos");
     confere(todos.length === prontos.length && espera.every(s => !todos.includes(s.id)), "P: santo sem imagens apareceu no nível Todos");
