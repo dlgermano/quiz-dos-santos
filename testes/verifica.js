@@ -130,9 +130,16 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
       confere(s.length === 3 && new Set(s).size === 3 && !s.includes(ans) && s.every(id => pool.includes(id)), `C: modo simbolos, ${nivel}, resposta ${ans}: sorteio errado`);
     }
   } else confere(false, "C: wrongFor não existe");
-  if (q.wrongFor) {
-    const w = q.wrongFor("apolonia", "dificil", "imagem");
-    confere(w.includes("rosalima") && w.includes("bakhita"), "C: no Difícil, as duas outras santas do nível deveriam sempre entrar");
+  // Quando o nível tem gente suficiente do mesmo sexo, as erradas saem todas do próprio nível;
+  // quando não tem, entram primeiro todas as do nível e o resto vem de fora
+  if (q.wrongFor) for (const [nivel] of q.LEVELS) {
+    const pool = q.poolFor(nivel);
+    for (const ans of pool) {
+      const doNivel = pool.filter(id => id !== ans && sexo[id] === sexo[ans]);
+      const w = q.wrongFor(ans, nivel, "imagem");
+      const ok = doNivel.length >= 3 ? w.every(id => doNivel.includes(id)) : doNivel.every(id => w.includes(id));
+      confere(ok, `C: modo imagem, ${nivel}, resposta ${ans}: as erradas deveriam priorizar o próprio nível`);
+    }
   }
 }
 
