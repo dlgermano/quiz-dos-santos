@@ -6,10 +6,11 @@
 <title>Quiz dos Santos</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" href="favicon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#1a2030">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" crossorigin>
 <style>
 /* Layout: a stained-glass window on the left, the question and choices on the right; stacks on phones */
 :root {
@@ -59,6 +60,9 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
 .lvl span { color: var(--muted); font-size: .8rem; font-variant-numeric: tabular-nums; margin-left: 2px; }
 .lvl[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--bg); }
 .lvl[aria-pressed="true"] span { color: var(--bg); opacity: .8; }
+.foot { color: var(--muted); font-size: .92rem; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; border-top: 1px solid var(--line); padding-top: 14px; }
+.foot:empty { display: none; }
+.foot .lvl { min-height: 44px; }
 .lvl:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 /* Tela larga e deitada: vitral à esquerda, do tamanho que couber na altura da tela */
 .stage { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 32px; align-items: start; }
@@ -158,6 +162,8 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     </div>
     <section class="panel" id="panel" aria-live="polite"></section>
   </main>
+
+  <footer class="foot" id="foot" aria-live="polite"></footer>
 </div>
 
 <script>
@@ -1250,8 +1256,62 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     if (st.i < ROUNDS && !st.picked && /^[1-4]$/.test(e.key)) pick(st.opts[+e.key - 1]);
   });
 
+  // Jogar sem internet. O sw.js serve o que estiver guardado no aparelho; aqui se guardam as imagens todas de uma vez.
+  const CACHE_IMAGENS = "quiz-santos-imagens-v1"; // o mesmo nome que está no sw.js
+  const todasImagens = () => [...COM_FIGURA.map(id => `img/santos/${id}.webp`), ...COM_SIMBOLOS.map(id => `img/simbolos/${id}.webp`)];
+  const offline = {
+    async faltam() {
+      const tem = new Set((await (await window.caches.open(CACHE_IMAGENS)).keys()).map(r => r.url.split("/img/")[1]));
+      return todasImagens().filter(u => !tem.has(u.slice(4)));
+    },
+    // Guarda o que falta, seis imagens por vez, e devolve quantas falharam
+    async baixar(aviso = () => {}) {
+      const cache = await window.caches.open(CACHE_IMAGENS), fila = await offline.faltam(), total = todasImagens().length;
+      let feitas = total - fila.length, erros = 0;
+      const braco = async () => {
+        for (let u; (u = fila.pop());) {
+          try { await cache.add(u); feitas++; } catch (e) { erros++; }
+          aviso(feitas, total);
+        }
+      };
+      await Promise.all(Array.from({ length: 6 }, braco));
+      return erros;
+    }
+  };
+  (async () => {
+    const nav = window.navigator, foot = $("foot");
+    if (!nav?.serviceWorker || !window.caches || !/^https?:$/.test(window.location.protocol)) return;
+    nav.serviceWorker.register("sw.js").catch(() => {});
+    const instalado = !!window.matchMedia?.("(display-mode: standalone)").matches || nav.standalone === true;
+    let convite = null;
+    const mostra = (texto, botao, acao) => {
+      foot.innerHTML = `<span>${texto}</span>${botao ? `<button class="lvl" type="button">${botao}</button>` : ""}`;
+      const b = botao && foot.querySelector("button");
+      if (b) b.onclick = acao;
+    };
+    const pronto = () => convite
+      ? mostra("Pronto para jogar sem internet.", "Instalar como aplicativo", () => { convite.prompt(); convite = null; pronto(); })
+      : mostra(instalado ? "Pronto para jogar sem internet." : "Pronto para jogar sem internet. Para virar aplicativo, abra o menu do navegador e toque em “Adicionar à tela inicial”.");
+    const guardar = async () => {
+      try { localStorage.setItem("quiz-santos-offline", "1"); } catch (e) {}
+      nav.storage?.persist?.().catch(() => {});
+      const erros = await offline.baixar((f, t) => mostra(`Guardando as imagens: ${f} de ${t}`));
+      if (erros) mostra(`Faltou guardar ${erros} ${erros === 1 ? "imagem" : "imagens"}. Confira a internet.`, "Tentar de novo", guardar);
+      else pronto();
+    };
+    window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); convite = e; if (foot.textContent.startsWith("Pronto")) pronto(); });
+    try {
+      const faltam = (await offline.faltam()).length;
+      let pedido = instalado;
+      try { pedido = pedido || localStorage.getItem("quiz-santos-offline") === "1"; } catch (e) {}
+      if (!faltam) pronto();
+      else if (pedido) guardar(); // quem já pediu, ou instalou, recebe sozinho as imagens novas
+      else mostra("Quer jogar sem internet? As imagens ficam guardadas no aparelho (cerca de 23 MB).", "Guardar para jogar sem internet", guardar);
+    } catch (e) {}
+  })();
+
   // Gancho para os testes (testes/verifica.js e testes/teste.html)
-  window.__quiz = { SAINTS, LEVELS, MODES, COM_FIGURA, COM_SIMBOLOS, ativo, poolFor, levelOf, wrongFor, imgFor, artFor, windowSVG, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
+  window.__quiz = { SAINTS, LEVELS, MODES, COM_FIGURA, COM_SIMBOLOS, ativo, poolFor, levelOf, wrongFor, imgFor, artFor, windowSVG, offline, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
 
   function start(data) {
     if (data && data.st && Array.isArray(data.st.order)) {

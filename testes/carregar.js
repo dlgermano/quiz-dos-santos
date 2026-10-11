@@ -2,13 +2,14 @@
 const fs = require("fs"), path = require("path");
 const RAIZ = path.join(__dirname, "..");
 
-function carregar(storage = {}, hot) {
+function carregar(storage = {}, hot, extra) {
   const html = fs.readFileSync(path.join(RAIZ, "index.html"), "utf8");
   const js = html.match(/<script>([\s\S]*?)<\/script>/)[1];
   const els = {};
   const filho = { classList: { add() {} }, tagName: "svg" };
   const el = id => els[id] ??= { id, dataset: {}, innerHTML: "", textContent: "", focus() {}, querySelectorAll: () => [], querySelector: () => filho };
   const window = hot ? { claude: { hot: { data: hot } } } : {};
+  Object.assign(window, extra); // ex.: caches de mentira, para o modo sem internet
   const document = { getElementById: el, addEventListener() {} };
   // storage === "bloqueado" imita o navegador que proíbe o localStorage
   const localStorage = storage === "bloqueado"

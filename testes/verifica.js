@@ -224,5 +224,109 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   }
 }
 
-console.log(`${total - falhas.length} de ${total} conferências passaram`);
-if (falhas.length) { console.log(falhas.join("\n")); process.exit(1); }
+// H. Aplicativo sem internet (manifest.webmanifest, sw.js e o botão de guardar as imagens)
+const assincronos = (async () => {
+  const fs = require("fs"), path = require("path"), { RAIZ } = require("./carregar");
+  const ler = n => fs.existsSync(path.join(RAIZ, n)) ? fs.readFileSync(path.join(RAIZ, n), "utf8") : "";
+  const html = ler("index.html"), sw = ler("sw.js");
+
+  let man = {};
+  try { man = JSON.parse(ler("manifest.webmanifest")); } catch (e) {}
+  confere(man.name === "Quiz dos Santos" && !!man.short_name, "H: manifest.webmanifest sem name ou short_name");
+  confere(man.start_url === "./" && man.scope === "./", "H: start_url e scope do manifesto deveriam ser ./ (o site mora numa subpasta do GitHub Pages)");
+  confere(man.display === "standalone", "H: o manifesto deveria abrir como aplicativo (display standalone)");
+  const icones = man.icons || [];
+  for (const [lado, uso] of [[192, "any"], [512, "any"], [512, "maskable"]]) {
+    const ic = icones.find(i => i.sizes === `${lado}x${lado}` && (i.purpose || "any") === uso);
+    confere(!!ic, `H: falta ícone ${lado}x${lado} (${uso}) no manifesto`);
+    if (!ic) continue;
+    const arq = path.join(RAIZ, ic.src);
+    confere(fs.existsSync(arq), `H: o manifesto cita ${ic.src}, que não existe`);
+    if (fs.existsSync(arq)) { const b = fs.readFileSync(arq); confere(b.readUInt32BE(16) === lado && b.readUInt32BE(20) === lado, `H: ${ic.src} não tem ${lado}x${lado}`); }
+  }
+  confere(html.includes('<link rel="manifest" href="manifest.webmanifest">'), "H: o index.html não aponta para o manifesto");
+  confere(/serviceWorker\.register\("sw\.js"\)/.test(html), "H: o index.html não registra o sw.js");
+  confere(/rel="stylesheet" href="https:\/\/fonts\.googleapis\.com[^>]*crossorigin/.test(html), "H: a folha de estilo das fontes precisa de crossorigin para poder ser guardada");
+
+  const nomeImg = t => (t.match(/"(quiz-santos-imagens-v\d+)"/) || [])[1];
+  confere(!!nomeImg(sw) && nomeImg(sw) === nomeImg(html), "H: o nome do cache de imagens difere entre sw.js e index.html");
+  const lista = JSON.parse((sw.match(/const ARQUIVOS = (\[[^\]]*\])/) || [0, "[]"])[1]);
+  confere(lista.includes("./") && lista.includes("manifest.webmanifest"), "H: o sw.js deveria guardar a página e o manifesto na instalação");
+  for (const a of lista) confere(fs.existsSync(path.join(RAIZ, a === "./" ? "index.html" : a)), `H: o sw.js guarda ${a}, que não existe`);
+
+  const bytes = ["santos", "simbolos"].flatMap(d => fs.readdirSync(path.join(RAIZ, "img", d)).map(n => fs.statSync(path.join(RAIZ, "img", d, n)).size)).reduce((a, b) => a + b, 0);
+  const dito = +(html.match(/cerca de (\d+) MB/) || [0, 0])[1];
+  confere(dito === Math.round(bytes / 1048576), `H: a página diz "cerca de ${dito} MB", as imagens somam ${(bytes / 1048576).toFixed(1)} MB`);
+
+  // Caches e rede de mentira, para exercitar o sw.js e o botão sem navegador
+  const BASE = "https://exemplo.test/quiz/";
+  const chave = (r, o) => { const u = new URL(typeof r === "string" ? r : r.url, BASE); if (o && o.ignoreSearch) u.search = ""; return u.href; };
+  const fazCaches = () => {
+    const todos = new Map();
+    const abre = n => {
+      if (!todos.has(n)) todos.set(n, new Map());
+      const m = todos.get(n);
+      return {
+        match: async (r, o) => o && o.ignoreSearch ? [...m].find(([k]) => chave(k, o) === chave(r, o))?.[1] : m.get(chave(r)),
+        put: async (r, resp) => { m.set(chave(r), resp); },
+        add: async r => { const resp = await api.rede(chave(r)); if (!resp.ok) throw new Error("falhou"); m.set(chave(r), resp); },
+        addAll: async rs => { for (const r of rs) m.set(chave(r), await api.rede(chave(r))); },
+        keys: async () => [...m.keys()].map(url => ({ url })),
+      };
+    };
+    const api = { todos, rede: async u => ({ ok: true, de: "rede", url: u, clone() { return this; } }),
+      caches: { open: async n => abre(n), keys: async () => [...todos.keys()], delete: async n => todos.delete(n) } };
+    return api;
+  };
+
+  if (sw) {
+    const api = fazCaches(), ouv = {};
+    let reclamou = false;
+    const self = { location: new URL(BASE), addEventListener: (t, f) => { ouv[t] = f; }, skipWaiting: async () => {}, clients: { claim: async () => { reclamou = true; } } };
+    const fetchFalso = r => api.rede(chave(r));
+    new Function("self", "caches", "fetch", "Response", sw)(self, api.caches, fetchFalso, { error: () => ({ ok: false, de: "erro" }) });
+    const dispara = async (tipo, request) => { let p; ouv[tipo]({ request, waitUntil: x => { p = x; }, respondWith: x => { p = x; } }); return p; };
+    const pede = (url, mode = "no-cors") => dispara("fetch", { url: chave(url), method: "GET", mode });
+
+    await dispara("install");
+    const casca = [...api.todos.keys()].find(k => k.includes("casca"));
+    confere(!!casca && api.todos.get(casca).has(BASE) && api.todos.get(casca).has(BASE + "favicon.svg"), "H: a instalação do sw.js não guardou a página e o ícone");
+    api.todos.set("quiz-santos-imagens-v0", new Map()); api.todos.set("outra-coisa", new Map());
+    await dispara("activate");
+    confere(!api.todos.has("quiz-santos-imagens-v0") && api.todos.has("outra-coisa") && api.todos.has(casca) && reclamou, "H: a ativação deveria apagar só os caches antigos do quiz e assumir as páginas abertas");
+
+    confere((await pede(BASE + "?v=1", "navigate")).de === "rede", "H: com internet, a página deveria vir da rede (para chegar correção nova)");
+    const r1 = await pede(BASE + "img/santos/pedro.webp");
+    confere(r1.de === "rede" && api.todos.get(nomeImg(sw))?.has(BASE + "img/santos/pedro.webp"), "H: imagem vista com internet deveria ficar guardada no cache de imagens");
+    confere(await pede("https://outro.test/x.png") === undefined, "H: o sw.js não deveria mexer em pedido de outro site");
+    api.rede = async u => ({ ok: true, de: "rede-nova", url: u, clone() { return this; } });
+    confere((await pede(BASE + "img/santos/pedro.webp")).de === "rede", "H: imagem guardada deveria vir do cache, sem ir à rede");
+    api.rede = async () => { throw new Error("sem internet"); };
+    confere((await pede(BASE + "?origem=atalho", "navigate"))?.url === BASE, "H: sem internet, a página deveria abrir do que está guardado");
+    confere((await pede(BASE + "img/santos/pedro.webp")).de === "rede", "H: sem internet, a imagem guardada deveria aparecer");
+    confere(await pede(BASE + "img/santos/paulo.webp").then(() => false, () => true), "H: sem internet, imagem não guardada deveria falhar (a página trata a falha)");
+  } else confere(false, "H: sw.js não existe");
+
+  {
+    const api = fazCaches();
+    const { q } = carregar({}, undefined, { caches: api.caches });
+    const of = q.offline;
+    confere(!!of, "H: window.__quiz.offline não existe");
+    if (of) {
+      const total = q.COM_FIGURA.length + q.COM_SIMBOLOS.length;
+      confere((await of.faltam()).length === total, "H: sem nada guardado, deveriam faltar todas as imagens");
+      api.rede = async u => ({ ok: !u.endsWith("/img/santos/rita.webp"), url: u, clone() { return this; } });
+      const avisos = [];
+      confere(await of.baixar((f, t) => avisos.push([f, t])) === 1, "H: baixar deveria contar 1 imagem que falhou");
+      confere((await of.faltam()).join() === "img/santos/rita.webp", "H: depois de baixar, deveria faltar só a imagem que falhou");
+      confere(avisos.length === total && avisos.at(-1).join() === `${total - 1},${total}`, "H: o andamento deveria ser avisado a cada imagem");
+      api.rede = async u => ({ ok: true, url: u, clone() { return this; } });
+      confere(await of.baixar() === 0 && (await of.faltam()).length === 0, "H: tentar de novo deveria completar o que faltava");
+    }
+  }
+})();
+
+assincronos.then(() => {
+  console.log(`${total - falhas.length} de ${total} conferências passaram`);
+  if (falhas.length) { console.log(falhas.join("\n")); process.exit(1); }
+});
