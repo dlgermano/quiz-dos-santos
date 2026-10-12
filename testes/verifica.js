@@ -117,6 +117,30 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   }
 }
 
+// D. Baralho: nenhum santo repete como resposta antes de todos do nível aparecerem
+{
+  const { q, storage } = carregar();
+  for (const [nivel] of q.LEVELS) {
+    // Em 60 partidas seguidas, cada santo sai quase o mesmo número de vezes (no sorteio solto a diferença passava de 10)
+    const pool = q.poolFor(nivel), conta = Object.fromEntries(pool.map(id => [id, 0]));
+    for (let g = 0; g < 60; g++) q.dealOrder(nivel).forEach(id => conta[id]++);
+    const v = Object.values(conta);
+    confere(Math.max(...v) - Math.min(...v) <= 2, `D: em ${nivel} a contagem por santo variou de ${Math.min(...v)} a ${Math.max(...v)}`);
+    for (let g = 0; g < 30; g++) { const o = q.dealOrder(nivel); if (new Set(o).size !== o.length) { confere(false, `D: santo repetido dentro da partida em ${nivel}`); break; } }
+  }
+  confere(typeof storage["quiz-santos-vistos"] === "string", "D: o baralho deveria ficar salvo no aparelho");
+  // Baralho salvo é retomado ao reabrir; santo que não existe mais é ignorado
+  const pool = q.poolFor("facil"), quase = pool.slice(0, pool.length - 3);
+  const r = carregar({ "quiz-santos-nivel": "medio", "quiz-santos-vistos": JSON.stringify({ facil: [...quase, "inexistente"] }) }).q;
+  const o = r.dealOrder("facil");
+  confere(pool.slice(-3).every(id => o.includes(id)) && o.length === 10, "D: ao reabrir, os santos que faltavam no baralho deveriam sair primeiro");
+  confere(carregar({ "quiz-santos-vistos": "lixo" }).q.dealOrder("facil").length === 10, "D: baralho salvo corrompido deveria ser ignorado");
+  const b = carregar("bloqueado").q, cb = Object.fromEntries(pool.map(id => [id, 0]));
+  for (let g = 0; g < 40; g++) b.dealOrder("facil").forEach(id => cb[id]++);
+  const vb = Object.values(cb);
+  confere(Math.max(...vb) - Math.min(...vb) <= 2, "D: com localStorage bloqueado o baralho deveria funcionar na memória");
+}
+
 // C. Sorteio das opções erradas
 {
   const { q } = carregar();

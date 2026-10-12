@@ -1156,9 +1156,29 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     return inLevel.concat(extra).slice(0, 3);
   }
 
+  // Baralho por nível: guarda quem já saiu como resposta neste ciclo. Só repete santo depois que todos do nível apareceram.
+  const VISTOS = "quiz-santos-vistos";
+  const lerVistos = () => { try { const v = JSON.parse(localStorage.getItem(VISTOS)); return v && typeof v === "object" ? v : {}; } catch (e) { return {}; } };
+  let vistosMem = lerVistos(); // cópia em memória, para funcionar mesmo com o localStorage bloqueado
+  function dealOrder(lv) {
+    const pool = poolFor(lv);
+    const vistos = (Array.isArray(vistosMem[lv]) ? vistosMem[lv] : []).filter(id => pool.includes(id));
+    let order = shuffle(pool.filter(id => !vistos.includes(id))).slice(0, ROUNDS);
+    let ciclo;
+    if (order.length < ROUNDS) {
+      // O baralho acabou: completa com um baralho novo, sem repetir quem já está nesta partida
+      const resto = shuffle(pool.filter(id => !order.includes(id))).slice(0, ROUNDS - order.length);
+      order = order.concat(resto);
+      ciclo = resto;
+    } else ciclo = vistos.concat(order);
+    vistosMem[lv] = ciclo;
+    try { localStorage.setItem(VISTOS, JSON.stringify(vistosMem)); } catch (e) {}
+    return order;
+  }
+
   let st;
   function newGame() {
-    const order = shuffle(poolFor(level)).slice(0, ROUNDS);
+    const order = dealOrder(level);
     st = { order, level, mode, i: 0, hits: 0, results: [], picked: null, opts: [] };
     setupRound();
   }
@@ -1346,7 +1366,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   })();
 
   // Gancho para os testes (testes/verifica.js e testes/teste.html)
-  window.__quiz = { SAINTS, LEVELS, MODES, COM_FIGURA, COM_SIMBOLOS, ativo, poolFor, levelOf, wrongFor, imgFor, artFor, windowSVG, offline, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
+  window.__quiz = { SAINTS, LEVELS, MODES, COM_FIGURA, COM_SIMBOLOS, ativo, poolFor, levelOf, wrongFor, imgFor, artFor, windowSVG, offline, dealOrder, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
 
   function start(data) {
     if (data && data.st && Array.isArray(data.st.order)) {
