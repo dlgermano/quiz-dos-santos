@@ -122,6 +122,7 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
       if (new Set(st.opts.map(sexo)).size !== 1) mesmoSexo = false;
       q.pick(st.order[st.i]);
       if (st.i === 1) confere(els.panel.innerHTML.includes("opt ok") && els.panel.innerHTML.includes("class=\"name\""), "N: em etapa, acertar deveria mostrar o nome e a explicação do santo");
+      if (st.i === 1) confere(els.dots.innerHTML.startsWith('<span class="dot ok"></span><span class="dot now"></span><span class="dot "></span>'), "N: em etapa, as bolinhas deveriam acender em ordem, da esquerda para a direita");
       if (st.i === 1) confere(JSON.parse(s["quiz-santos-progresso"]).santos.length === 1, "N: o acerto deveria ser gravado na hora, antes de a etapa acabar");
       q.next();
     }

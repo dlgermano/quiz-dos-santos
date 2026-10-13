@@ -1513,9 +1513,9 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   }
 
   function renderDots() {
-    // Em etapa, uma bolinha por santo da etapa: acesa a de quem já foi acertado
+    // Em etapa, uma bolinha por santo da etapa. Acendem em ordem, da esquerda para a direita, uma a cada santo acertado
     if (st.tipo === "etapa") {
-      $("dots").innerHTML = st.itens.map(id => `<span class="dot ${st.certos.includes(id) ? "ok" : id === st.order[st.i] ? "now" : ""}"></span>`).join("");
+      $("dots").innerHTML = st.itens.map((_, k) => `<span class="dot ${k < st.certos.length ? "ok" : k === st.certos.length ? "now" : ""}"></span>`).join("");
       return;
     }
     let s = "";
