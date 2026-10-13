@@ -85,7 +85,7 @@ const relata = (nome, prob) => { linhas.push(`${nome}: problemas: ${prob.length 
     if (!await ate(`return document.querySelector("h1")?.textContent === "Quiz dos Santos" && !!document.getElementById("livre")`, 15)) prob.push("a página não abriu");
     else {
       await roda(`document.getElementById("col-santos").click()`);
-      if (await roda(`return document.querySelectorAll("#mapa .casa").length`) !== 19) prob.push("sem internet, o mapa não mostrou as 19 etapas");
+      if (await roda(`return document.querySelectorAll("#mapa .casa").length`) !== 20) prob.push("sem internet, o mapa não mostrou as 20 etapas");
       await roda(`document.getElementById("ao-inicio").click(); document.getElementById("livre").click()`);
       if (!await ate(`return ${vitral}`, 10)) prob.push("o vitral da primeira rodada não apareceu");
       if (!await ate(`return document.getElementById("foot").textContent.startsWith("Pronto")`, 10)) prob.push("o rodapé não diz que está pronto: " + await rodape());

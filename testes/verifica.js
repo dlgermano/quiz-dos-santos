@@ -54,9 +54,9 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     confere(col.ordem.length === ativos.length && new Set(col.ordem).size === col.ordem.length && ativos.every(id => col.ordem.includes(id)),
       "M: a ordem do mapa deveria ter cada santo ativo uma vez só");
     const ets = q.etapas(col);
-    confere(ets.length === 19 && ets.slice(0, -1).every(e => e.length === 10) && ets.at(-1).length === 4,
-      `M: esperava 18 etapas de 10 e uma de 4, achei ${ets.map(e => e.length).join(",")}`);
-    const peso = { facil: 0, medio: 1, dificil: 2 }, pesos = col.ordem.map(id => peso[q.levelOf(id)]);
+    confere(ets.length === 20 && ets.every(e => e.length === 10),
+      `M: esperava 20 etapas de 10, achei ${ets.map(e => e.length).join(",")}`);
+    const peso = { facil: 0, medio: 1, dificil: 2 }, pesos = col.ordem.slice(0, 184).map(id => peso[q.levelOf(id)]); // os 16 de 13/10/2026 entraram no fim, à espera da reclassificação do Daniel
     confere(pesos.every((p, k) => !k || p >= pesos[k - 1]), "M: há santo de nível mais difícil antes de um mais fácil");
     confere(ets[0].join(" ") === "jose pedro antonio francisco jorge joao sebastiao luzia rita expedito", "M: a etapa 1 difere da aprovada pelo Daniel em 13/10/2026");
     confere(q.acertados(col).length === 0 && q.etapaAberta(col) === 0 && q.situacao(col, 0) === "aberta" && q.situacao(col, 1) === "trancada",
@@ -67,7 +67,7 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     confere(q.etapaAberta(col) === 1 && q.situacao(col, 0) === "completa" && q.situacao(col, 1) === "aberta" && q.situacao(col, 2) === "trancada",
       "M: com a etapa 1 acertada, a 2 deveria abrir e a 3 continuar trancada");
     col.ordem.forEach(id => q.marcarAcerto(col, id));
-    confere(q.etapaAberta(col) === -1 && q.situacao(col, 18) === "completa", "M: com tudo acertado, não deveria haver etapa aberta");
+    confere(q.etapaAberta(col) === -1 && q.situacao(col, 19) === "completa", "M: com tudo acertado, não deveria haver etapa aberta");
   }
 }
 {
@@ -174,14 +174,14 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     confere(els.inicio.hidden === false && els.mapa.hidden === true && els.stage.hidden === true && els.modes.hidden === true && els.dots.hidden === true,
       "O: no início, o mapa, o jogo e os botões do jogo deveriam estar escondidos");
     const ini = els.inicio.innerHTML;
-    confere(ini.includes("id=\"col-santos\"") && ini.includes("0 de 184") && ini.includes("id=\"livre\""), "O: o início deveria ter a carta dos santos com 0 de 184 e o botão de jogo livre");
+    confere(ini.includes("id=\"col-santos\"") && ini.includes("0 de 200") && ini.includes("id=\"livre\""), "O: o início deveria ter a carta dos santos com 0 de 200 e o botão de jogo livre");
     q.abrirMapa("nada");
     confere(q.tela() === "inicio", "O: coleção que não existe não deveria abrir mapa");
     q.abrirMapa("santos");
     const mapa = els.mapa.innerHTML, conta = t => (mapa.match(new RegExp(`class="casa ${t}"`, "g")) || []).length;
     confere(q.tela() === "mapa" && els.mapa.hidden === false && els.inicio.hidden === true, "O: abrir o mapa deveria esconder o início");
-    confere(conta("aberta") === 1 && conta("trancada") === 18 && conta("completa") === 0 && mapa.includes("Caminho dos Santos") && mapa.includes("id=\"etapa-19\""),
-      "O: sem progresso, o mapa deveria ter 1 etapa aberta e 18 trancadas");
+    confere(conta("aberta") === 1 && conta("trancada") === 19 && conta("completa") === 0 && mapa.includes("Caminho dos Santos") && mapa.includes("id=\"etapa-20\""),
+      "O: sem progresso, o mapa deveria ter 1 etapa aberta e 19 trancadas");
     q.jogarEtapa("santos", 0);
     confere(q.tela() === "jogo" && els.stage.hidden === false && els.mapa.hidden === true && els.modes.hidden === false && els.nav.innerHTML.includes("Mapa"),
       "O: começar uma etapa deveria mostrar o jogo, com o botão de volta ao mapa");
@@ -198,7 +198,7 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   const ets = (() => { const { q } = carregar(); return q.etapas(q.COLECOES[0]); })();
   const { q, els } = carregar({ "quiz-santos-progresso": JSON.stringify({ santos: ets[0].concat(ets[1].slice(0, 3)) }) }, undefined, undefined, true);
   if (q.tela) {
-    confere(els.inicio.innerHTML.includes("13 de 184"), "O: a carta dos santos deveria mostrar o progresso guardado");
+    confere(els.inicio.innerHTML.includes("13 de 200"), "O: a carta dos santos deveria mostrar o progresso guardado");
     q.abrirMapa("santos");
     const mapa = els.mapa.innerHTML;
     confere(mapa.includes("class=\"casa completa\" id=\"etapa-1\"") && mapa.includes("class=\"casa aberta\" id=\"etapa-2\"") && mapa.includes("Etapa 2 · 3 de 10") && mapa.includes("class=\"casa trancada\" id=\"etapa-3\""),
