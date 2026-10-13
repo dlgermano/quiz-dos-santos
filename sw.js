@@ -2,7 +2,7 @@
 // Mudou favicon, ícone ou manifesto: suba o número de CASCA. Refez imagem com o mesmo nome: ponha (ou suba) o número
 // dela em REFEITAS, no index.html, e só ela é baixada de novo. Subir o de IMAGENS faz baixar todas outra vez.
 const CASCA = "quiz-santos-casca-v1";
-const IMAGENS = "quiz-santos-imagens-v3";
+const IMAGENS = "quiz-santos-imagens-v4";
 const ARQUIVOS = ["./", "manifest.webmanifest", "favicon.svg", "favicon-180.png", "icone-192.png", "icone-512.png", "icone-mascara-512.png"];
 
 self.addEventListener("install", e => e.waitUntil(
