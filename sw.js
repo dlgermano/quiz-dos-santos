@@ -1,6 +1,6 @@
 // Deixa o Quiz dos Santos abrir sem internet: guarda a página e as imagens no aparelho e as serve de lá.
-// Mudou favicon, ícone ou manifesto: suba o número de CASCA. Refez imagem com o mesmo nome: suba o de IMAGENS
-// (e o mesmo nome no index.html), para os aparelhos baixarem de novo.
+// Mudou favicon, ícone ou manifesto: suba o número de CASCA. Refez imagem com o mesmo nome: ponha (ou suba) o número
+// dela em REFEITAS, no index.html, e só ela é baixada de novo. Subir o de IMAGENS faz baixar todas outra vez.
 const CASCA = "quiz-santos-casca-v1";
 const IMAGENS = "quiz-santos-imagens-v1";
 const ARQUIVOS = ["./", "manifest.webmanifest", "favicon.svg", "favicon-180.png", "icone-192.png", "icone-512.png", "icone-mascara-512.png"];

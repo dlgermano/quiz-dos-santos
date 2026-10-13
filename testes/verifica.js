@@ -271,6 +271,13 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   }
 }
 
+// J. Imagem refeita: São Longuinho ganhou vitral novo em 13/10/2026 e o endereço muda, para os aparelhos baixarem de novo
+{
+  const { q } = carregar();
+  confere(q.imgFor("longuinho", "imagem") === "img/santos/longuinho.webp?v=2", "J: a figura de São Longuinho deveria vir com ?v=2");
+  confere(q.imgFor("longuinho", "simbolos") === "img/simbolos/longuinho.webp", "J: os símbolos de São Longuinho não mudaram");
+}
+
 // I. Compartilhar pelo WhatsApp: o botão leva a mensagem e o link do jogo, sem o ?/# de quem compartilhou
 {
   const { els } = carregar({}, null, { location: { protocol: "https:", origin: "https://exemplo.test", pathname: "/quiz/", search: "?x=1", hash: "#y" } });
