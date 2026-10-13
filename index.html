@@ -105,6 +105,8 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
 .casa.aberta { color: var(--accent); font-weight: 700; }
 .casa.aberta .arco { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 35%, transparent); }
 .casa.aberta .arco img { filter: grayscale(1) opacity(.45); }
+/* o número fica sob a imagem só como reserva; com a imagem translúcida ele apareceria por cima do vitral */
+.casa.aberta .arco:has(img) { color: transparent; }
 .casa.trancada { cursor: default; }
 .casa.trancada .arco { border-color: var(--muted); opacity: .7; }
 /* Tela larga e deitada: vitral à esquerda, do tamanho que couber na altura da tela */
@@ -1521,23 +1523,27 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   function renderFimEtapa() {
     const col = colecao(st.colecao), n = st.etapa, total = etapas(col).length;
     const errados = [...new Set(st.results.filter(r => !r.ok).map(r => r.id))];
+    const jogados = new Set(st.results.map(r => r.id)).size, todos = jogados === st.itens.length;
+    const quem = todos ? `os ${st.itens.length}` : jogados === 1 ? "o santo que faltava" : `os ${jogados} que faltavam`;
+    const temProxima = n + 1 < total && situacao(col, n + 1) !== "trancada";
     showArt(byId[st.results.at(-1).id]);
     $("panel").innerHTML = `<div class="end">
       <div class="eyebrow">Etapa ${n + 1} completa</div>
       <div class="big">${st.itens.length}/${st.itens.length}</div>
-      <p class="q">${errados.length ? `Você acertou os ${st.itens.length} em ${st.results.length} respostas.` : "Todos de primeira. Você conhece bem estes santos."}</p>
-      ${etapaAberta(col) === -1 ? `<p class="why">Você completou o ${col.nomeMapa}.</p>` : ""}
+      <p class="q">${errados.length ? `Você acertou ${quem} em ${st.results.length} respostas.` : todos ? "Todos de primeira. Você conhece bem estes santos." : `Você acertou ${quem} de primeira.`}</p>
+      ${n + 1 === total && etapaAberta(col) === -1 ? `<p class="why">Você completou o ${col.nomeMapa}.</p>` : ""}
       ${errados.length ? `<div><div class="eyebrow" style="margin-bottom:6px">Para rever</div><ul class="missed">${errados.map(id =>
         `<li><b>${byId[id].name}</b>: ${byId[id].why}</li>`).join("")}</ul></div>` : ""}
-      <div class="acoes">${n + 1 < total ? `<button class="btn" id="proxima">Próxima etapa</button>` : ""}<button class="btn" id="vermapa">Ver o mapa</button>
+      <div class="acoes">${temProxima ? `<button class="btn" id="proxima">Próxima etapa</button>` : ""}<button class="btn" id="vermapa">Ver o mapa</button>
       ${botaoZap(`Completei a etapa ${n + 1} de ${total} do ${col.nomeMapa}, no Quiz dos Santos. Consegue chegar até aqui?`, "Desafiar no WhatsApp", "zap-fim")}</div></div>`;
-    const colId = st.colecao, prox = n + 1 < total ? $("proxima") : null;
+    const colId = st.colecao, prox = temProxima ? $("proxima") : null;
     $("vermapa").onclick = () => volta(() => abrirMapa(colId));
     if (prox) { prox.onclick = () => jogarEtapa(colId, n + 1); prox.focus(); } else $("vermapa").focus();
   }
 
   function render() {
     renderNav();
+    $("score").hidden = st.tipo === "etapa";
     renderModes();
     $("cap").textContent = st.mode === "imagem" ? "Vitral do santo" : "Vitral com os atributos tradicionais do santo";
     renderLevels();
@@ -1602,7 +1608,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   }
 
   document.addEventListener("keydown", e => {
-    if (!st || tela !== "jogo" || e.target.closest &&e.target.closest("input,textarea")) return;
+    if (!st || tela !== "jogo" || e.target.closest && e.target.closest("input,textarea")) return;
     if (st.i < st.order.length && !st.picked && /^[1-4]$/.test(e.key)) pick(st.opts[+e.key - 1]);
   });
 

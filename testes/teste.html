@@ -188,6 +188,8 @@ f.onload = () => {
         // Para a foto: 34 santos acertados (3 etapas completas e a quarta pela metade) e o mapa aberto
         Q.ORDEM.slice(0, 34).forEach(id => Q.marcarAcerto(Q.COLECOES[0], id));
         q("#col-santos").click();
+        const cortadas = qa(".casa").filter(c => c.getBoundingClientRect().left < 0 || c.getBoundingClientRect().right > w.innerWidth).length;
+        log.push(`mapa sem etapa cortada: problemas: ${cortadas ? cortadas + " etapas cortadas pela borda da tela" : "nenhum"}`);
       }
       else if (acao === "completo") {
         let t = false;

@@ -139,12 +139,20 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
 }
 {
   const ets = (() => { const { q } = carregar(); return q.etapas(q.COLECOES[0]); })();
-  let { q } = carregar({ "quiz-santos-progresso": JSON.stringify({ santos: ets[0].slice(0, 4) }) });
+  let { q, els } = carregar({ "quiz-santos-progresso": JSON.stringify({ santos: ets[0].slice(0, 4) }) });
   if (q.jogarEtapa) {
     q.jogarEtapa("santos", 0);
     const st = q.state();
     confere(st.order.length === 6 && st.order.every(id => !ets[0].slice(0, 4).includes(id)) && st.certos.length === 4,
       "N: voltar a uma etapa pela metade deveria trazer só os santos que faltam");
+    for (let k = 0; k < 6; k++) { q.pick(st.order[st.i]); q.next(); }
+    const retomada = els.panel.innerHTML;
+    confere(retomada.includes("Etapa 1 completa") && retomada.includes("6 que faltavam") && !retomada.includes("Todos de primeira"),
+      "N: etapa retomada sem erro deveria dizer que acertou os 6 que faltavam, e não 'Todos de primeira'");
+    q.jogarEtapa("santos", 0);
+    const zero = q.state();
+    for (let k = 0; k < 10; k++) { q.pick(zero.order[zero.i]); q.next(); }
+    confere(els.panel.innerHTML.includes("Todos de primeira"), "N: etapa jogada inteira sem erro deveria dizer 'Todos de primeira'");
     q = carregar("bloqueado").q;
     q.jogarEtapa("santos", 0);
     const b = q.state();
@@ -172,9 +180,11 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     q.jogarEtapa("santos", 0);
     confere(q.tela() === "jogo" && els.stage.hidden === false && els.mapa.hidden === true && els.modes.hidden === false && els.nav.innerHTML.includes("Mapa"),
       "O: começar uma etapa deveria mostrar o jogo, com o botão de volta ao mapa");
+    confere(els.score.hidden === true, "O: em etapa, o placar Rodada/Acertos deveria ficar escondido");
     q.jogoLivre();
     confere(q.tela() === "jogo" && q.state().tipo === "livre" && els.levels.innerHTML.includes("lvl-facil") && els.nav.innerHTML.includes("Início"),
       "O: o jogo livre deveria mostrar os níveis e o botão de volta ao início");
+    confere(els.score.hidden === false, "O: no jogo livre, o placar deveria voltar");
     q.abrirInicio();
     confere(q.tela() === "inicio" && els.stage.hidden === true && els.foot.hidden === false, "O: voltar ao início deveria esconder o jogo e mostrar o rodapé");
   } else confere(false, "O: window.__quiz.tela não existe");
