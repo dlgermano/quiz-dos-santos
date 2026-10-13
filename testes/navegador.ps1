@@ -14,7 +14,7 @@ $comum = @("--headless=new", "--disable-gpu", "--hide-scrollbars", "--user-data-
 $base = "http://127.0.0.1:$porta/testes/teste.html"
 $falhou = $false
 try {
-  foreach ($url in @("$base`?acao=completo", "$base`?acao=resposta&modo=imagem&largura=390", "$base`?acao=cabe&largura=390&altura=844", "$base`?acao=cabe&largura=360&altura=740", "$base`?acao=cabe&largura=320&altura=568", "$base`?acao=cabe&largura=412&altura=915", "$base`?acao=cabe&largura=768&altura=1024", "$base`?acao=cabe&largura=844&altura=390", "$base`?acao=etapa", "$base`?acao=etapa&largura=390&altura=844", "$base`?acao=mapa&largura=320&altura=568")) {
+  foreach ($url in @("$base`?acao=completo", "$base`?acao=resposta&modo=imagem&largura=390", "$base`?acao=cabe&largura=390&altura=844", "$base`?acao=cabe&largura=360&altura=740", "$base`?acao=cabe&largura=320&altura=568", "$base`?acao=cabe&largura=412&altura=915", "$base`?acao=cabe&largura=768&altura=1024", "$base`?acao=cabe&largura=844&altura=390", "$base`?acao=etapa&modo=simbolos", "$base`?acao=etapa&modo=imagem&largura=390&altura=844", "$base`?acao=mapa&largura=320&altura=568")) {
     $saida = Join-Path $cap "dom.txt"
     Start-Process -FilePath $edge -ArgumentList ($comum + @("--window-size=1100,1100", "--dump-dom", "`"$url`"")) -Wait -NoNewWindow -RedirectStandardOutput $saida -RedirectStandardError (Join-Path $cap "erro.txt")
     $t = Get-Content $saida -Raw -Encoding UTF8
