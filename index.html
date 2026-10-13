@@ -1378,6 +1378,10 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     setupRound();
   }
   // Telas: início (coleções), mapa (etapas de uma coleção) e jogo. Só uma aparece por vez.
+  // Botão voltar do aparelho: cada avanço de tela entra no histórico, para o voltar levar ao mapa ou ao início em vez de sair do jogo.
+  // Os botões de volta da página usam o mesmo caminho quando há o que desfazer.
+  const empilha = estado => { try { window.history?.pushState?.(estado, ""); } catch (e) {} };
+  const volta = reserva => { if (window.history?.state?.quiz) window.history.back(); else reserva(); };
   let tela = "inicio";
   function mostrar(t) {
     tela = t;
@@ -1395,8 +1399,8 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
           <span class="txt"><span class="nome">${c.nome}</span><span class="muted">${ok} de ${it.length}</span><span class="barra"><i style="width:${it.length ? 100 * ok / it.length : 0}%"></i></span></span></button>`;
       }).join("")}</div>
       <div class="livre"><span class="muted">Partida avulsa de 10 rodadas, por nível</span><button class="lvl" id="livre">Jogo livre</button></div>`;
-    $("inicio").querySelectorAll(".carta").forEach(b => b.onclick = () => abrirMapa(b.dataset.k));
-    $("livre").onclick = jogoLivre;
+    $("inicio").querySelectorAll(".carta").forEach(b => b.onclick = () => { empilha({ quiz: "mapa", col: b.dataset.k }); abrirMapa(b.dataset.k); });
+    $("livre").onclick = () => { empilha({ quiz: "jogo" }); jogoLivre(); };
     mostrar("inicio");
   }
   function abrirMapa(colId) {
@@ -1412,8 +1416,8 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     $("mapa").innerHTML = `<div class="topo"><button class="lvl" id="ao-inicio">‹ Início</button><span class="muted"><b>${ok.length}</b> de ${itensDe(col).length} ${col.unidade}</span></div>
       <h2>${col.nomeMapa}</h2>
       <div class="trilha" style="height:${alto}px"><svg viewBox="0 0 100 ${alto}" preserveAspectRatio="none" aria-hidden="true"><path d="${linha}"/></svg>${casas}</div>`;
-    $("ao-inicio").onclick = abrirInicio;
-    $("mapa").querySelectorAll(".casa").forEach(b => b.onclick = () => jogarEtapa(colId, +b.dataset.n));
+    $("ao-inicio").onclick = () => volta(abrirInicio);
+    $("mapa").querySelectorAll(".casa").forEach(b => b.onclick = () => { empilha({ quiz: "jogo" }); jogarEtapa(colId, +b.dataset.n); });
     mostrar("mapa");
     // O mapa é comprido: começa com a etapa aberta no meio da tela
     $("mapa").querySelector(".casa.aberta")?.scrollIntoView?.({ block: "center" });
@@ -1477,7 +1481,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   function renderNav() {
     const etapa = st.tipo === "etapa", colId = st.colecao;
     $("nav").innerHTML = `<button class="lvl" id="voltar">‹ ${etapa ? "Mapa" : "Início"}</button>`;
-    $("voltar").onclick = etapa ? () => abrirMapa(colId) : abrirInicio;
+    $("voltar").onclick = () => volta(etapa ? () => abrirMapa(colId) : abrirInicio);
   }
 
   function renderLevels() {
@@ -1528,7 +1532,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
       <div class="acoes">${n + 1 < total ? `<button class="btn" id="proxima">Próxima etapa</button>` : ""}<button class="btn" id="vermapa">Ver o mapa</button>
       ${botaoZap(`Completei a etapa ${n + 1} de ${total} do ${col.nomeMapa}, no Quiz dos Santos. Consegue chegar até aqui?`, "Desafiar no WhatsApp", "zap-fim")}</div></div>`;
     const colId = st.colecao, prox = n + 1 < total ? $("proxima") : null;
-    $("vermapa").onclick = () => abrirMapa(colId);
+    $("vermapa").onclick = () => volta(() => abrirMapa(colId));
     if (prox) { prox.onclick = () => jogarEtapa(colId, n + 1); prox.focus(); } else $("vermapa").focus();
   }
 
@@ -1656,6 +1660,13 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     } catch (e) {}
   })();
 
+  window.addEventListener?.("popstate", ev => {
+    const e = ev.state;
+    if (e?.quiz === "mapa") abrirMapa(e.col);
+    else if (e?.quiz === "jogo" && st) { mostrar("jogo"); render(); }
+    else abrirInicio();
+  });
+
   // Gancho para os testes (testes/verifica.js e testes/teste.html)
   window.__quiz = { SAINTS, LEVELS, MODES, COM_FIGURA, COM_SIMBOLOS, ativo, poolFor, levelOf, wrongFor, imgFor, artFor, windowSVG, offline, dealOrder, ORDEM, COLECOES, colecao, itensDe, etapas, acertados, marcarAcerto, etapaAberta, situacao, jogarEtapa, jogoLivre, abrirInicio, abrirMapa, mostrar, tela: () => tela, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
 
@@ -1665,7 +1676,11 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
       if (!MODES.some(m => m[0] === st.mode)) st.mode = "simbolos";
       mode = st.mode; mostrar("jogo"); render();
     }
-    else abrirInicio();
+    else {
+      // Página recarregada no meio do jogo: o histórico pode ter ficado numa tela que não existe mais
+      try { window.history?.replaceState?.(null, ""); } catch (e) {}
+      abrirInicio();
+    }
   }
   window.claude?.hot?.snapshot?.(() => ({ st }));
   window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
