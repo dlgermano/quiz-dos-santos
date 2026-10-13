@@ -271,6 +271,17 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   }
 }
 
+// I. Compartilhar pelo WhatsApp: o botão leva a mensagem e o link do jogo, sem o ?/# de quem compartilhou
+{
+  const { els } = carregar({}, null, { location: { protocol: "https:", origin: "https://exemplo.test", pathname: "/quiz/", search: "?x=1", hash: "#y" } });
+  const href = (els.convite.innerHTML.match(/href="([^"]+)"/) || [])[1] || "";
+  confere(href.startsWith("https://wa.me/?text="), "I: o botão do rodapé deveria abrir o WhatsApp");
+  const texto = decodeURIComponent(href.split("text=")[1] || "");
+  confere(texto.includes("Quiz dos Santos") && texto.endsWith("\nhttps://exemplo.test/quiz/"), `I: mensagem sem o link do jogo: ${texto}`);
+  const { els: semRede } = carregar();
+  confere(/wa\.me\/\?text=/.test(semRede.convite.innerHTML) && !/undefined/.test(semRede.convite.innerHTML), "I: aberto do arquivo, o botão deveria sair sem link e sem 'undefined'");
+}
+
 // H. Aplicativo sem internet (manifest.webmanifest, sw.js e o botão de guardar as imagens)
 const assincronos = (async () => {
   const fs = require("fs"), path = require("path"), { RAIZ } = require("./carregar");
