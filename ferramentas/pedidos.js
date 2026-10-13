@@ -1,10 +1,10 @@
 // Monta os pedidos de geração de um lote, a partir do prompts-higgsfield.md.
-// Uso: node ferramentas/pedidos.js <santos|simbolos|nossasenhora> <id> [<id> ...]   (acrescente "id=texto extra" para corrigir uma refação)
+// Uso: node ferramentas/pedidos.js <santos|simbolos|nossasenhora|novotestamento|antigotestamento> <id> [<id> ...]   (acrescente "id=texto extra" para corrigir uma refação)
 const fs = require("fs"), path = require("path");
 const md = fs.readFileSync(path.join(__dirname, "..", "prompts-higgsfield.md"), "utf8");
 const [serie, ...args] = process.argv.slice(2);
-const MARCA = { santos: "[FIGURA]", simbolos: "[OBJETOS]", nossasenhora: "[SENHORA]" }[serie];
-if (!MARCA || !args.length) { console.log("Uso: node ferramentas/pedidos.js <santos|simbolos|nossasenhora> <id> [<id> ...]"); process.exit(2); }
+const MARCA = { santos: "[FIGURA]", simbolos: "[OBJETOS]", nossasenhora: "[SENHORA]", novotestamento: "[CENA]", antigotestamento: "[CENA]" }[serie];
+if (!MARCA || !args.length) { console.log("Uso: node ferramentas/pedidos.js <santos|simbolos|nossasenhora|novotestamento|antigotestamento> <id> [<id> ...]"); process.exit(2); }
 
 const base = md.split(/\r?\n/).find(l => l.startsWith("> Gothic") && l.includes(MARCA)).slice(2).trim();
 const linhas = {};

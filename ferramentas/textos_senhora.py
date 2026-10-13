@@ -136,7 +136,7 @@ def main() -> None:
     faltam = [i for i, *_ in TITULOS if i not in TEXTOS]
     if faltam:
         raise SystemExit(f"Títulos sem texto: {faltam}")
-    itens = [{"id": i, "name": nome, "curto": TEXTOS[i][0], "feast": TEXTOS[i][1], "bio": TEXTOS[i][2], "why": TEXTOS[i][3], "ns": True}
+    itens = [{"id": i, "name": nome, "curto": TEXTOS[i][0], "feast": TEXTOS[i][1], "bio": TEXTOS[i][2], "why": TEXTOS[i][3], "serie": "nossasenhora"}
              for i, nome, _figura, _conferir in TITULOS]
     linha = "  const SENHORAS = " + json.dumps(itens, ensure_ascii=False) + ";"
     arq = RAIZ / "index.html"
