@@ -1441,7 +1441,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   });
 
   // Jogar sem internet. O sw.js serve o que estiver guardado no aparelho; aqui se guardam as imagens todas de uma vez.
-  const CACHE_IMAGENS = "quiz-santos-imagens-v1"; // o mesmo nome que está no sw.js
+  const CACHE_IMAGENS = "quiz-santos-imagens-v2"; // o mesmo nome que está no sw.js
   const todasImagens = () => [...COM_FIGURA.map(id => arquivo("santos", id)), ...COM_SIMBOLOS.map(id => arquivo("simbolos", id))];
   const offline = {
     async faltam() {
