@@ -40,6 +40,8 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+/* O jogo decide onde a página fica ao trocar de rodada: o navegador não deve segurar a rolagem no que sumiu */
+html { overflow-anchor: none; }
 /* O atributo hidden precisa vencer o display das telas (grid, flex) */
 [hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 17px; line-height: 1.5; }
@@ -82,7 +84,8 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
 .barra { display: block; height: 7px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 4px; }
 .barra i { display: block; height: 100%; background: var(--accent); }
 .livre { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; border-top: 1px solid var(--line); padding-top: 12px; }
-.livre .lvl, .topo .lvl { min-height: 44px; }
+.livre .lvl, .topo .lvl, .zerar .lvl { min-height: 44px; }
+.zerar { display: flex; justify-content: center; margin-top: 20px; }
 /* Arco de vitral: miniatura das cartas e das etapas. O número fica por baixo da imagem e aparece se ela não carregar */
 .arco {
   position: relative; display: grid; place-items: center; aspect-ratio: 3 / 4; overflow: hidden; border: 2.5px solid #231d1a;
@@ -1369,6 +1372,11 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     progressoMem[col.id] = v;
     try { localStorage.setItem(PROGRESSO, JSON.stringify(progressoMem)); } catch (e) {}
   }
+  // Recomeçar o mapa: apaga os acertos de uma coleção. Não tem volta; quem chama pede a confirmação do jogador.
+  function zerarMapa(colId) {
+    delete progressoMem[colId];
+    try { localStorage.setItem(PROGRESSO, JSON.stringify(progressoMem)); } catch (e) {}
+  }
   const completa = (col, n) => { const ok = acertados(col); return etapas(col)[n].every(id => ok.includes(id)); };
   // A etapa aberta é a primeira com santo por acertar; -1 quando a coleção está completa
   const etapaAberta = col => etapas(col).findIndex((e, n) => !completa(col, n));
@@ -1450,7 +1458,13 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     const linha = ets.map((_, n) => `${n ? "L" : "M"}${XS[n % 4]} ${n * PASSO + 42}`).join(" ");
     $("mapa").innerHTML = `<div class="topo"><button class="lvl" id="ao-inicio">‹ Início</button><span class="muted"><b>${ok.length}</b> de ${itensDe(col).length} ${col.unidade}</span></div>
       <h2>${col.nomeMapa}</h2>
-      <div class="trilha" style="height:${alto}px"><svg viewBox="0 0 100 ${alto}" preserveAspectRatio="none" aria-hidden="true"><path d="${linha}"/></svg>${casas}</div>`;
+      <div class="trilha" style="height:${alto}px"><svg viewBox="0 0 100 ${alto}" preserveAspectRatio="none" aria-hidden="true"><path d="${linha}"/></svg>${casas}</div>
+      ${ok.length ? `<div class="zerar"><button class="lvl" id="zerar">Recomeçar o mapa</button></div>` : ""}`;
+    const zerar = ok.length ? $("zerar") : null;
+    if (zerar) zerar.onclick = () => {
+      if (!window.confirm(`Recomeçar o ${col.nomeMapa}? Os ${ok.length} acertos guardados serão apagados.`)) return;
+      zerarMapa(colId); abrirMapa(colId);
+    };
     $("ao-inicio").onclick = () => volta(abrirInicio);
     $("mapa").querySelectorAll(".casa").forEach(b => b.onclick = () => { empilha({ quiz: "jogo" }); jogarEtapa(colId, +b.dataset.n); });
     mostrar("mapa");
@@ -1478,7 +1492,12 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     const nb = $("next"); if (nb) nb.focus();
   }
   // Quando a página não cabe inteira na tela, cada rodada nova começa com o quadro no alto, para caber junto com as opções
-  const toTop = () => { if (document.documentElement?.scrollHeight > window.innerHeight + 4) $("stage").scrollIntoView?.(); };
+  // Repete depois de a página ser redesenhada: no celular, a rolagem feita na mesma hora pode ser desfeita quando a página encolhe
+  // (a explicação da rodada anterior some e a barra do navegador muda de tamanho).
+  const toTop = () => {
+    const sobe = () => { const el = document.documentElement; if (el && el.scrollHeight > el.clientHeight + 4) $("stage").scrollIntoView?.(); else window.scrollTo?.(0, 0); };
+    sobe(); window.requestAnimationFrame?.(sobe); window.setTimeout?.(sobe, 200);
+  };
   function next() { st.i++; if (st.i < st.order.length) { setupRound(); toTop(); } else render(); }
   function setLevel(k) {
     level = k;
@@ -1616,19 +1635,24 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
       const prox = st.i + 1 < st.order.length ? imgFor(st.order[st.i + 1], st.mode) : null;
       if (prox && typeof Image !== "undefined") new Image().src = prox;
     }
-    const answered = !!st.picked;
+    const answered = !!st.picked, ok = st.picked === ans.id;
+    // Em etapa do mapa, quem erra não vê a resposta: o santo volta mais adiante e tem de ser acertado
+    const segredo = answered && !ok && st.tipo === "etapa";
     const opts = st.opts.map((id, k) => {
       let cls = "";
-      if (answered) cls = id === ans.id ? "ok" : id === st.picked ? "bad" : "dim";
+      if (answered) cls = id === ans.id && !segredo ? "ok" : id === st.picked ? "bad" : "dim";
       return `<button class="opt ${cls}" id="opt-${k}" data-id="${id}" ${answered ? "disabled" : ""}><span class="k">${k + 1}</span><span>${byId[id].name}</span></button>`;
     }).join("");
-    const ok = st.picked === ans.id;
     panel.innerHTML = `
       <div class="eyebrow">${st.tipo === "etapa" ? `Etapa ${st.etapa + 1} · ${st.certos.length} de ${st.itens.length}` : `Rodada ${st.i + 1} de ${ROUNDS}`}</div>
       <p class="q">${st.mode === "imagem" ? "Que santo é este?" : "Que santo é representado por estes símbolos?"}</p>
       <p class="hint">Na arte sacra, cada santo é reconhecido pelos seus atributos: os objetos que contam sua vida ou seu martírio.</p>
       <div class="opts">${opts}</div>
-      ${answered ? `<div class="reveal">
+      ${segredo ? `<div class="reveal">
+        <div class="verdict bad">Não foi dessa vez.</div>
+        <p class="why">Este santo volta mais adiante nesta etapa. Repare bem no vitral.</p>
+        <button class="btn" id="next">Próximo santo</button>
+      </div>` : answered ? `<div class="reveal">
         <div class="verdict ${ok ? "ok" : "bad"}">${ok ? "Acertou!" : "Não foi dessa vez."}</div>
         <div class="name">${ans.name}</div>
         <div class="feast">Festa: ${ans.feast}</div>
@@ -1707,7 +1731,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   });
 
   // Gancho para os testes (testes/verifica.js e testes/teste.html)
-  window.__quiz = { SAINTS, LEVELS, MODES, COM_FIGURA, COM_SIMBOLOS, ativo, poolFor, levelOf, wrongFor, imgFor, artFor, windowSVG, offline, dealOrder, ORDEM, COLECOES, colecao, itensDe, etapas, acertados, marcarAcerto, etapaAberta, situacao, jogarEtapa, jogoLivre, abrirInicio, abrirMapa, mostrar, tela: () => tela, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
+  window.__quiz = { SAINTS, LEVELS, MODES, COM_FIGURA, COM_SIMBOLOS, ativo, poolFor, levelOf, wrongFor, imgFor, artFor, windowSVG, offline, dealOrder, ORDEM, COLECOES, colecao, itensDe, etapas, acertados, marcarAcerto, zerarMapa, etapaAberta, situacao, jogarEtapa, jogoLivre, abrirInicio, abrirMapa, mostrar, tela: () => tela, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
 
   function start(data) {
     if (data && data.st && Array.isArray(data.st.order)) {

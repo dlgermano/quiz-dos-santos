@@ -89,6 +89,8 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     const s = {};
     q = carregar(s).q; q.marcarAcerto(q.COLECOES[0], "pedro");
     confere(JSON.parse(s["quiz-santos-progresso"]).santos.join() === "pedro", "M: o acerto deveria ser gravado em quiz-santos-progresso");
+    q.zerarMapa?.("santos");
+    confere(q.acertados(q.COLECOES[0]).length === 0 && q.etapaAberta(q.COLECOES[0]) === 0 && !JSON.parse(s["quiz-santos-progresso"]).santos, "M: recomeçar o mapa deveria apagar os acertos, na memória e no aparelho");
     q = carregar("bloqueado").q; q.marcarAcerto(q.COLECOES[0], "jose");
     confere(q.acertados(q.COLECOES[0]).join() === "jose", "M: com o localStorage bloqueado, o progresso deveria valer em memória");
   }
@@ -111,6 +113,7 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     const errado = st.order[0];
     q.pick(st.opts.find(id => id !== errado));
     confere(st.order.length === 11 && st.order[10] === errado && q.acertados(col).length === 0, "N: santo errado deveria voltar no fim da fila, sem contar como acerto");
+    confere(!els.panel.innerHTML.includes("opt ok") && !els.panel.innerHTML.includes("class=\"name\"") && els.panel.innerHTML.includes("volta mais adiante"), "N: em etapa, errar não deveria mostrar qual era a resposta certa");
     q.setMode("imagem");
     confere(q.state() === st && st.order.length === 11, "N: trocar o modo no meio da etapa não deveria recomeçar a etapa");
     q.next();
@@ -118,6 +121,7 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     while (st.i < st.order.length && voltas++ < 40) {
       if (new Set(st.opts.map(sexo)).size !== 1) mesmoSexo = false;
       q.pick(st.order[st.i]);
+      if (st.i === 1) confere(els.panel.innerHTML.includes("opt ok") && els.panel.innerHTML.includes("class=\"name\""), "N: em etapa, acertar deveria mostrar o nome e a explicação do santo");
       if (st.i === 1) confere(JSON.parse(s["quiz-santos-progresso"]).santos.length === 1, "N: o acerto deveria ser gravado na hora, antes de a etapa acabar");
       q.next();
     }
@@ -180,7 +184,7 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     q.abrirMapa("santos");
     const mapa = els.mapa.innerHTML, conta = t => (mapa.match(new RegExp(`class="casa ${t}"`, "g")) || []).length;
     confere(q.tela() === "mapa" && els.mapa.hidden === false && els.inicio.hidden === true, "O: abrir o mapa deveria esconder o início");
-    confere(conta("aberta") === 1 && conta("trancada") === 19 && conta("completa") === 0 && mapa.includes("Caminho dos Santos") && mapa.includes("id=\"etapa-20\""),
+    confere(conta("aberta") === 1 && conta("trancada") === 19 && conta("completa") === 0 && mapa.includes("Caminho dos Santos") && mapa.includes("id=\"etapa-20\"") && !mapa.includes("id=\"zerar\""),
       "O: sem progresso, o mapa deveria ter 1 etapa aberta e 19 trancadas");
     q.jogarEtapa("santos", 0);
     confere(q.tela() === "jogo" && els.stage.hidden === false && els.mapa.hidden === true && els.modes.hidden === false && els.nav.innerHTML.includes("Mapa"),
@@ -201,7 +205,7 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     confere(els.inicio.innerHTML.includes("13 de 200"), "O: a carta dos santos deveria mostrar o progresso guardado");
     q.abrirMapa("santos");
     const mapa = els.mapa.innerHTML;
-    confere(mapa.includes("class=\"casa completa\" id=\"etapa-1\"") && mapa.includes("class=\"casa aberta\" id=\"etapa-2\"") && mapa.includes("Etapa 2 · 3 de 10") && mapa.includes("class=\"casa trancada\" id=\"etapa-3\""),
+    confere(mapa.includes("class=\"casa completa\" id=\"etapa-1\"") && mapa.includes("class=\"casa aberta\" id=\"etapa-2\"") && mapa.includes("Etapa 2 · 3 de 10") && mapa.includes("id=\"zerar\"") && mapa.includes("class=\"casa trancada\" id=\"etapa-3\""),
       "O: com 13 acertos, a etapa 1 fica completa, a 2 aberta com 3 de 10 e a 3 trancada");
   }
 }
