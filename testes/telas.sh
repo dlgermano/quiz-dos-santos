@@ -1,5 +1,5 @@
 #!/bin/bash
-# Fotografa o jogo em vários tamanhos de tela e junta tudo numa folha. Uso: bash testes/telas.sh <acao> <saida.png>
+# Fotografa o jogo em vários tamanhos de tela e junta tudo numa folha. Uso: bash testes/telas.sh <inicio|cabe|resposta|inicio-mapa|mapa> <saida.png>
 cd "$(dirname "$0")/.." || exit 1
 ACAO=${1:-inicio}; SAIDA=${2:-testes/capturas/telas-$ACAO.png}
 EDGE="/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
