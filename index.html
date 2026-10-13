@@ -1267,6 +1267,29 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     return inLevel.concat(extra).slice(0, 3);
   }
 
+  // Mapa: a ordem dos santos, do mais conhecido ao menos conhecido (aprovada pelo Daniel em 13/10/2026). Cada 10 formam uma etapa.
+  // Santo novo entra no fim, para não reabrir etapa que alguém já completou.
+  const ORDEM = "jose pedro antonio francisco jorge joao sebastiao luzia rita expedito paulo judas teresinha miguel barbara cosme bento cristovao clara joaopaulo dulce madalena ana pio teresacalcuta nicolau edwiges gabriel reismagos carloacutis tome monica lazaro veronica joaobosco vicentepaulo pastorinhos ines valentim geraldo margaridamaria mariagoretti silvestre joaoxxiii domingossavio catarinalaboure pancracio piox paulovi luisrei benedito galvao longuinho agostinho joaoev mateus lucas marcos tiago andre anchieta paulina cecilia helena joaquim bras roque lourenco joana catarina estevao faustina bernadete teresaavila inacio domingos jeronimo patricio tomasaquino dimas marta efigenia isabel catarinasena raimundononato camilo martinho josemaria vianney tarcisio gianna luisgonzaga martinholima joaodiego onofre joaodacruz franciscosales bernardo peregrino cunhau simaostock carlosborromeu tomasmore boaventura afonso filipeneri franciscopaula romero damiao luiszelia bruno crisostomo dionisio ursula genoveva pedroclaver zita luisamarillac pedroalcantara margaridaantioquia paulomiki rafael bartolomeu filipe tiagomenor simao matias barnabe xavier goncalo amaro rosalima kolbe bakhita edithstein charbel frassati ambrosio gregorio antao apolonia escolastica isidoro ivo joaodedeus januario bonifacio ferrer foucauld roquegonzalez eloi huberto brigida doroteia clemente leao basilio tomasbecket cupertino nepomuceno inacioantioquia perpetua gil vito venceslau kostka anselmo cirilometodio germano brandao junipero kateri lwanga angelamerici solano beda norberto fiacre mariaegipciaca ezequielmoreno tomasvilanova joaosahagun nicolautolentino madalenanagasaki".split(" ");
+  // Coleções: cada uma tem o próprio mapa e o próprio progresso
+  const COLECOES = [{ id: "santos", nome: "Santos", nomeMapa: "Caminho dos Santos", unidade: "santos", ordem: ORDEM, modos: ["simbolos", "imagem"] }];
+  const colecao = id => COLECOES.find(c => c.id === id);
+  const itensDe = col => col.ordem.filter(id => byId[id] && ativo(byId[id]));
+  const etapas = col => { const it = itensDe(col), r = []; for (let k = 0; k < it.length; k += 10) r.push(it.slice(k, k + 10)); return r; };
+  // Progresso: os ids já acertados em cada coleção. Guardar por santo, e não por etapa, deixa reordenar ou incluir santos sem apagar nada.
+  const PROGRESSO = "quiz-santos-progresso";
+  const lerProgresso = () => { try { const v = JSON.parse(localStorage.getItem(PROGRESSO)); return v && typeof v === "object" && !Array.isArray(v) ? v : {}; } catch (e) { return {}; } };
+  let progressoMem = lerProgresso(); // cópia em memória, para funcionar mesmo com o localStorage bloqueado
+  const acertados = col => { const v = progressoMem[col.id]; return Array.isArray(v) ? itensDe(col).filter(id => v.includes(id)) : []; };
+  function marcarAcerto(col, id) {
+    const v = Array.isArray(progressoMem[col.id]) ? progressoMem[col.id] : [];
+    if (!v.includes(id)) v.push(id);
+    progressoMem[col.id] = v;
+    try { localStorage.setItem(PROGRESSO, JSON.stringify(progressoMem)); } catch (e) {}
+  }
+  const completa = (col, n) => { const ok = acertados(col); return etapas(col)[n].every(id => ok.includes(id)); };
+  // A etapa aberta é a primeira com santo por acertar; -1 quando a coleção está completa
+  const etapaAberta = col => etapas(col).findIndex((e, n) => !completa(col, n));
+  const situacao = (col, n) => completa(col, n) ? "completa" : n === etapaAberta(col) ? "aberta" : "trancada";
   // Baralho por nível: guarda quem já saiu como resposta neste ciclo. Só repete santo depois que todos do nível apareceram.
   const VISTOS = "quiz-santos-vistos";
   const lerVistos = () => { try { const v = JSON.parse(localStorage.getItem(VISTOS)); return v && typeof v === "object" ? v : {}; } catch (e) { return {}; } };
@@ -1495,7 +1518,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   })();
 
   // Gancho para os testes (testes/verifica.js e testes/teste.html)
-  window.__quiz = { SAINTS, LEVELS, MODES, COM_FIGURA, COM_SIMBOLOS, ativo, poolFor, levelOf, wrongFor, imgFor, artFor, windowSVG, offline, dealOrder, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
+  window.__quiz = { SAINTS, LEVELS, MODES, COM_FIGURA, COM_SIMBOLOS, ativo, poolFor, levelOf, wrongFor, imgFor, artFor, windowSVG, offline, dealOrder, ORDEM, COLECOES, colecao, itensDe, etapas, acertados, marcarAcerto, etapaAberta, situacao, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
 
   function start(data) {
     if (data && data.st && Array.isArray(data.st.order)) {

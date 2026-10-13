@@ -39,6 +39,56 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   }
 }
 
+// M. Mapa: ordem dos santos, etapas e progresso guardado
+{
+  const { q } = carregar();
+  const col = q.COLECOES?.find(c => c.id === "santos");
+  confere(!!col, "M: a coleção santos não existe");
+  if (col) {
+    const ativos = q.poolFor("todos");
+    confere(col.ordem.length === ativos.length && new Set(col.ordem).size === col.ordem.length && ativos.every(id => col.ordem.includes(id)),
+      "M: a ordem do mapa deveria ter cada santo ativo uma vez só");
+    const ets = q.etapas(col);
+    confere(ets.length === 19 && ets.slice(0, -1).every(e => e.length === 10) && ets.at(-1).length === 4,
+      `M: esperava 18 etapas de 10 e uma de 4, achei ${ets.map(e => e.length).join(",")}`);
+    const peso = { facil: 0, medio: 1, dificil: 2 }, pesos = col.ordem.map(id => peso[q.levelOf(id)]);
+    confere(pesos.every((p, k) => !k || p >= pesos[k - 1]), "M: há santo de nível mais difícil antes de um mais fácil");
+    confere(ets[0].join(" ") === "jose pedro antonio francisco jorge joao sebastiao luzia rita expedito", "M: a etapa 1 difere da aprovada pelo Daniel em 13/10/2026");
+    confere(q.acertados(col).length === 0 && q.etapaAberta(col) === 0 && q.situacao(col, 0) === "aberta" && q.situacao(col, 1) === "trancada",
+      "M: sem progresso, só a etapa 1 deveria estar aberta");
+    ets[0].forEach(id => q.marcarAcerto(col, id));
+    q.marcarAcerto(col, ets[0][0]);
+    confere(q.acertados(col).length === 10, "M: marcar o mesmo santo duas vezes não deveria contar em dobro");
+    confere(q.etapaAberta(col) === 1 && q.situacao(col, 0) === "completa" && q.situacao(col, 1) === "aberta" && q.situacao(col, 2) === "trancada",
+      "M: com a etapa 1 acertada, a 2 deveria abrir e a 3 continuar trancada");
+    col.ordem.forEach(id => q.marcarAcerto(col, id));
+    confere(q.etapaAberta(col) === -1 && q.situacao(col, 18) === "completa", "M: com tudo acertado, não deveria haver etapa aberta");
+  }
+}
+{
+  const ets = (() => { const { q } = carregar(); return q.etapas ? q.etapas(q.COLECOES[0]) : null; })();
+  if (ets) {
+    const guardado = texto => carregar({ "quiz-santos-progresso": texto }).q;
+    let q = guardado(JSON.stringify({ santos: ets[0].concat(ets[1]).filter(id => id !== ets[0][3]) }));
+    let col = q.COLECOES[0];
+    confere(q.etapaAberta(col) === 0 && q.situacao(col, 0) === "aberta" && q.situacao(col, 1) === "completa" && q.situacao(col, 2) === "trancada",
+      "M: com um santo por acertar numa etapa antiga, ela reabre e a seguinte, já feita, continua completa");
+    for (const ruim of ["{", "[1,2]", "\"x\"", "null", "{\"santos\":\"pedro\"}", "{\"santos\":{\"a\":1}}"]) {
+      q = guardado(ruim); col = q.COLECOES[0];
+      confere(q.acertados(col).length === 0 && q.etapaAberta(col) === 0, `M: progresso estragado (${ruim}) deveria ser ignorado`);
+      q.marcarAcerto(col, "pedro");
+      confere(q.acertados(col).join() === "pedro", `M: depois de progresso estragado (${ruim}), marcar acerto deveria funcionar`);
+    }
+    q = guardado("{\"santos\":[\"naoexiste\",\"pedro\",\"pedro\"]}"); col = q.COLECOES[0];
+    confere(q.acertados(col).join() === "pedro", "M: id que não existe mais, ou repetido, não deveria contar");
+    const s = {};
+    q = carregar(s).q; q.marcarAcerto(q.COLECOES[0], "pedro");
+    confere(JSON.parse(s["quiz-santos-progresso"]).santos.join() === "pedro", "M: o acerto deveria ser gravado em quiz-santos-progresso");
+    q = carregar("bloqueado").q; q.marcarAcerto(q.COLECOES[0], "jose");
+    confere(q.acertados(q.COLECOES[0]).join() === "jose", "M: com o localStorage bloqueado, o progresso deveria valer em memória");
+  }
+}
+
 // P. Santos preparados: ficam escondidos até terem as duas imagens aprovadas
 {
   const { q } = carregar();
