@@ -211,6 +211,57 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   }
 }
 
+// S. Coleção Nossa Senhora: 40 títulos, só figura, mapa e progresso próprios
+{
+  const fs = require("fs"), path = require("path");
+  const s = {}, { q, els } = carregar(s, undefined, undefined, true);
+  const col = q.colecao?.("nossasenhora");
+  confere(!!col && !!q.SENHORAS, "S: a coleção nossasenhora não existe");
+  if (col && q.SENHORAS) {
+    const ids = q.SENHORAS.map(x => x.id), santos = q.SAINTS.map(x => x.id);
+    confere(ids.length === 40 && new Set(ids).size === 40 && ids.every(id => /^ns[a-z]+$/.test(id)) && ids.every(id => !santos.includes(id)), "S: deveriam ser 40 títulos, com ids de prefixo ns e sem repetir id de santo");
+    confere(q.SENHORAS.every(x => x.name && x.curto && x.feast && x.bio && x.bio.length > 60 && x.why && x.why.length > 30), "S: há título sem nome, nome curto, festa, história ou explicação");
+    confere(new Set(q.SENHORAS.map(x => x.curto)).size === 40 && new Set(q.SENHORAS.map(x => x.name)).size === 40, "S: há nome ou nome curto repetido");
+    confere(q.poolFor("todos").every(id => !ids.includes(id)) && q.SAINTS.length === 200, "S: os títulos de Nossa Senhora não deveriam entrar no jogo livre nem na lista de santos");
+    confere(q.COM_SENHORA.every(id => fs.existsSync(path.join(__dirname, "..", "img", "nossasenhora", id + ".webp"))), "S: há título listado em COM_SENHORA sem arquivo de imagem");
+    const ets = q.etapas(col);
+    confere(ets.length === 4 && ets.every(e => e.length === 10) && ets[0][0] === "nsaparecida" && ets[3][9] === "nslibano", `S: esperava 4 etapas de 10, de Aparecida a Líbano, achei ${ets.map(e => e.length).join(",")}`);
+    confere(q.imgFor("nsfatima", "simbolos") === "img/nossasenhora/nsfatima.webp" && q.imgFor("nsfatima", "imagem") === "img/nossasenhora/nsfatima.webp", "S: o vitral de um título é o mesmo em qualquer modo");
+    confere(els.inicio.innerHTML.includes("id=\"col-nossasenhora\"") && els.inicio.innerHTML.includes("0 de 40"), "S: o início deveria ter a carta de Nossa Senhora com 0 de 40");
+    q.abrirMapa("nossasenhora");
+    confere(els.mapa.innerHTML.includes("Caminho de Nossa Senhora") && els.mapa.innerHTML.includes("de 40 títulos") && els.mapa.innerHTML.includes("id=\"etapa-4\"") && !els.mapa.innerHTML.includes("id=\"etapa-5\""), "S: o mapa de Nossa Senhora deveria ter 4 etapas e contar títulos");
+    q.jogarEtapa("nossasenhora", 0); // o modo guardado é Símbolos (padrão): a coleção tem de impor o seu
+    const st = q.state();
+    confere(st.mode === "imagem" && els.modes.innerHTML === "", "S: Nossa Senhora só tem o modo Imagem, sem botões de modo");
+    confere(st.opts.length === 4 && new Set(st.opts).size === 4 && st.opts.every(id => ets[0].includes(id)), "S: na etapa 1, as 4 opções deveriam ser títulos da própria etapa");
+    const p0 = els.panel.innerHTML, certo = q.SENHORAS.find(x => x.id === st.order[0]);
+    confere(p0.includes("Que título de Nossa Senhora é este?") && p0.includes(`<span>${certo.curto}</span>`) && els.art.innerHTML.includes(`img/nossasenhora/${certo.id}.webp`) && els.art.innerHTML.includes("Vitral de Nossa Senhora"), "S: a rodada deveria ter a pergunta da coleção, o nome curto nas opções e o vitral da pasta nossasenhora");
+    q.pick(st.opts.find(id => id !== certo.id));
+    confere(els.panel.innerHTML.includes("Este título volta") && els.panel.innerHTML.includes("Próximo título") && !els.panel.innerHTML.includes("class=\"name\""), "S: errar não deveria mostrar o título certo");
+    q.next();
+    let fora = false;
+    for (let g = 0; g < 40 && st.i < st.order.length; g++) {
+      if (!st.opts.every(id => ids.includes(id))) fora = true;
+      q.pick(st.order[st.i]);
+      if (st.i === 1) confere(els.panel.innerHTML.includes(`class="name">${q.SENHORAS.find(x => x.id === st.order[1]).name}<`) && els.panel.innerHTML.includes("Festa:"), "S: acertar deveria mostrar o nome inteiro e a festa do título");
+      q.next();
+    }
+    confere(!fora, "S: apareceu opção que não é título de Nossa Senhora");
+    confere(q.situacao(col, 0) === "completa" && q.situacao(col, 1) === "aberta" && els.panel.innerHTML.includes("Etapa 1 completa"), "S: com os 10 títulos acertados, a etapa 1 fecha");
+    const guardado = JSON.parse(s["quiz-santos-progresso"]);
+    confere(guardado.nossasenhora.length === 10 && !guardado.santos && q.acertados(q.colecao("santos")).length === 0, "S: o progresso de Nossa Senhora não deveria mexer no dos santos");
+    q.zerarMapa("nossasenhora");
+    confere(q.acertados(col).length === 0, "S: recomeçar o mapa de Nossa Senhora deveria zerar só ele");
+    q.jogoLivre();
+    confere(q.state().tipo === "livre" && els.modes.innerHTML.includes("modo-simbolos") && els.panel.innerHTML.includes("santo"), "S: o jogo livre continua sendo de santos, com os dois modos");
+    // Coleção com menos de 10 itens com imagem não aparece no início
+    const guarda = q.COM_SENHORA.splice(9);
+    q.abrirInicio();
+    confere(!els.inicio.innerHTML.includes("col-nossasenhora") && els.inicio.innerHTML.includes("col-santos"), "S: coleção com menos de 10 títulos prontos não deveria aparecer no início");
+    q.COM_SENHORA.push(...guarda);
+  }
+}
+
 // P. Santos preparados: ficam escondidos até terem as duas imagens aprovadas
 {
   const { q } = carregar();
@@ -491,7 +542,7 @@ const assincronos = (async () => {
   confere(lista.includes("./") && lista.includes("manifest.webmanifest"), "H: o sw.js deveria guardar a página e o manifesto na instalação");
   for (const a of lista) confere(fs.existsSync(path.join(RAIZ, a === "./" ? "index.html" : a)), `H: o sw.js guarda ${a}, que não existe`);
 
-  const bytes = ["santos", "simbolos"].flatMap(d => fs.readdirSync(path.join(RAIZ, "img", d)).map(n => fs.statSync(path.join(RAIZ, "img", d, n)).size)).reduce((a, b) => a + b, 0);
+  const bytes = ["santos", "simbolos", "nossasenhora"].flatMap(d => fs.readdirSync(path.join(RAIZ, "img", d)).map(n => fs.statSync(path.join(RAIZ, "img", d, n)).size)).reduce((a, b) => a + b, 0);
   const dito = +(html.match(/cerca de (\d+) MB/) || [0, 0])[1];
   confere(dito === Math.round(bytes / 1048576), `H: a página diz "cerca de ${dito} MB", as imagens somam ${(bytes / 1048576).toFixed(1)} MB`);
 
@@ -550,7 +601,7 @@ const assincronos = (async () => {
     const of = q.offline;
     confere(!!of, "H: window.__quiz.offline não existe");
     if (of) {
-      const total = q.COM_FIGURA.length + q.COM_SIMBOLOS.length;
+      const total = q.COM_FIGURA.length + q.COM_SIMBOLOS.length + q.COM_SENHORA.length;
       confere((await of.faltam()).length === total, "H: sem nada guardado, deveriam faltar todas as imagens");
       api.rede = async u => ({ ok: !u.endsWith("/img/santos/rita.webp"), url: u, clone() { return this; } });
       const avisos = [];

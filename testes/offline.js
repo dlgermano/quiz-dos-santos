@@ -65,7 +65,7 @@ const relata = (nome, prob) => { linhas.push(`${nome}: problemas: ${prob.length 
       }
       await roda(`document.querySelector("#foot button").click()`);
       if (!await ate(`return document.getElementById("foot").textContent.startsWith("Pronto")`, 120)) prob.push("não terminou de guardar: " + await rodape());
-      const [tem, total] = await roda(`const q = window.__quiz; return [(await (await caches.open("quiz-santos-imagens-v4")).keys()).length, q.COM_FIGURA.length + q.COM_SIMBOLOS.length]`);
+      const [tem, total] = await roda(`const q = window.__quiz; return [(await (await caches.open("quiz-santos-imagens-v4")).keys()).length, q.COM_FIGURA.length + q.COM_SIMBOLOS.length + q.COM_SENHORA.length]`);
       if (tem !== total) prob.push(`guardou ${tem} de ${total} imagens`);
       if (!await ate(`return !!navigator.serviceWorker.controller`, 10)) prob.push("o sw.js não assumiu a página");
     }

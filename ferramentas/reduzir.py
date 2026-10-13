@@ -6,7 +6,7 @@ from pathlib import Path
 from PIL import Image
 
 RAIZ = Path(__file__).resolve().parent.parent
-SERIES = ("santos", "simbolos")
+SERIES = ("santos", "simbolos", "nossasenhora")
 LARGURA, ALTURA, LIMITE = 600, 796, 120 * 1024
 
 

@@ -57,12 +57,14 @@ f.onload = () => {
   const visivel = id => !d.getElementById(id).hidden;
   const esperar = (cond, ms = 3000) => new Promise(ok => { const t0 = Date.now(); (function ver() { if (cond() || Date.now() - t0 > ms) ok(!!cond()); else setTimeout(ver, 30); })(); });
 
+  // A ação "etapa" joga a coleção pedida em ?colecao= (santos, se faltar)
+  const COL = Q.colecao(P.get("colecao") || "santos"), CARTA = "#col-" + COL.id;
   // Joga a etapa 1 do mapa errando o primeiro santo, e confere a navegação com os botões da página e com o voltar do navegador
   async function etapa() {
-    const prob = [], col = Q.COLECOES[0], ets = Q.etapas(col), total = Q.itensDe(col).length;
+    const prob = [], col = COL, ets = Q.etapas(col), total = Q.itensDe(col).length;
     if (!visivel("inicio") || visivel("stage") || visivel("mapa")) prob.push("a primeira tela não é o início");
-    if (!q("#col-santos") || !q("#livre")) prob.push("faltam a carta dos santos ou o botão de jogo livre");
-    q("#col-santos").click();
+    if (!q(CARTA) || !q("#livre")) prob.push("faltam a carta dos santos ou o botão de jogo livre");
+    q(CARTA).click();
     const casas = qa(".casa");
     if (!visivel("mapa") || casas.length !== ets.length) prob.push(`o mapa deveria ter ${ets.length} etapas, tem ${casas.length}`);
     if (!casas[0].classList.contains("aberta") || !casas.slice(1).every(c => c.classList.contains("trancada") && c.disabled)) prob.push("sem progresso, só a etapa 1 deveria estar aberta");
@@ -74,8 +76,8 @@ f.onload = () => {
     // Com o mapa na tela, as teclas 1 a 4 não podem responder a partida escondida
     // O modo é escolhido de forma explícita, e não herdado de uma execução anterior (o perfil do navegador é o mesmo).
     // A partida em curso mantém as opções já sorteadas; a etapa aberta de novo, logo abaixo, já nasce no modo escolhido.
-    const modo = P.get("modo") || "simbolos";
-    q("#modo-" + modo).click();
+    const unico = col.modos.length < 2, modo = unico ? col.modos[0] : (P.get("modo") || "simbolos"); // coleção de um modo só não tem botões de modo
+    if (unico) { if (q("#modo-imagem")) prob.push("os botões de modo apareceram numa coleção de um modo só"); } else q("#modo-" + modo).click();
     if (Q.state().mode !== modo) prob.push(`não consegui escolher o modo ${modo}`);
     q("#voltar").click();
     if (!await esperar(() => visivel("mapa"))) prob.push("o botão Mapa não voltou ao mapa");
@@ -87,7 +89,7 @@ f.onload = () => {
     for (; voltas < 40 && !q("#vermapa"); voltas++) {
       const st = Q.state(), ans = st.order[st.i], opts = qa(".opt");
       if (st.mode !== modo) prob.push(`resposta ${voltas + 1}: a partida está no modo ${st.mode}, não em ${modo}`);
-      if (modo === "simbolos") {
+      if (modo === "simbolos" || unico) {
         if (!opts.every(o => ets[0].includes(o.dataset.id))) prob.push(`resposta ${voltas + 1}: há opção de fora da etapa 1`);
       } else {
         // Modo Imagem: mesmo sexo da resposta; opção de fora da etapa 1 só entra se a etapa 1 não tem santos desse sexo para completar as 4
@@ -112,15 +114,15 @@ f.onload = () => {
     if (!q("#etapa-1")?.classList.contains("completa") || !q("#etapa-2")?.classList.contains("aberta") || !q("#etapa-3")?.classList.contains("trancada")) prob.push("depois da etapa 1, o mapa deveria mostrar 1 completa, 2 aberta e 3 trancada");
     w.history.back();
     if (!await esperar(() => visivel("inicio"))) prob.push("o voltar do navegador, no mapa, não mostrou o início");
-    if (!q("#col-santos").textContent.includes(`10 de ${total}`)) prob.push(`a carta dos santos deveria dizer 10 de ${total}: ${q("#col-santos").textContent}`);
+    if (!q(CARTA).textContent.includes(`10 de ${total}`)) prob.push(`a carta dos santos deveria dizer 10 de ${total}: ${q(CARTA).textContent}`);
     log.push(`etapa do mapa: problemas: ${prob.length ? prob.join("; ") : "nenhum"}`);
   }
 
   // Segunda fase da ação "etapa": a página do jogo foi recarregada e o progresso tem de estar lá
   function depoisDeRecarregar() {
-    const prob = [], total = Q.itensDe(Q.COLECOES[0]).length;
-    if (!visivel("inicio") || !q("#col-santos").textContent.includes(`10 de ${total}`)) prob.push("depois de recarregar, o início não mostra 10 acertos");
-    q("#col-santos").click();
+    const prob = [], total = Q.itensDe(COL).length;
+    if (!visivel("inicio") || !q(CARTA).textContent.includes(`10 de ${total}`)) prob.push("depois de recarregar, o início não mostra 10 acertos");
+    q(CARTA).click();
     if (!q("#etapa-1")?.classList.contains("completa") || !q("#etapa-2")?.classList.contains("aberta")) prob.push("depois de recarregar, o mapa perdeu a etapa 1");
     log.push(`mapa depois de recarregar: problemas: ${prob.length ? prob.join("; ") : "nenhum"}`);
   }

@@ -5,7 +5,7 @@ import urllib.request
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-SERIES = ("santos", "simbolos")
+SERIES = ("santos", "simbolos", "nossasenhora")
 
 
 def baixar(url: str, destino: Path) -> int:
