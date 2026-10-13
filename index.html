@@ -1258,8 +1258,9 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   const byId = Object.fromEntries(SAINTS.map(s => [s.id, s]));
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   // Três opções erradas. No modo Imagem são do mesmo sexo da resposta; se o nível não tiver gente suficiente, completa com outros níveis.
-  function wrongFor(ans, lv, md) {
-    const pool = poolFor(lv).filter(x => x !== ans);
+  // Em etapa do mapa, base traz os santos da etapa e das anteriores: o jogador não vê nome que ainda não encontrou.
+  function wrongFor(ans, lv, md, base) {
+    const pool = (base || poolFor(lv)).filter(x => x !== ans);
     if (md !== "imagem") return shuffle(pool).slice(0, 3);
     const same = id => byId[id].sex === byId[ans].sex;
     const inLevel = shuffle(pool.filter(same));
@@ -1313,12 +1314,24 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   let st;
   function newGame() {
     const order = dealOrder(level);
-    st = { order, level, mode, i: 0, hits: 0, results: [], picked: null, opts: [] };
+    st = { tipo: "livre", order, level, mode, i: 0, hits: 0, results: [], picked: null, opts: [] };
+    $("art").dataset.id = "";
+    setupRound();
+  }
+  // Etapa do mapa: a fila são os santos que faltam acertar. Quem é errado volta no fim da fila, até todos serem acertados.
+  function jogarEtapa(colId, n) {
+    const col = colecao(colId), itens = col && etapas(col)[n];
+    if (!itens || situacao(col, n) === "trancada") return;
+    const ok = acertados(col), falta = itens.filter(id => !ok.includes(id));
+    // Etapa já completa pode ser jogada de novo, com todos os santos, sem mexer no progresso
+    st = { tipo: "etapa", colecao: colId, etapa: n, itens, certos: falta.length ? itens.filter(id => ok.includes(id)) : [],
+      base: etapas(col).slice(0, n + 1).flat(), order: shuffle(falta.length ? falta : itens), mode, i: 0, hits: 0, results: [], picked: null, opts: [] };
+    $("art").dataset.id = "";
     setupRound();
   }
   function setupRound() {
     const ans = st.order[st.i];
-    st.opts = shuffle([ans, ...wrongFor(ans, st.level || "todos", st.mode)]);
+    st.opts = shuffle([ans, ...wrongFor(ans, st.level || "todos", st.mode, st.base)]);
     st.picked = null;
     render();
   }
@@ -1327,13 +1340,17 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     st.picked = id;
     const ok = id === st.order[st.i];
     if (ok) st.hits++;
+    if (st.tipo === "etapa") {
+      if (ok) { marcarAcerto(colecao(st.colecao), id); if (!st.certos.includes(id)) st.certos.push(id); }
+      else st.order.push(st.order[st.i]); // errou: o santo volta no fim da fila
+    }
     st.results.push({ id: st.order[st.i], ok, picked: id });
     render();
     const nb = $("next"); if (nb) nb.focus();
   }
   // Quando a página não cabe inteira na tela, cada rodada nova começa com o quadro no alto, para caber junto com as opções
   const toTop = () => { if (document.documentElement?.scrollHeight > window.innerHeight + 4) $("stage").scrollIntoView?.(); };
-  function next() { st.i++; if (st.i < ROUNDS) { setupRound(); toTop(); } else render(); }
+  function next() { st.i++; if (st.i < st.order.length) { setupRound(); toTop(); } else render(); }
   function setLevel(k) {
     level = k;
     try { localStorage.setItem("quiz-santos-nivel", level); } catch (e) {}
@@ -1348,8 +1365,13 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   }
 
   function renderDots() {
+    // Em etapa, uma bolinha por santo da etapa: acesa a de quem já foi acertado
+    if (st.tipo === "etapa") {
+      $("dots").innerHTML = st.itens.map(id => `<span class="dot ${st.certos.includes(id) ? "ok" : id === st.order[st.i] ? "now" : ""}"></span>`).join("");
+      return;
+    }
     let s = "";
-    for (let k = 0; k < ROUNDS; k++) {
+    for (let k = 0; k < st.order.length; k++) {
       const r = st.results[k];
       s += `<span class="dot ${r ? (r.ok ? "ok" : "bad") : (k === st.i ? "now" : "")}"></span>`;
     }
@@ -1363,6 +1385,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   }
 
   function renderLevels() {
+    if (st.tipo === "etapa") { $("levels").innerHTML = ""; return; }
     $("levels").innerHTML = LEVELS.map(([k, label]) =>
       `<button class="lvl" id="lvl-${k}" aria-pressed="${st.level === k}" data-k="${k}">${label} <span>${poolFor(k).length}</span></button>`).join("");
     $("levels").querySelectorAll(".lvl").forEach(b => b.onclick = () => setLevel(b.dataset.k));
@@ -1395,22 +1418,41 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   });
   $("convite").innerHTML = botaoZap("Conhece os santos pelos vitrais? Jogue o Quiz dos Santos: veja o vitral e descubra quem é o santo.", "Compartilhar o jogo no WhatsApp", "zap");
 
+  function renderFimEtapa() {
+    const col = colecao(st.colecao), n = st.etapa, total = etapas(col).length;
+    const errados = [...new Set(st.results.filter(r => !r.ok).map(r => r.id))];
+    showArt(byId[st.results.at(-1).id]);
+    $("panel").innerHTML = `<div class="end">
+      <div class="eyebrow">Etapa ${n + 1} completa</div>
+      <div class="big">${st.itens.length}/${st.itens.length}</div>
+      <p class="q">${errados.length ? `Você acertou os ${st.itens.length} em ${st.results.length} respostas.` : "Todos de primeira. Você conhece bem estes santos."}</p>
+      ${etapaAberta(col) === -1 ? `<p class="why">Você completou o ${col.nomeMapa}.</p>` : ""}
+      ${errados.length ? `<div><div class="eyebrow" style="margin-bottom:6px">Para rever</div><ul class="missed">${errados.map(id =>
+        `<li><b>${byId[id].name}</b>: ${byId[id].why}</li>`).join("")}</ul></div>` : ""}
+      <div class="acoes">${n + 1 < total ? `<button class="btn" id="proxima">Próxima etapa</button>` : ""}<button class="btn" id="vermapa">Ver o mapa</button>
+      ${botaoZap(`Completei a etapa ${n + 1} de ${total} do ${col.nomeMapa}, no Quiz dos Santos. Consegue chegar até aqui?`, "Desafiar no WhatsApp", "zap-fim")}</div></div>`;
+    const colId = st.colecao, prox = n + 1 < total ? $("proxima") : null;
+    $("vermapa").onclick = () => abrirMapa(colId);
+    if (prox) { prox.onclick = () => jogarEtapa(colId, n + 1); prox.focus(); } else $("vermapa").focus();
+  }
+
   function render() {
     renderModes();
     $("cap").textContent = st.mode === "imagem" ? "Vitral do santo" : "Vitral com os atributos tradicionais do santo";
     renderLevels();
-    $("total").textContent = ROUNDS;
-    $("hits").textContent = st.hits;
-    $("round").textContent = Math.min(st.i + 1, ROUNDS);
+    $("total").textContent = st.order.length;
+    $("hits").textContent = st.tipo === "etapa" ? st.certos.length : st.hits;
+    $("round").textContent = Math.min(st.i + 1, st.order.length);
     renderDots();
     const panel = $("panel");
 
-    if (st.i >= ROUNDS) {
+    if (st.i >= st.order.length) {
+      if (st.tipo === "etapa") { renderFimEtapa(); return; }
       const missed = st.results.filter(r => !r.ok);
       const verdict = st.hits === ROUNDS ? "Perfeito. Você conhece bem a arte sacra." :
         st.hits >= 7 ? "Muito bem. Poucos santos te escaparam." :
         st.hits >= 4 ? "Bom começo. Os símbolos ficam mais fáceis com a prática." : "Os atributos dos santos têm muita história. Vale outra rodada.";
-      showArt(byId[st.results[ROUNDS - 1].id]);
+      showArt(byId[st.results.at(-1).id]);
       panel.innerHTML = `<div class="end">
         <div class="eyebrow">Resultado</div>
         <div class="big">${st.hits}/${ROUNDS}</div>
@@ -1431,7 +1473,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
       showArt(ans);
       art.dataset.id = key;
       // Adianta o carregamento da imagem da rodada seguinte
-      const prox = st.i + 1 < ROUNDS ? imgFor(st.order[st.i + 1], st.mode) : null;
+      const prox = st.i + 1 < st.order.length ? imgFor(st.order[st.i + 1], st.mode) : null;
       if (prox && typeof Image !== "undefined") new Image().src = prox;
     }
     const answered = !!st.picked;
@@ -1442,7 +1484,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     }).join("");
     const ok = st.picked === ans.id;
     panel.innerHTML = `
-      <div class="eyebrow">Rodada ${st.i + 1} de ${ROUNDS}</div>
+      <div class="eyebrow">${st.tipo === "etapa" ? `Etapa ${st.etapa + 1} · ${st.certos.length} de ${st.itens.length}` : `Rodada ${st.i + 1} de ${ROUNDS}`}</div>
       <p class="q">${st.mode === "imagem" ? "Que santo é este?" : "Que santo é representado por estes símbolos?"}</p>
       <p class="hint">Na arte sacra, cada santo é reconhecido pelos seus atributos: os objetos que contam sua vida ou seu martírio.</p>
       <div class="opts">${opts}</div>
@@ -1452,7 +1494,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
         <div class="feast">Festa: ${ans.feast}</div>
         <p class="why">${ans.bio}</p>
         <p class="why"><b>No vitral:</b> ${ans.why}</p>
-        <button class="btn" id="next">${st.i + 1 < ROUNDS ? "Próximo santo" : "Ver resultado"}</button>
+        <button class="btn" id="next">${st.i + 1 < st.order.length ? "Próximo santo" : "Ver resultado"}</button>
       </div>` : ""}`;
     panel.querySelectorAll(".opt").forEach(b => b.onclick = () => pick(b.dataset.id));
     const nb = $("next"); if (nb) nb.onclick = next;
@@ -1460,7 +1502,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
 
   document.addEventListener("keydown", e => {
     if (!st || e.target.closest && e.target.closest("input,textarea")) return;
-    if (st.i < ROUNDS && !st.picked && /^[1-4]$/.test(e.key)) pick(st.opts[+e.key - 1]);
+    if (st.i < st.order.length && !st.picked && /^[1-4]$/.test(e.key)) pick(st.opts[+e.key - 1]);
   });
 
   // Jogar sem internet. O sw.js serve o que estiver guardado no aparelho; aqui se guardam as imagens todas de uma vez.
@@ -1518,7 +1560,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   })();
 
   // Gancho para os testes (testes/verifica.js e testes/teste.html)
-  window.__quiz = { SAINTS, LEVELS, MODES, COM_FIGURA, COM_SIMBOLOS, ativo, poolFor, levelOf, wrongFor, imgFor, artFor, windowSVG, offline, dealOrder, ORDEM, COLECOES, colecao, itensDe, etapas, acertados, marcarAcerto, etapaAberta, situacao, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
+  window.__quiz = { SAINTS, LEVELS, MODES, COM_FIGURA, COM_SIMBOLOS, ativo, poolFor, levelOf, wrongFor, imgFor, artFor, windowSVG, offline, dealOrder, ORDEM, COLECOES, colecao, itensDe, etapas, acertados, marcarAcerto, etapaAberta, situacao, jogarEtapa, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
 
   function start(data) {
     if (data && data.st && Array.isArray(data.st.order)) {

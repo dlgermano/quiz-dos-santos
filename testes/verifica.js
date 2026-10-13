@@ -89,6 +89,70 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   }
 }
 
+// N. Partida de etapa: fila, erro que volta, acerto gravado na hora
+{
+  const s = {}, { q, els } = carregar(s);
+  if (q.jogarEtapa) {
+    const col = q.COLECOES[0], ets = q.etapas(col), sexo = id => q.SAINTS.find(x => x.id === id).sex;
+    const antes = q.state();
+    q.jogarEtapa("santos", 1); q.jogarEtapa("santos", 99); q.jogarEtapa("nada", 0);
+    confere(q.state() === antes, "N: etapa trancada, etapa que não existe ou coleção que não existe não deveriam começar partida");
+    q.jogarEtapa("santos", 0);
+    const st = q.state();
+    confere(st.tipo === "etapa" && st.order.length === 10 && st.order.slice().sort().join() === ets[0].slice().sort().join(), "N: a fila da etapa 1 deveria ser os 10 santos dela");
+    confere(st.opts.length === 4 && new Set(st.opts).size === 4 && st.opts.includes(st.order[0]) && st.opts.every(id => ets[0].includes(id)),
+      "N: na etapa 1, modo Símbolos, as 4 opções deveriam ser santos da própria etapa");
+    confere(els.levels.innerHTML === "", "N: em etapa, os botões de nível não deveriam aparecer");
+    const errado = st.order[0];
+    q.pick(st.opts.find(id => id !== errado));
+    confere(st.order.length === 11 && st.order[10] === errado && q.acertados(col).length === 0, "N: santo errado deveria voltar no fim da fila, sem contar como acerto");
+    q.setMode("imagem");
+    confere(q.state() === st && st.order.length === 11, "N: trocar o modo no meio da etapa não deveria recomeçar a etapa");
+    q.next();
+    let mesmoSexo = true, voltas = 0;
+    while (st.i < st.order.length && voltas++ < 40) {
+      if (new Set(st.opts.map(sexo)).size !== 1) mesmoSexo = false;
+      q.pick(st.order[st.i]);
+      if (st.i === 1) confere(JSON.parse(s["quiz-santos-progresso"]).santos.length === 1, "N: o acerto deveria ser gravado na hora, antes de a etapa acabar");
+      q.next();
+    }
+    confere(mesmoSexo, "N: em etapa, no modo Imagem, as opções deveriam ser do mesmo sexo da resposta");
+    confere(st.i === 11 && st.results.length === 11 && st.results.filter(r => !r.ok).length === 1, "N: errando um santo, a etapa deveria fechar em 11 respostas");
+    confere(q.acertados(col).length === 10 && q.situacao(col, 0) === "completa" && q.situacao(col, 1) === "aberta", "N: com os 10 acertados, a etapa fecha e a seguinte abre");
+    const fim = els.panel.innerHTML;
+    confere(fim.includes("Etapa 1 completa") && fim.includes("id=\"proxima\"") && fim.includes("id=\"vermapa\"") && fim.includes(q.SAINTS.find(x => x.id === errado).name),
+      "N: a tela final deveria dizer que a etapa fechou, oferecer a próxima e o mapa, e listar o santo errado em Para rever");
+    q.jogarEtapa("santos", 0);
+    const denovo = q.state();
+    confere(denovo.order.length === 10 && denovo.certos.length === 0, "N: etapa completa jogada de novo deveria trazer os 10 santos");
+    q.pick(denovo.opts.find(id => id !== denovo.order[0]));
+    confere(q.acertados(col).length === 10, "N: errar ao jogar de novo uma etapa completa não deveria tirar progresso");
+    q.setMode("simbolos"); q.jogarEtapa("santos", 1);
+    const ate2 = ets[0].concat(ets[1]);
+    confere(q.state().opts.every(id => ate2.includes(id)), "N: na etapa 2, as opções deveriam sair das etapas 1 e 2");
+    q.setLevel("dificil");
+    const livre = q.state();
+    confere(livre.tipo === "livre" && livre.order.length === 10, "N: escolher um nível deveria começar uma partida livre de 10 rodadas");
+    q.pick(livre.order[0]);
+    confere(q.acertados(col).length === 10, "N: acerto no jogo livre não deveria contar para o mapa");
+  } else confere(false, "N: jogarEtapa não existe");
+}
+{
+  const ets = (() => { const { q } = carregar(); return q.etapas(q.COLECOES[0]); })();
+  let { q } = carregar({ "quiz-santos-progresso": JSON.stringify({ santos: ets[0].slice(0, 4) }) });
+  if (q.jogarEtapa) {
+    q.jogarEtapa("santos", 0);
+    const st = q.state();
+    confere(st.order.length === 6 && st.order.every(id => !ets[0].slice(0, 4).includes(id)) && st.certos.length === 4,
+      "N: voltar a uma etapa pela metade deveria trazer só os santos que faltam");
+    q = carregar("bloqueado").q;
+    q.jogarEtapa("santos", 0);
+    const b = q.state();
+    for (let k = 0; k < 10; k++) { q.pick(b.order[b.i]); q.next(); }
+    confere(q.situacao(q.COLECOES[0], 0) === "completa", "N: com o localStorage bloqueado, a etapa deveria fechar com o progresso em memória");
+  }
+}
+
 // P. Santos preparados: ficam escondidos até terem as duas imagens aprovadas
 {
   const { q } = carregar();
