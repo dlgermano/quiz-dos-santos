@@ -100,6 +100,8 @@ f.onload = () => {
 
   (async () => {
     try {
+      // A página abre no início. Os testes do jogo de 10 rodadas entram pelo botão "Jogo livre".
+      if (!["etapa", "mapa", "inicio-mapa"].includes(acao)) d.getElementById("livre").click();
       if (acao === "completo") {
         let t = false;
         for (const modo of ["simbolos", "imagem"]) for (const nivel of ["facil", "medio", "dificil", "todos"]) jogar(modo, nivel, t = !t);

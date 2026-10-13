@@ -153,6 +153,44 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   }
 }
 
+// O. Telas: início, mapa e jogo
+{
+  const { q, els } = carregar({}, undefined, undefined, true);
+  if (q.tela) {
+    confere(q.tela() === "inicio" && q.state() === undefined, "O: a página deveria abrir no início, sem partida em curso");
+    confere(els.inicio.hidden === false && els.mapa.hidden === true && els.stage.hidden === true && els.modes.hidden === true && els.dots.hidden === true,
+      "O: no início, o mapa, o jogo e os botões do jogo deveriam estar escondidos");
+    const ini = els.inicio.innerHTML;
+    confere(ini.includes("id=\"col-santos\"") && ini.includes("0 de 184") && ini.includes("id=\"livre\""), "O: o início deveria ter a carta dos santos com 0 de 184 e o botão de jogo livre");
+    q.abrirMapa("nada");
+    confere(q.tela() === "inicio", "O: coleção que não existe não deveria abrir mapa");
+    q.abrirMapa("santos");
+    const mapa = els.mapa.innerHTML, conta = t => (mapa.match(new RegExp(`class="casa ${t}"`, "g")) || []).length;
+    confere(q.tela() === "mapa" && els.mapa.hidden === false && els.inicio.hidden === true, "O: abrir o mapa deveria esconder o início");
+    confere(conta("aberta") === 1 && conta("trancada") === 18 && conta("completa") === 0 && mapa.includes("Caminho dos Santos") && mapa.includes("id=\"etapa-19\""),
+      "O: sem progresso, o mapa deveria ter 1 etapa aberta e 18 trancadas");
+    q.jogarEtapa("santos", 0);
+    confere(q.tela() === "jogo" && els.stage.hidden === false && els.mapa.hidden === true && els.modes.hidden === false && els.nav.innerHTML.includes("Mapa"),
+      "O: começar uma etapa deveria mostrar o jogo, com o botão de volta ao mapa");
+    q.jogoLivre();
+    confere(q.tela() === "jogo" && q.state().tipo === "livre" && els.levels.innerHTML.includes("lvl-facil") && els.nav.innerHTML.includes("Início"),
+      "O: o jogo livre deveria mostrar os níveis e o botão de volta ao início");
+    q.abrirInicio();
+    confere(q.tela() === "inicio" && els.stage.hidden === true && els.foot.hidden === false, "O: voltar ao início deveria esconder o jogo e mostrar o rodapé");
+  } else confere(false, "O: window.__quiz.tela não existe");
+}
+{
+  const ets = (() => { const { q } = carregar(); return q.etapas(q.COLECOES[0]); })();
+  const { q, els } = carregar({ "quiz-santos-progresso": JSON.stringify({ santos: ets[0].concat(ets[1].slice(0, 3)) }) }, undefined, undefined, true);
+  if (q.tela) {
+    confere(els.inicio.innerHTML.includes("13 de 184"), "O: a carta dos santos deveria mostrar o progresso guardado");
+    q.abrirMapa("santos");
+    const mapa = els.mapa.innerHTML;
+    confere(mapa.includes("class=\"casa completa\" id=\"etapa-1\"") && mapa.includes("class=\"casa aberta\" id=\"etapa-2\"") && mapa.includes("Etapa 2 · 3 de 10") && mapa.includes("class=\"casa trancada\" id=\"etapa-3\""),
+      "O: com 13 acertos, a etapa 1 fica completa, a 2 aberta com 3 de 10 e a 3 trancada");
+  }
+}
+
 // P. Santos preparados: ficam escondidos até terem as duas imagens aprovadas
 {
   const { q } = carregar();

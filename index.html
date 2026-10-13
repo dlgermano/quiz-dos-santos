@@ -40,6 +40,8 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+/* O atributo hidden precisa vencer o display das telas (grid, flex) */
+[hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 17px; line-height: 1.5; }
 .wrap { max-width: 980px; margin: 0 auto; padding: 24px 16px 40px; display: grid; gap: 20px; }
 header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
@@ -64,6 +66,47 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
 .foot:empty { display: none; }
 .foot .lvl { min-height: 44px; }
 .lvl:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.levels:empty { display: none; }
+.muted { color: var(--muted); font-size: .92rem; }
+/* Início: uma carta por coleção e, embaixo, o jogo livre */
+.inicio { display: grid; gap: 12px; width: 100%; max-width: 520px; margin: 0 auto; }
+.cartas { display: grid; gap: 10px; }
+.carta {
+  font: inherit; color: var(--fg); text-align: left; cursor: pointer; display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center;
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px;
+}
+.carta:hover { border-color: var(--accent); }
+.carta:focus-visible, .casa:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.carta .txt { display: grid; gap: 2px; }
+.carta .nome { font-family: var(--display); font-size: 1.15rem; line-height: 1.2; }
+.barra { display: block; height: 7px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 4px; }
+.barra i { display: block; height: 100%; background: var(--accent); }
+.livre { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; border-top: 1px solid var(--line); padding-top: 12px; }
+.livre .lvl, .topo .lvl { min-height: 44px; }
+/* Arco de vitral: miniatura das cartas e das etapas. O número fica por baixo da imagem e aparece se ela não carregar */
+.arco {
+  position: relative; display: grid; place-items: center; aspect-ratio: 3 / 4; overflow: hidden; border: 2.5px solid #231d1a;
+  border-radius: 50% 50% 6px 6px / 38% 38% 6px 6px; background: var(--line); font-family: var(--display); font-size: 1.3rem; color: var(--muted);
+}
+.arco img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* Mapa: trilha de etapas em zigue-zague, de cima para baixo */
+.mapa { width: 100%; max-width: 420px; margin: 0 auto; }
+.topo { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.mapa h2 { font-family: var(--display); font-weight: 400; font-size: 1.4rem; margin: 8px 0 0; }
+.trilha { position: relative; margin-top: 10px; }
+.trilha svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.trilha path { fill: none; stroke: var(--line); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 2 12; vector-effect: non-scaling-stroke; }
+.casa {
+  font: inherit; font-size: .8rem; line-height: 1.2; color: var(--muted); background: none; border: 0; padding: 0; cursor: pointer;
+  position: absolute; width: 96px; transform: translateX(-50%); display: grid; justify-items: center; gap: 2px; text-align: center;
+}
+.casa .arco { width: 62px; }
+.casa.completa { color: var(--fg); }
+.casa.aberta { color: var(--accent); font-weight: 700; }
+.casa.aberta .arco { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 35%, transparent); }
+.casa.aberta .arco img { filter: grayscale(1) opacity(.45); }
+.casa.trancada { cursor: default; }
+.casa.trancada .arco { border-color: var(--muted); opacity: .7; }
 /* Tela larga e deitada: vitral à esquerda, do tamanho que couber na altura da tela */
 .stage { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 32px; align-items: start; }
 .window { width: min(100%, 360px, calc((100dvh - 230px) * .75)); min-width: 150px; margin: 0 auto; }
@@ -155,13 +198,17 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
 <div class="wrap">
   <header>
     <h1>Quiz dos Santos</h1>
-    <div class="score"><span>Rodada <b id="round">1</b>/<span id="total">10</span></span><span>Acertos <b id="hits">0</b></span></div>
-    <div class="dots" id="dots" aria-hidden="true"></div>
-    <div class="levels" id="modes" role="group" aria-label="Modo de jogo"></div>
-    <div class="levels" id="levels" role="group" aria-label="Nível"></div>
+    <div class="score" id="score" hidden><span>Rodada <b id="round">1</b>/<span id="total">10</span></span><span>Acertos <b id="hits">0</b></span></div>
+    <div class="dots" id="dots" aria-hidden="true" hidden></div>
+    <div class="levels" id="nav" role="group" aria-label="Voltar" hidden></div>
+    <div class="levels" id="modes" role="group" aria-label="Modo de jogo" hidden></div>
+    <div class="levels" id="levels" role="group" aria-label="Nível" hidden></div>
   </header>
 
-  <main class="stage" id="stage">
+  <section class="inicio" id="inicio" hidden></section>
+  <section class="mapa" id="mapa" hidden></section>
+
+  <main class="stage" id="stage" hidden>
     <div class="window">
       <div id="art"></div>
       <div class="cap" id="cap"></div>
@@ -1327,8 +1374,51 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     st = { tipo: "etapa", colecao: colId, etapa: n, itens, certos: falta.length ? itens.filter(id => ok.includes(id)) : [],
       base: etapas(col).slice(0, n + 1).flat(), order: shuffle(falta.length ? falta : itens), mode, i: 0, hits: 0, results: [], picked: null, opts: [] };
     $("art").dataset.id = "";
+    mostrar("jogo");
     setupRound();
   }
+  // Telas: início (coleções), mapa (etapas de uma coleção) e jogo. Só uma aparece por vez.
+  let tela = "inicio";
+  function mostrar(t) {
+    tela = t;
+    $("inicio").hidden = t !== "inicio"; $("mapa").hidden = t !== "mapa"; $("stage").hidden = t !== "jogo";
+    for (const id of ["score", "dots", "nav", "modes", "levels"]) $(id).hidden = t !== "jogo";
+    $("foot").hidden = $("convite").hidden = t !== "inicio";
+    window.scrollTo?.(0, 0);
+  }
+  const miniatura = id => { const src = id && imgFor(id, "imagem"); return src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()">` : ""; };
+  function abrirInicio() {
+    $("inicio").innerHTML = `<div class="eyebrow">Escolha um caminho</div>
+      <div class="cartas">${COLECOES.map(c => {
+        const it = itensDe(c), ok = acertados(c).length;
+        return `<button class="carta" id="col-${c.id}" data-k="${c.id}"><span class="arco">${miniatura(it[0])}</span>
+          <span class="txt"><span class="nome">${c.nome}</span><span class="muted">${ok} de ${it.length}</span><span class="barra"><i style="width:${it.length ? 100 * ok / it.length : 0}%"></i></span></span></button>`;
+      }).join("")}</div>
+      <div class="livre"><span class="muted">Partida avulsa de 10 rodadas, por nível</span><button class="lvl" id="livre">Jogo livre</button></div>`;
+    $("inicio").querySelectorAll(".carta").forEach(b => b.onclick = () => abrirMapa(b.dataset.k));
+    $("livre").onclick = jogoLivre;
+    mostrar("inicio");
+  }
+  function abrirMapa(colId) {
+    const col = colecao(colId);
+    if (!col) return;
+    const ets = etapas(col), ok = acertados(col), XS = [22, 50, 78, 50], PASSO = 96, alto = ets.length * PASSO + 20;
+    const casas = ets.map((et, n) => {
+      const sit = situacao(col, n), feitos = et.filter(id => ok.includes(id)).length;
+      const legenda = sit === "completa" ? `${feitos} de ${et.length}` : sit === "aberta" ? `Etapa ${n + 1} · ${feitos} de ${et.length}` : "";
+      return `<button class="casa ${sit}" id="etapa-${n + 1}" data-n="${n}" style="left:${XS[n % 4]}%;top:${n * PASSO}px" ${sit === "trancada" ? "disabled" : ""} aria-label="Etapa ${n + 1}, ${sit}, ${feitos} de ${et.length}"><span class="arco">${n + 1}${sit === "trancada" ? "" : miniatura(et[0])}</span><span>${legenda}</span></button>`;
+    }).join("");
+    const linha = ets.map((_, n) => `${n ? "L" : "M"}${XS[n % 4]} ${n * PASSO + 42}`).join(" ");
+    $("mapa").innerHTML = `<div class="topo"><button class="lvl" id="ao-inicio">‹ Início</button><span class="muted"><b>${ok.length}</b> de ${itensDe(col).length} ${col.unidade}</span></div>
+      <h2>${col.nomeMapa}</h2>
+      <div class="trilha" style="height:${alto}px"><svg viewBox="0 0 100 ${alto}" preserveAspectRatio="none" aria-hidden="true"><path d="${linha}"/></svg>${casas}</div>`;
+    $("ao-inicio").onclick = abrirInicio;
+    $("mapa").querySelectorAll(".casa").forEach(b => b.onclick = () => jogarEtapa(colId, +b.dataset.n));
+    mostrar("mapa");
+    // O mapa é comprido: começa com a etapa aberta no meio da tela
+    $("mapa").querySelector(".casa.aberta")?.scrollIntoView?.({ block: "center" });
+  }
+  function jogoLivre() { mostrar("jogo"); newGame(); }
   function setupRound() {
     const ans = st.order[st.i];
     st.opts = shuffle([ans, ...wrongFor(ans, st.level || "todos", st.mode, st.base)]);
@@ -1384,6 +1474,12 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     $("modes").querySelectorAll(".lvl").forEach(b => b.onclick = () => setMode(b.dataset.k));
   }
 
+  function renderNav() {
+    const etapa = st.tipo === "etapa", colId = st.colecao;
+    $("nav").innerHTML = `<button class="lvl" id="voltar">‹ ${etapa ? "Mapa" : "Início"}</button>`;
+    $("voltar").onclick = etapa ? () => abrirMapa(colId) : abrirInicio;
+  }
+
   function renderLevels() {
     if (st.tipo === "etapa") { $("levels").innerHTML = ""; return; }
     $("levels").innerHTML = LEVELS.map(([k, label]) =>
@@ -1437,6 +1533,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   }
 
   function render() {
+    renderNav();
     renderModes();
     $("cap").textContent = st.mode === "imagem" ? "Vitral do santo" : "Vitral com os atributos tradicionais do santo";
     renderLevels();
@@ -1501,7 +1598,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   }
 
   document.addEventListener("keydown", e => {
-    if (!st || e.target.closest && e.target.closest("input,textarea")) return;
+    if (!st || tela !== "jogo" || e.target.closest &&e.target.closest("input,textarea")) return;
     if (st.i < st.order.length && !st.picked && /^[1-4]$/.test(e.key)) pick(st.opts[+e.key - 1]);
   });
 
@@ -1560,15 +1657,15 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   })();
 
   // Gancho para os testes (testes/verifica.js e testes/teste.html)
-  window.__quiz = { SAINTS, LEVELS, MODES, COM_FIGURA, COM_SIMBOLOS, ativo, poolFor, levelOf, wrongFor, imgFor, artFor, windowSVG, offline, dealOrder, ORDEM, COLECOES, colecao, itensDe, etapas, acertados, marcarAcerto, etapaAberta, situacao, jogarEtapa, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
+  window.__quiz = { SAINTS, LEVELS, MODES, COM_FIGURA, COM_SIMBOLOS, ativo, poolFor, levelOf, wrongFor, imgFor, artFor, windowSVG, offline, dealOrder, ORDEM, COLECOES, colecao, itensDe, etapas, acertados, marcarAcerto, etapaAberta, situacao, jogarEtapa, jogoLivre, abrirInicio, abrirMapa, mostrar, tela: () => tela, state: () => st, mode: () => mode, setLevel, setMode, pick, next };
 
   function start(data) {
     if (data && data.st && Array.isArray(data.st.order)) {
       st = data.st; if (st.level) level = st.level;
       if (!MODES.some(m => m[0] === st.mode)) st.mode = "simbolos";
-      mode = st.mode; render();
+      mode = st.mode; mostrar("jogo"); render();
     }
-    else newGame();
+    else abrirInicio();
   }
   window.claude?.hot?.snapshot?.(() => ({ st }));
   window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});

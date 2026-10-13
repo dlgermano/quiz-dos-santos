@@ -69,6 +69,7 @@ const relata = (nome, prob) => { linhas.push(`${nome}: problemas: ${prob.length 
       if (tem !== total) prob.push(`guardou ${tem} de ${total} imagens`);
       if (!await ate(`return !!navigator.serviceWorker.controller`, 10)) prob.push("o sw.js não assumiu a página");
     }
+    await roda(`document.getElementById("livre").click()`);
     for (const modo of ["imagem", "simbolos", "imagem"]) {
       await roda(`document.getElementById("modo-${modo}").click()`);
       const visto = await roda(`return [document.getElementById("modo-${modo}").getAttribute("aria-pressed"), document.querySelector("#art img")?.getAttribute("src") || "sem imagem"]`);
@@ -81,8 +82,11 @@ const relata = (nome, prob) => { linhas.push(`${nome}: problemas: ${prob.length 
     prob = [];
     if (await fetch(url).then(() => true, () => false)) prob.push("o servidor continuou no ar, o teste não vale");
     await manda("Page.navigate", { url: url + "?origem=atalho" });
-    if (!await ate(`return document.querySelector("h1")?.textContent === "Quiz dos Santos" && document.querySelectorAll(".opt").length === 4`, 15)) prob.push("a página não abriu");
+    if (!await ate(`return document.querySelector("h1")?.textContent === "Quiz dos Santos" && !!document.getElementById("livre")`, 15)) prob.push("a página não abriu");
     else {
+      await roda(`document.getElementById("col-santos").click()`);
+      if (await roda(`return document.querySelectorAll("#mapa .casa").length`) !== 19) prob.push("sem internet, o mapa não mostrou as 19 etapas");
+      await roda(`document.getElementById("ao-inicio").click(); document.getElementById("livre").click()`);
       if (!await ate(`return ${vitral}`, 10)) prob.push("o vitral da primeira rodada não apareceu");
       if (!await ate(`return document.getElementById("foot").textContent.startsWith("Pronto")`, 10)) prob.push("o rodapé não diz que está pronto: " + await rodape());
       for (const modo of ["simbolos", "imagem"]) {
