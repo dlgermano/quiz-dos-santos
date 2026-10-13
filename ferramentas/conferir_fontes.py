@@ -138,6 +138,22 @@ TITULOS = {
     "cirilometodio": ("Saints Cyril and Methodius", "Cirilo e Metódio"),
     "solano": ("Francis Solanus", "Francisco Solano"),
     "mariaegipciaca": ("Mary of Egypt", "Maria Egipcíaca"),
+    "anjodaguarda": ("Guardian angel", "Anjo da guarda"),
+    "zacariasisabel": ("Zechariah (New Testament figure)", "Zacarias (sacerdote)"),
+    "agueda": ("Agatha of Sicily", "Águeda de Catânia"),
+    "floriano": ("Saint Florian", "Floriano de Lorch"),
+    "lasalle": ("Jean-Baptiste de La Salle", "João Batista de La Salle"),
+    "champagnat": ("Marcellin Champagnat", "Marcelino Champagnat"),
+    "aleixo": ("Alexius of Rome", "Aleixo de Roma"),
+    "hildegarda": ("Hildegard of Bingen", "Hildegarda de Bingen"),
+    "cabrini": ("Frances Xavier Cabrini", "Francisca Xavier Cabrini"),
+    "dimpna": ("Dymphna", "Dimpna"),
+    "albertomagno": ("Albertus Magnus", "Alberto Magno"),
+    "nuno": ("Nuno Álvares Pereira", "Nuno Álvares Pereira"),
+    "joaodebrito": ("John de Britto", "João de Brito"),
+    "erasmo": ("Erasmus of Formia", "Erasmo de Formia"),
+    "raimundopenaforte": ("Raymond of Penyafort", "Raimundo de Penaforte"),
+    "borja": ("Francis Borgia", "Francisco de Borja, 4.º duque de Gandia"),
 }
 
 

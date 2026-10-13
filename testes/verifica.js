@@ -5,7 +5,7 @@ const falhas = [];
 let total = 0;
 const confere = (cond, msg) => { total++; if (!cond) falhas.push(msg); };
 
-const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia helena joana edwiges rosalima faustina bernadete teresaavila teresacalcuta bakhita madalena ana monica veronica dulce margaridamaria marta isabel catarinasena efigenia paulina gianna brigida escolastica doroteia edithstein ines madalenanagasaki catarinalaboure mariagoretti ursula genoveva zita luisamarillac margaridaantioquia kateri perpetua angelamerici mariaegipciaca".split(" ");
+const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia helena joana edwiges rosalima faustina bernadete teresaavila teresacalcuta bakhita madalena ana monica veronica dulce margaridamaria marta isabel catarinasena efigenia paulina gianna brigida escolastica doroteia edithstein ines madalenanagasaki catarinalaboure mariagoretti ursula genoveva zita luisamarillac margaridaantioquia kateri perpetua angelamerici mariaegipciaca agueda hildegarda cabrini dimpna".split(" ");
 
 // A. Dados
 {
@@ -13,7 +13,7 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   confere(!!q, "A: window.__quiz não existe");
   if (q) {
     const ids = q.SAINTS.map(s => s.id);
-    confere(ids.length === 184, `A: esperava 184 santos no total, achei ${ids.length}`);
+    confere(ids.length === 200, `A: esperava 200 santos no total, achei ${ids.length}`);
     confere(!ids.includes("elias"), "A: Santo Elias foi recusado pelo Daniel e não deveria estar na lista");
     confere(q.levelOf("joaodacruz") === "medio", "A: São João da Cruz deveria ser do nível medio");
     confere(new Set(ids).size === ids.length, "A: há ids repetidos");
@@ -23,6 +23,11 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     const lote1210 = "valentim silvestre pancracio geraldo catarinalaboure joaoxxiii domingossavio mariagoretti lazaro piox luisrei paulovi franciscosales afonso bernardo crisostomo dionisio ursula genoveva damiao pedroclaver romero zita peregrino luiszelia luisamarillac pedroalcantara cunhau margaridaantioquia paulomiki gil vito roquegonzalez kateri junipero fiacre venceslau clemente perpetua basilio leao anselmo beda norberto kostka angelamerici lwanga cirilometodio solano mariaegipciaca".split(" ");
     confere(lote1210.length === 50 && lote1210.every(id => ids.includes(id)), "A: faltam santos da lista de 12/10/2026");
     confere(lote1210.every(id => !q.poolFor("todos").includes(id) || q.ativo(q.SAINTS.find(s => s.id === id))), "A: santo da lista de 12/10/2026 apareceu sem as duas imagens");
+    // Lista aprovada pelo Daniel em 13/10/2026: 16 santos que completam os 200 e entram escondidos até terem as duas imagens
+    const lote1310 = "anjodaguarda zacariasisabel agueda floriano lasalle champagnat aleixo hildegarda cabrini dimpna albertomagno nuno joaodebrito erasmo raimundopenaforte borja".split(" ");
+    confere(lote1310.length === 16 && lote1310.every(id => ids.includes(id)), "A: faltam santos da lista de 13/10/2026");
+    confere(lote1310.every(id => !q.poolFor("todos").includes(id) || q.ativo(q.SAINTS.find(s => s.id === id))), "A: santo da lista de 13/10/2026 apareceu sem as duas imagens");
+    confere(lote1310.every(id => q.ORDEM.includes(id) === q.ativo(q.SAINTS.find(s => s.id === id))), "A: santo da lista de 13/10/2026 só entra na ordem do mapa quando tiver as duas imagens");
     confere(q.SAINTS.find(s => s.id === "pastorinhos")?.name === "Santos Francisco e Jacinta Marto", "A: os irmãos de Fátima deveriam ser uma entrada só");
     confere(ids.every(id => /^[a-z]+$/.test(id)), "A: há id com letra maiúscula, acento ou espaço");
     const jm = q.SAINTS.find(s => s.id === "josemaria");
@@ -30,12 +35,12 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     confere(q.SAINTS.every(s => s.sex === "m" || s.sex === "f"), "A: há santo sem sex válido");
     const f = q.SAINTS.filter(s => s.sex === "f").map(s => s.id).sort();
     confere(f.join() === MULHERES.slice().sort().join(), `A: lista de mulheres difere: ${f.join(" ")}`);
-    confere(q.SAINTS.filter(s => s.sex === "m").length === 138, "A: esperava 138 homens");
+    confere(q.SAINTS.filter(s => s.sex === "m").length === 150, "A: esperava 150 homens");
     confere(q.SAINTS.every(s => s.name && s.feast && s.why && s.why.length > 60), "A: há santo sem nome, festa ou explicação");
     confere(new Set(q.SAINTS.map(s => s.name)).size === ids.length, "A: há nomes repetidos");
     confere(q.SAINTS.every(s => { const v = q.windowSVG(s); return v.includes("<svg") && !/NaN|undefined/.test(v); }), "A: há desenho SVG com defeito");
     const porNivel = n => q.SAINTS.filter(s => q.levelOf(s.id) === n).length;
-    confere(porNivel("facil") === 50 && porNivel("medio") === 71 && porNivel("dificil") === 63, `A: níveis no total deveriam ser 50/71/63, achei ${porNivel("facil")}/${porNivel("medio")}/${porNivel("dificil")}`);
+    confere(porNivel("facil") === 51 && porNivel("medio") === 77 && porNivel("dificil") === 72, `A: níveis no total deveriam ser 51/77/72, achei ${porNivel("facil")}/${porNivel("medio")}/${porNivel("dificil")}`);
   }
 }
 
@@ -196,7 +201,7 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   const { q } = carregar();
   if (q.ativo) {
     const prontos = q.SAINTS.filter(s => q.ativo(s)), espera = q.SAINTS.filter(s => !q.ativo(s));
-    confere(prontos.length + espera.length === 184, "P: contagem de ativos e preparados não fecha");
+    confere(prontos.length + espera.length === 200, "P: contagem de ativos e preparados não fecha");
     confere(espera.every(s => !s.draw), "P: santo com desenho não pode estar escondido");
     const todos = q.poolFor("todos");
     confere(todos.length === prontos.length && espera.every(s => !todos.includes(s.id)), "P: santo sem imagens apareceu no nível Todos");
