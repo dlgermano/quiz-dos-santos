@@ -2,7 +2,9 @@
 const fs = require("fs"), path = require("path");
 const RAIZ = path.join(__dirname, "..");
 
-function carregar(storage = {}, hot, extra) {
+// cru = true deixa a página como abre para o jogador (tela inicial). Sem ele, o carregador entra no jogo livre,
+// que é de onde partem os testes anteriores ao mapa.
+function carregar(storage = {}, hot, extra, cru) {
   const html = fs.readFileSync(path.join(RAIZ, "index.html"), "utf8");
   const js = html.match(/<script>([\s\S]*?)<\/script>/)[1];
   const els = {};
@@ -16,6 +18,7 @@ function carregar(storage = {}, hot, extra) {
     ? { getItem() { throw new Error("bloqueado"); }, setItem() { throw new Error("bloqueado"); } }
     : { getItem: k => (k in storage ? storage[k] : null), setItem(k, v) { storage[k] = String(v); } };
   new Function("window", "document", "localStorage", js)(window, document, localStorage);
+  if (!hot && !cru) window.__quiz?.jogoLivre?.();
   return { q: window.__quiz, els, storage };
 }
 

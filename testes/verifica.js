@@ -5,7 +5,7 @@ const falhas = [];
 let total = 0;
 const confere = (cond, msg) => { total++; if (!cond) falhas.push(msg); };
 
-const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia helena joana edwiges rosalima faustina bernadete teresaavila teresacalcuta bakhita madalena ana monica veronica dulce margaridamaria marta isabel catarinasena efigenia paulina gianna brigida escolastica doroteia edithstein ines madalenanagasaki catarinalaboure mariagoretti ursula genoveva zita luisamarillac margaridaantioquia kateri perpetua angelamerici mariaegipciaca".split(" ");
+const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia helena joana edwiges rosalima faustina bernadete teresaavila teresacalcuta bakhita madalena ana monica veronica dulce margaridamaria marta isabel catarinasena efigenia paulina gianna brigida escolastica doroteia edithstein ines madalenanagasaki catarinalaboure mariagoretti ursula genoveva zita luisamarillac margaridaantioquia kateri perpetua angelamerici mariaegipciaca agueda hildegarda cabrini dimpna".split(" ");
 
 // A. Dados
 {
@@ -13,7 +13,7 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   confere(!!q, "A: window.__quiz não existe");
   if (q) {
     const ids = q.SAINTS.map(s => s.id);
-    confere(ids.length === 184, `A: esperava 184 santos no total, achei ${ids.length}`);
+    confere(ids.length === 200, `A: esperava 200 santos no total, achei ${ids.length}`);
     confere(!ids.includes("elias"), "A: Santo Elias foi recusado pelo Daniel e não deveria estar na lista");
     confere(q.levelOf("joaodacruz") === "medio", "A: São João da Cruz deveria ser do nível medio");
     confere(new Set(ids).size === ids.length, "A: há ids repetidos");
@@ -23,6 +23,11 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     const lote1210 = "valentim silvestre pancracio geraldo catarinalaboure joaoxxiii domingossavio mariagoretti lazaro piox luisrei paulovi franciscosales afonso bernardo crisostomo dionisio ursula genoveva damiao pedroclaver romero zita peregrino luiszelia luisamarillac pedroalcantara cunhau margaridaantioquia paulomiki gil vito roquegonzalez kateri junipero fiacre venceslau clemente perpetua basilio leao anselmo beda norberto kostka angelamerici lwanga cirilometodio solano mariaegipciaca".split(" ");
     confere(lote1210.length === 50 && lote1210.every(id => ids.includes(id)), "A: faltam santos da lista de 12/10/2026");
     confere(lote1210.every(id => !q.poolFor("todos").includes(id) || q.ativo(q.SAINTS.find(s => s.id === id))), "A: santo da lista de 12/10/2026 apareceu sem as duas imagens");
+    // Lista aprovada pelo Daniel em 13/10/2026: 16 santos que completam os 200 e entram escondidos até terem as duas imagens
+    const lote1310 = "anjodaguarda zacariasisabel agueda floriano lasalle champagnat aleixo hildegarda cabrini dimpna albertomagno nuno joaodebrito erasmo raimundopenaforte borja".split(" ");
+    confere(lote1310.length === 16 && lote1310.every(id => ids.includes(id)), "A: faltam santos da lista de 13/10/2026");
+    confere(lote1310.every(id => !q.poolFor("todos").includes(id) || q.ativo(q.SAINTS.find(s => s.id === id))), "A: santo da lista de 13/10/2026 apareceu sem as duas imagens");
+    confere(lote1310.every(id => q.ORDEM.includes(id) === q.ativo(q.SAINTS.find(s => s.id === id))), "A: santo da lista de 13/10/2026 só entra na ordem do mapa quando tiver as duas imagens");
     confere(q.SAINTS.find(s => s.id === "pastorinhos")?.name === "Santos Francisco e Jacinta Marto", "A: os irmãos de Fátima deveriam ser uma entrada só");
     confere(ids.every(id => /^[a-z]+$/.test(id)), "A: há id com letra maiúscula, acento ou espaço");
     const jm = q.SAINTS.find(s => s.id === "josemaria");
@@ -30,12 +35,174 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     confere(q.SAINTS.every(s => s.sex === "m" || s.sex === "f"), "A: há santo sem sex válido");
     const f = q.SAINTS.filter(s => s.sex === "f").map(s => s.id).sort();
     confere(f.join() === MULHERES.slice().sort().join(), `A: lista de mulheres difere: ${f.join(" ")}`);
-    confere(q.SAINTS.filter(s => s.sex === "m").length === 138, "A: esperava 138 homens");
+    confere(q.SAINTS.filter(s => s.sex === "m").length === 150, "A: esperava 150 homens");
     confere(q.SAINTS.every(s => s.name && s.feast && s.why && s.why.length > 60), "A: há santo sem nome, festa ou explicação");
     confere(new Set(q.SAINTS.map(s => s.name)).size === ids.length, "A: há nomes repetidos");
     confere(q.SAINTS.every(s => { const v = q.windowSVG(s); return v.includes("<svg") && !/NaN|undefined/.test(v); }), "A: há desenho SVG com defeito");
     const porNivel = n => q.SAINTS.filter(s => q.levelOf(s.id) === n).length;
-    confere(porNivel("facil") === 50 && porNivel("medio") === 71 && porNivel("dificil") === 63, `A: níveis no total deveriam ser 50/71/63, achei ${porNivel("facil")}/${porNivel("medio")}/${porNivel("dificil")}`);
+    confere(porNivel("facil") === 51 && porNivel("medio") === 77 && porNivel("dificil") === 72, `A: níveis no total deveriam ser 51/77/72, achei ${porNivel("facil")}/${porNivel("medio")}/${porNivel("dificil")}`);
+  }
+}
+
+// M. Mapa: ordem dos santos, etapas e progresso guardado
+{
+  const { q } = carregar();
+  const col = q.COLECOES?.find(c => c.id === "santos");
+  confere(!!col, "M: a coleção santos não existe");
+  if (col) {
+    const ativos = q.poolFor("todos");
+    confere(col.ordem.length === ativos.length && new Set(col.ordem).size === col.ordem.length && ativos.every(id => col.ordem.includes(id)),
+      "M: a ordem do mapa deveria ter cada santo ativo uma vez só");
+    const ets = q.etapas(col);
+    confere(ets.length === 19 && ets.slice(0, -1).every(e => e.length === 10) && ets.at(-1).length === 4,
+      `M: esperava 18 etapas de 10 e uma de 4, achei ${ets.map(e => e.length).join(",")}`);
+    const peso = { facil: 0, medio: 1, dificil: 2 }, pesos = col.ordem.map(id => peso[q.levelOf(id)]);
+    confere(pesos.every((p, k) => !k || p >= pesos[k - 1]), "M: há santo de nível mais difícil antes de um mais fácil");
+    confere(ets[0].join(" ") === "jose pedro antonio francisco jorge joao sebastiao luzia rita expedito", "M: a etapa 1 difere da aprovada pelo Daniel em 13/10/2026");
+    confere(q.acertados(col).length === 0 && q.etapaAberta(col) === 0 && q.situacao(col, 0) === "aberta" && q.situacao(col, 1) === "trancada",
+      "M: sem progresso, só a etapa 1 deveria estar aberta");
+    ets[0].forEach(id => q.marcarAcerto(col, id));
+    q.marcarAcerto(col, ets[0][0]);
+    confere(q.acertados(col).length === 10, "M: marcar o mesmo santo duas vezes não deveria contar em dobro");
+    confere(q.etapaAberta(col) === 1 && q.situacao(col, 0) === "completa" && q.situacao(col, 1) === "aberta" && q.situacao(col, 2) === "trancada",
+      "M: com a etapa 1 acertada, a 2 deveria abrir e a 3 continuar trancada");
+    col.ordem.forEach(id => q.marcarAcerto(col, id));
+    confere(q.etapaAberta(col) === -1 && q.situacao(col, 18) === "completa", "M: com tudo acertado, não deveria haver etapa aberta");
+  }
+}
+{
+  const ets = (() => { const { q } = carregar(); return q.etapas ? q.etapas(q.COLECOES[0]) : null; })();
+  if (ets) {
+    const guardado = texto => carregar({ "quiz-santos-progresso": texto }).q;
+    let q = guardado(JSON.stringify({ santos: ets[0].concat(ets[1]).filter(id => id !== ets[0][3]) }));
+    let col = q.COLECOES[0];
+    confere(q.etapaAberta(col) === 0 && q.situacao(col, 0) === "aberta" && q.situacao(col, 1) === "completa" && q.situacao(col, 2) === "trancada",
+      "M: com um santo por acertar numa etapa antiga, ela reabre e a seguinte, já feita, continua completa");
+    for (const ruim of ["{", "[1,2]", "\"x\"", "null", "{\"santos\":\"pedro\"}", "{\"santos\":{\"a\":1}}"]) {
+      q = guardado(ruim); col = q.COLECOES[0];
+      confere(q.acertados(col).length === 0 && q.etapaAberta(col) === 0, `M: progresso estragado (${ruim}) deveria ser ignorado`);
+      q.marcarAcerto(col, "pedro");
+      confere(q.acertados(col).join() === "pedro", `M: depois de progresso estragado (${ruim}), marcar acerto deveria funcionar`);
+    }
+    q = guardado("{\"santos\":[\"naoexiste\",\"pedro\",\"pedro\"]}"); col = q.COLECOES[0];
+    confere(q.acertados(col).join() === "pedro", "M: id que não existe mais, ou repetido, não deveria contar");
+    const s = {};
+    q = carregar(s).q; q.marcarAcerto(q.COLECOES[0], "pedro");
+    confere(JSON.parse(s["quiz-santos-progresso"]).santos.join() === "pedro", "M: o acerto deveria ser gravado em quiz-santos-progresso");
+    q = carregar("bloqueado").q; q.marcarAcerto(q.COLECOES[0], "jose");
+    confere(q.acertados(q.COLECOES[0]).join() === "jose", "M: com o localStorage bloqueado, o progresso deveria valer em memória");
+  }
+}
+
+// N. Partida de etapa: fila, erro que volta, acerto gravado na hora
+{
+  const s = {}, { q, els } = carregar(s);
+  if (q.jogarEtapa) {
+    const col = q.COLECOES[0], ets = q.etapas(col), sexo = id => q.SAINTS.find(x => x.id === id).sex;
+    const antes = q.state();
+    q.jogarEtapa("santos", 1); q.jogarEtapa("santos", 99); q.jogarEtapa("nada", 0);
+    confere(q.state() === antes, "N: etapa trancada, etapa que não existe ou coleção que não existe não deveriam começar partida");
+    q.jogarEtapa("santos", 0);
+    const st = q.state();
+    confere(st.tipo === "etapa" && st.order.length === 10 && st.order.slice().sort().join() === ets[0].slice().sort().join(), "N: a fila da etapa 1 deveria ser os 10 santos dela");
+    confere(st.opts.length === 4 && new Set(st.opts).size === 4 && st.opts.includes(st.order[0]) && st.opts.every(id => ets[0].includes(id)),
+      "N: na etapa 1, modo Símbolos, as 4 opções deveriam ser santos da própria etapa");
+    confere(els.levels.innerHTML === "", "N: em etapa, os botões de nível não deveriam aparecer");
+    const errado = st.order[0];
+    q.pick(st.opts.find(id => id !== errado));
+    confere(st.order.length === 11 && st.order[10] === errado && q.acertados(col).length === 0, "N: santo errado deveria voltar no fim da fila, sem contar como acerto");
+    q.setMode("imagem");
+    confere(q.state() === st && st.order.length === 11, "N: trocar o modo no meio da etapa não deveria recomeçar a etapa");
+    q.next();
+    let mesmoSexo = true, voltas = 0;
+    while (st.i < st.order.length && voltas++ < 40) {
+      if (new Set(st.opts.map(sexo)).size !== 1) mesmoSexo = false;
+      q.pick(st.order[st.i]);
+      if (st.i === 1) confere(JSON.parse(s["quiz-santos-progresso"]).santos.length === 1, "N: o acerto deveria ser gravado na hora, antes de a etapa acabar");
+      q.next();
+    }
+    confere(mesmoSexo, "N: em etapa, no modo Imagem, as opções deveriam ser do mesmo sexo da resposta");
+    confere(st.i === 11 && st.results.length === 11 && st.results.filter(r => !r.ok).length === 1, "N: errando um santo, a etapa deveria fechar em 11 respostas");
+    confere(q.acertados(col).length === 10 && q.situacao(col, 0) === "completa" && q.situacao(col, 1) === "aberta", "N: com os 10 acertados, a etapa fecha e a seguinte abre");
+    const fim = els.panel.innerHTML;
+    confere(fim.includes("Etapa 1 completa") && fim.includes("id=\"proxima\"") && fim.includes("id=\"vermapa\"") && fim.includes(q.SAINTS.find(x => x.id === errado).name),
+      "N: a tela final deveria dizer que a etapa fechou, oferecer a próxima e o mapa, e listar o santo errado em Para rever");
+    q.jogarEtapa("santos", 0);
+    const denovo = q.state();
+    confere(denovo.order.length === 10 && denovo.certos.length === 0, "N: etapa completa jogada de novo deveria trazer os 10 santos");
+    q.pick(denovo.opts.find(id => id !== denovo.order[0]));
+    confere(q.acertados(col).length === 10, "N: errar ao jogar de novo uma etapa completa não deveria tirar progresso");
+    q.setMode("simbolos"); q.jogarEtapa("santos", 1);
+    const ate2 = ets[0].concat(ets[1]);
+    confere(q.state().opts.every(id => ate2.includes(id)), "N: na etapa 2, as opções deveriam sair das etapas 1 e 2");
+    q.setLevel("dificil");
+    const livre = q.state();
+    confere(livre.tipo === "livre" && livre.order.length === 10, "N: escolher um nível deveria começar uma partida livre de 10 rodadas");
+    q.pick(livre.order[0]);
+    confere(q.acertados(col).length === 10, "N: acerto no jogo livre não deveria contar para o mapa");
+  } else confere(false, "N: jogarEtapa não existe");
+}
+{
+  const ets = (() => { const { q } = carregar(); return q.etapas(q.COLECOES[0]); })();
+  let { q, els } = carregar({ "quiz-santos-progresso": JSON.stringify({ santos: ets[0].slice(0, 4) }) });
+  if (q.jogarEtapa) {
+    q.jogarEtapa("santos", 0);
+    const st = q.state();
+    confere(st.order.length === 6 && st.order.every(id => !ets[0].slice(0, 4).includes(id)) && st.certos.length === 4,
+      "N: voltar a uma etapa pela metade deveria trazer só os santos que faltam");
+    for (let k = 0; k < 6; k++) { q.pick(st.order[st.i]); q.next(); }
+    const retomada = els.panel.innerHTML;
+    confere(retomada.includes("Etapa 1 completa") && retomada.includes("6 que faltavam") && !retomada.includes("Todos de primeira"),
+      "N: etapa retomada sem erro deveria dizer que acertou os 6 que faltavam, e não 'Todos de primeira'");
+    q.jogarEtapa("santos", 0);
+    const zero = q.state();
+    for (let k = 0; k < 10; k++) { q.pick(zero.order[zero.i]); q.next(); }
+    confere(els.panel.innerHTML.includes("Todos de primeira"), "N: etapa jogada inteira sem erro deveria dizer 'Todos de primeira'");
+    q = carregar("bloqueado").q;
+    q.jogarEtapa("santos", 0);
+    const b = q.state();
+    for (let k = 0; k < 10; k++) { q.pick(b.order[b.i]); q.next(); }
+    confere(q.situacao(q.COLECOES[0], 0) === "completa", "N: com o localStorage bloqueado, a etapa deveria fechar com o progresso em memória");
+  }
+}
+
+// O. Telas: início, mapa e jogo
+{
+  const { q, els } = carregar({}, undefined, undefined, true);
+  if (q.tela) {
+    confere(q.tela() === "inicio" && q.state() === undefined, "O: a página deveria abrir no início, sem partida em curso");
+    confere(els.inicio.hidden === false && els.mapa.hidden === true && els.stage.hidden === true && els.modes.hidden === true && els.dots.hidden === true,
+      "O: no início, o mapa, o jogo e os botões do jogo deveriam estar escondidos");
+    const ini = els.inicio.innerHTML;
+    confere(ini.includes("id=\"col-santos\"") && ini.includes("0 de 184") && ini.includes("id=\"livre\""), "O: o início deveria ter a carta dos santos com 0 de 184 e o botão de jogo livre");
+    q.abrirMapa("nada");
+    confere(q.tela() === "inicio", "O: coleção que não existe não deveria abrir mapa");
+    q.abrirMapa("santos");
+    const mapa = els.mapa.innerHTML, conta = t => (mapa.match(new RegExp(`class="casa ${t}"`, "g")) || []).length;
+    confere(q.tela() === "mapa" && els.mapa.hidden === false && els.inicio.hidden === true, "O: abrir o mapa deveria esconder o início");
+    confere(conta("aberta") === 1 && conta("trancada") === 18 && conta("completa") === 0 && mapa.includes("Caminho dos Santos") && mapa.includes("id=\"etapa-19\""),
+      "O: sem progresso, o mapa deveria ter 1 etapa aberta e 18 trancadas");
+    q.jogarEtapa("santos", 0);
+    confere(q.tela() === "jogo" && els.stage.hidden === false && els.mapa.hidden === true && els.modes.hidden === false && els.nav.innerHTML.includes("Mapa"),
+      "O: começar uma etapa deveria mostrar o jogo, com o botão de volta ao mapa");
+    confere(els.score.hidden === true, "O: em etapa, o placar Rodada/Acertos deveria ficar escondido");
+    q.jogoLivre();
+    confere(q.tela() === "jogo" && q.state().tipo === "livre" && els.levels.innerHTML.includes("lvl-facil") && els.nav.innerHTML.includes("Início"),
+      "O: o jogo livre deveria mostrar os níveis e o botão de volta ao início");
+    confere(els.score.hidden === false, "O: no jogo livre, o placar deveria voltar");
+    q.abrirInicio();
+    confere(q.tela() === "inicio" && els.stage.hidden === true && els.foot.hidden === false, "O: voltar ao início deveria esconder o jogo e mostrar o rodapé");
+  } else confere(false, "O: window.__quiz.tela não existe");
+}
+{
+  const ets = (() => { const { q } = carregar(); return q.etapas(q.COLECOES[0]); })();
+  const { q, els } = carregar({ "quiz-santos-progresso": JSON.stringify({ santos: ets[0].concat(ets[1].slice(0, 3)) }) }, undefined, undefined, true);
+  if (q.tela) {
+    confere(els.inicio.innerHTML.includes("13 de 184"), "O: a carta dos santos deveria mostrar o progresso guardado");
+    q.abrirMapa("santos");
+    const mapa = els.mapa.innerHTML;
+    confere(mapa.includes("class=\"casa completa\" id=\"etapa-1\"") && mapa.includes("class=\"casa aberta\" id=\"etapa-2\"") && mapa.includes("Etapa 2 · 3 de 10") && mapa.includes("class=\"casa trancada\" id=\"etapa-3\""),
+      "O: com 13 acertos, a etapa 1 fica completa, a 2 aberta com 3 de 10 e a 3 trancada");
   }
 }
 
@@ -44,7 +211,7 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   const { q } = carregar();
   if (q.ativo) {
     const prontos = q.SAINTS.filter(s => q.ativo(s)), espera = q.SAINTS.filter(s => !q.ativo(s));
-    confere(prontos.length + espera.length === 184, "P: contagem de ativos e preparados não fecha");
+    confere(prontos.length + espera.length === 200, "P: contagem de ativos e preparados não fecha");
     confere(espera.every(s => !s.draw), "P: santo com desenho não pode estar escondido");
     const todos = q.poolFor("todos");
     confere(todos.length === prontos.length && espera.every(s => !todos.includes(s.id)), "P: santo sem imagens apareceu no nível Todos");

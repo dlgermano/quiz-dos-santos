@@ -1,11 +1,14 @@
 <!doctype html><meta charset="utf-8"><title>teste</title>
 <style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%;display:block}pre{position:absolute;left:-9999px}</style>
-<iframe id="f" src="../index.html"></iframe><pre id="out">PENDENTE</pre>
+<iframe id="f"></iframe><pre id="out">PENDENTE</pre>
 <script>
 // Joga o quiz de verdade dentro do iframe, clicando nos botões da página.
 const P = new URLSearchParams(location.search);
 const acao = P.get("acao") || "completo", largura = P.get("largura");
 const f = document.getElementById("f"), log = [];
+let fase = 1; // a ação "etapa" recarrega a página do jogo para conferir que o progresso ficou guardado
+// O perfil do navegador é o mesmo entre as execuções do roteiro: cada uma começa sem progresso guardado
+try { localStorage.removeItem("quiz-santos-progresso"); } catch (e) {}
 if (largura) f.style.width = largura + "px";
 const altura = P.get("altura");
 if (altura) f.style.height = altura + "px";
@@ -49,6 +52,77 @@ f.onload = () => {
     if (nota !== `${verdes}/10`) prob.push(`nota ${nota} não bate com ${verdes} bolinhas verdes`);
     if (rever !== vermelhas) prob.push(`"Para rever" tem ${rever} itens e houve ${vermelhas} erros`);
     log.push(`${modo}/${nivel} (${teclado ? "teclado" : "clique"}): nota ${nota}; problemas: ${prob.length ? prob.join("; ") : "nenhum"}`);
+  }
+
+  const visivel = id => !d.getElementById(id).hidden;
+  const esperar = (cond, ms = 3000) => new Promise(ok => { const t0 = Date.now(); (function ver() { if (cond() || Date.now() - t0 > ms) ok(!!cond()); else setTimeout(ver, 30); })(); });
+
+  // Joga a etapa 1 do mapa errando o primeiro santo, e confere a navegação com os botões da página e com o voltar do navegador
+  async function etapa() {
+    const prob = [], col = Q.COLECOES[0], ets = Q.etapas(col), total = Q.itensDe(col).length;
+    if (!visivel("inicio") || visivel("stage") || visivel("mapa")) prob.push("a primeira tela não é o início");
+    if (!q("#col-santos") || !q("#livre")) prob.push("faltam a carta dos santos ou o botão de jogo livre");
+    q("#col-santos").click();
+    const casas = qa(".casa");
+    if (!visivel("mapa") || casas.length !== ets.length) prob.push(`o mapa deveria ter ${ets.length} etapas, tem ${casas.length}`);
+    if (!casas[0].classList.contains("aberta") || !casas.slice(1).every(c => c.classList.contains("trancada") && c.disabled)) prob.push("sem progresso, só a etapa 1 deveria estar aberta");
+    if (casas.some(c => c.getBoundingClientRect().left < 0 || c.getBoundingClientRect().right > w.innerWidth)) prob.push("há etapa cortada pela borda da tela");
+    casas[1].click();
+    if (!visivel("mapa")) prob.push("etapa trancada abriu");
+    casas[0].click();
+    if (!visivel("stage") || qa(".opt").length !== 4 || q("#lvl-facil")) prob.push("a etapa não abriu como jogo, ou mostrou os botões de nível");
+    // Com o mapa na tela, as teclas 1 a 4 não podem responder a partida escondida
+    // O modo é escolhido de forma explícita, e não herdado de uma execução anterior (o perfil do navegador é o mesmo).
+    // A partida em curso mantém as opções já sorteadas; a etapa aberta de novo, logo abaixo, já nasce no modo escolhido.
+    const modo = P.get("modo") || "simbolos";
+    q("#modo-" + modo).click();
+    if (Q.state().mode !== modo) prob.push(`não consegui escolher o modo ${modo}`);
+    q("#voltar").click();
+    if (!await esperar(() => visivel("mapa"))) prob.push("o botão Mapa não voltou ao mapa");
+    d.dispatchEvent(new w.KeyboardEvent("keydown", { key: "1", bubbles: true }));
+    if (Q.state().picked) prob.push("a tecla 1 respondeu a rodada com o mapa na tela");
+    q("#etapa-1").click();
+    const errado = Q.state().order[0];
+    let voltas = 0, reviu = false;
+    for (; voltas < 40 && !q("#vermapa"); voltas++) {
+      const st = Q.state(), ans = st.order[st.i], opts = qa(".opt");
+      if (st.mode !== modo) prob.push(`resposta ${voltas + 1}: a partida está no modo ${st.mode}, não em ${modo}`);
+      if (modo === "simbolos") {
+        if (!opts.every(o => ets[0].includes(o.dataset.id))) prob.push(`resposta ${voltas + 1}: há opção de fora da etapa 1`);
+      } else {
+        // Modo Imagem: mesmo sexo da resposta; opção de fora da etapa 1 só entra se a etapa 1 não tem santos desse sexo para completar as 4
+        const sexo = id => Q.SAINTS.find(x => x.id === id).sex;
+        const daEtapa = ets[0].filter(id => sexo(id) === sexo(ans)).length;
+        const fora = opts.filter(o => !ets[0].includes(o.dataset.id)).length;
+        if (!opts.every(o => sexo(o.dataset.id) === sexo(ans))) prob.push(`resposta ${voltas + 1}: há opção de sexo diferente da resposta`);
+        if (fora > Math.max(0, 4 - daEtapa)) prob.push(`resposta ${voltas + 1}: ${fora} opções de fora da etapa 1, mas a etapa tem ${daEtapa} santos do mesmo sexo da resposta`);
+      }
+      if (voltas > 0 && ans === errado) reviu = true;
+      opts.find(o => voltas === 0 ? o.dataset.id !== ans : o.dataset.id === ans).click();
+      q("#next").click();
+    }
+    if (voltas !== 11 || !reviu) prob.push(`errando um santo, a etapa deveria fechar em 11 respostas com ele de volta; foram ${voltas}`);
+    if (!/Etapa 1 completa/.test(q(".end .eyebrow")?.textContent || "") || qa(".missed li").length !== 1) prob.push("a tela final não diz que a etapa fechou, ou não lista o santo errado");
+    if (qa(".dot.ok").length !== 10) prob.push(`deveria haver 10 bolinhas acesas, há ${qa(".dot.ok").length}`);
+    q("#proxima")?.click();
+    if (Q.state().etapa !== 1 || qa(".opt").length !== 4) prob.push("Próxima etapa não abriu a etapa 2");
+    // Voltar do aparelho, no meio da etapa: mostra o mapa; de novo: mostra o início
+    w.history.back();
+    if (!await esperar(() => visivel("mapa"))) prob.push("o voltar do navegador, no meio da etapa, não mostrou o mapa");
+    if (!q("#etapa-1")?.classList.contains("completa") || !q("#etapa-2")?.classList.contains("aberta") || !q("#etapa-3")?.classList.contains("trancada")) prob.push("depois da etapa 1, o mapa deveria mostrar 1 completa, 2 aberta e 3 trancada");
+    w.history.back();
+    if (!await esperar(() => visivel("inicio"))) prob.push("o voltar do navegador, no mapa, não mostrou o início");
+    if (!q("#col-santos").textContent.includes(`10 de ${total}`)) prob.push(`a carta dos santos deveria dizer 10 de ${total}: ${q("#col-santos").textContent}`);
+    log.push(`etapa do mapa: problemas: ${prob.length ? prob.join("; ") : "nenhum"}`);
+  }
+
+  // Segunda fase da ação "etapa": a página do jogo foi recarregada e o progresso tem de estar lá
+  function depoisDeRecarregar() {
+    const prob = [], total = Q.itensDe(Q.COLECOES[0]).length;
+    if (!visivel("inicio") || !q("#col-santos").textContent.includes(`10 de ${total}`)) prob.push("depois de recarregar, o início não mostra 10 acertos");
+    q("#col-santos").click();
+    if (!q("#etapa-1")?.classList.contains("completa") || !q("#etapa-2")?.classList.contains("aberta")) prob.push("depois de recarregar, o mapa perdeu a etapa 1");
+    log.push(`mapa depois de recarregar: problemas: ${prob.length ? prob.join("; ") : "nenhum"}`);
   }
 
   // Foco de revisão 4: imagem que não carrega cai para o desenho e a rodada continua respondível.
@@ -100,7 +174,24 @@ f.onload = () => {
 
   (async () => {
     try {
-      if (acao === "completo") {
+      // A página abre no início. Os testes do jogo de 10 rodadas entram pelo botão "Jogo livre".
+      if (!["etapa", "mapa", "inicio-mapa"].includes(acao)) d.getElementById("livre").click();
+      if (acao === "etapa" && fase === 1) {
+        await etapa();
+        if (erros.length) log.push(`erros de script antes de recarregar: problemas: ${erros.join(" | ")}`);
+        fase = 2; w.location.reload();
+        return;
+      }
+      if (acao === "etapa") depoisDeRecarregar();
+      else if (acao === "inicio-mapa") { /* só abre a página, para fotografar a tela inicial */ }
+      else if (acao === "mapa") {
+        // Para a foto: 34 santos acertados (3 etapas completas e a quarta pela metade) e o mapa aberto
+        Q.ORDEM.slice(0, 34).forEach(id => Q.marcarAcerto(Q.COLECOES[0], id));
+        q("#col-santos").click();
+        const cortadas = qa(".casa").filter(c => c.getBoundingClientRect().left < 0 || c.getBoundingClientRect().right > w.innerWidth).length;
+        log.push(`mapa sem etapa cortada: problemas: ${cortadas ? cortadas + " etapas cortadas pela borda da tela" : "nenhum"}`);
+      }
+      else if (acao === "completo") {
         let t = false;
         for (const modo of ["simbolos", "imagem"]) for (const nivel of ["facil", "medio", "dificil", "todos"]) jogar(modo, nivel, t = !t);
         q("#again").click();
@@ -116,4 +207,6 @@ f.onload = () => {
     document.getElementById("out").textContent = "RESULTADO\n" + log.join("\n") + "\nFIM";
   })();
 };
+// O src só é atribuído aqui, depois da limpeza do progresso e de definir o onload: o jogo nunca lê o localStorage antes da limpeza
+f.src = "../index.html";
 </script>

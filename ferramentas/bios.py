@@ -192,6 +192,22 @@ BIO = {
     "cirilometodio": "Cirilo, o mais novo, morreu monge em Roma, em 869; Metódio morreu bispo na Morávia, em 885. O alfabeto cirílico, usado hoje no russo e em outras línguas, foi assim chamado em homenagem a Cirilo.",
     "solano": "Nascido em Montilla, na Espanha, em 1549, cuidou dos doentes numa epidemia de peste antes de partir para a América, aos 40 anos. Morreu em Lima, no Peru, em 1610, e foi canonizado em 1726.",
     "mariaegipciaca": "Viveu em Alexandria, no Egito, no século V. Converteu-se diante de uma imagem de Nossa Senhora em Jerusalém e passou cerca de 47 anos sozinha no deserto, além do Jordão. É muito venerada pelas Igrejas do Oriente.",
+    "anjodaguarda": "A Bíblia fala de anjos enviados por Deus para guardar as pessoas, como no Salmo 91 e nas palavras de Jesus sobre os anjos dos pequeninos (Mateus 18,10). A festa dos Santos Anjos da Guarda é celebrada em 2 de outubro.",
+    "zacariasisabel": "Segundo o Evangelho de Lucas, Zacarias era sacerdote do Templo de Jerusalém e Isabel descendia de Aarão. Já idosos e sem filhos, tornaram-se pais de São João Batista.",
+    "agueda": "Jovem de família nobre da Sicília, recusou o governador romano Quinciano e foi presa e torturada em Catânia, por volta do ano 251, na perseguição do imperador Décio. Seu nome é citado na Oração Eucarística I da missa.",
+    "floriano": "Oficial do exército romano na província do Nórico, na atual Áustria, declarou-se cristão durante a perseguição de Diocleciano e foi morto em 304. É padroeiro da Alta Áustria.",
+    "lasalle": "Nascido em Reims, na França, em 1651, de família rica, tornou-se padre e distribuiu sua fortuna aos pobres. Morreu em Rouen em 1719 e foi canonizado em 1900.",
+    "champagnat": "Nascido em 1789 perto de Lyon, na França, filho de camponeses, foi ordenado padre em 1816 e fundou os Irmãos Maristas em 1817, em La Valla. Morreu em 1840 e foi canonizado em 1999.",
+    "aleixo": "Sua história é uma lenda nascida no Oriente, no século V, e muito contada na Idade Média. Em Roma, a igreja de Santo Aleixo, no monte Aventino, guarda a escada de madeira que a tradição diz ser a dele.",
+    "hildegarda": "Nascida na Renânia, na Alemanha, em 1098, foi confiada ainda menina a um mosteiro beneditino. Abadessa, fundou o mosteiro de Rupertsberg, perto de Bingen, pregou em várias cidades e escreveu a papas e imperadores. Morreu em 1179.",
+    "cabrini": "Nascida na Lombardia, na Itália, em 1850, fundou em 1880 as Missionárias do Sagrado Coração de Jesus. Chegou a Nova York em 1889 e abriu escolas, orfanatos e hospitais nas Américas. Morreu em Chicago em 1917 e foi a primeira cidadã dos Estados Unidos canonizada, em 1946.",
+    "dimpna": "Sua história foi escrita no século XIII, a partir da tradição oral. Em Geel, onde estão suas relíquias, os moradores acolhem doentes mentais em suas próprias casas desde a Idade Média, costume que dura até hoje.",
+    "albertomagno": "Nascido na Suábia, na Alemanha, por volta de 1200, entrou para os dominicanos e ensinou em Paris e em Colônia. Foi bispo de Ratisbona por pouco tempo e morreu em Colônia em 1280. Foi canonizado e declarado doutor da Igreja em 1931.",
+    "nuno": "Nascido em 1360, foi o grande general de Dom João I na guerra que garantiu a independência de Portugal. Entrou no Carmo em 1423, com o nome de frei Nuno de Santa Maria, e morreu em 1431. Foi canonizado em 2009.",
+    "joaodebrito": "Nascido em Lisboa em 1647, foi pajem na corte e companheiro do futuro rei Dom Pedro II. Entrou para os jesuítas e partiu para a Índia em 1673, para a missão de Maduré. Foi canonizado em 1947.",
+    "erasmo": "Pouco se sabe ao certo de sua vida. Segundo a tradição, era bispo de Fórmias, na Itália, e morreu mártir por volta de 303, no tempo do imperador Diocleciano. É um dos catorze santos auxiliares, e suas relíquias estão na catedral de Gaeta.",
+    "raimundopenaforte": "Nascido na Catalunha por volta de 1175, ensinou direito em Bolonha e entrou para os dominicanos já com mais de 40 anos. Foi superior geral da ordem e morreu em Barcelona em 1275, com cerca de cem anos. Foi canonizado em 1601.",
+    "borja": "Nascido em Gandia, na Espanha, em 1510, bisneto do papa Alexandre VI, foi vice-rei da Catalunha e pai de oito filhos. Foi o terceiro superior geral dos jesuítas, de 1565 até a morte, em Roma, em 1572. Dá nome à cidade gaúcha de São Borja.",
 }
 
 
