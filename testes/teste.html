@@ -90,7 +90,9 @@ f.onload = () => {
       const st = Q.state(), ans = st.order[st.i], opts = qa(".opt");
       if (st.mode !== modo) prob.push(`resposta ${voltas + 1}: a partida está no modo ${st.mode}, não em ${modo}`);
       if (modo === "simbolos" || unico) {
-        if (!opts.every(o => ets[0].includes(o.dataset.id))) prob.push(`resposta ${voltas + 1}: há opção de fora da etapa 1`);
+        // Coleção com tipos de pergunta: as opções são passagens de qualquer etapa da coleção. Nas outras, só da etapa 1.
+        const validas = col.tipos ? Q.itensDe(col).map(Q.base) : ets[0];
+        if (!opts.every(o => validas.includes(o.dataset.id))) prob.push(`resposta ${voltas + 1}: há opção de fora ${col.tipos ? "da coleção" : "da etapa 1"}`);
       } else {
         // Modo Imagem: mesmo sexo da resposta; opção de fora da etapa 1 só entra se a etapa 1 não tem santos desse sexo para completar as 4
         const sexo = id => Q.SAINTS.find(x => x.id === id).sex;
@@ -100,7 +102,8 @@ f.onload = () => {
         if (fora > Math.max(0, 4 - daEtapa)) prob.push(`resposta ${voltas + 1}: ${fora} opções de fora da etapa 1, mas a etapa tem ${daEtapa} santos do mesmo sexo da resposta`);
       }
       if (voltas > 0 && ans === errado) reviu = true;
-      opts.find(o => voltas === 0 ? o.dataset.id !== ans : o.dataset.id === ans).click();
+      const certa = st.certa ?? ans;
+      opts.find(o => voltas === 0 ? o.dataset.id !== certa : o.dataset.id === certa).click();
       q("#next").click();
     }
     if (voltas !== 11 || !reviu) prob.push(`errando um santo, a etapa deveria fechar em 11 respostas com ele de volta; foram ${voltas}`);
@@ -116,6 +119,33 @@ f.onload = () => {
     if (!await esperar(() => visivel("inicio"))) prob.push("o voltar do navegador, no mapa, não mostrou o início");
     if (!q(CARTA).textContent.includes(`10 de ${total}`)) prob.push(`a carta dos santos deveria dizer 10 de ${total}: ${q(CARTA).textContent}`);
     log.push(`etapa do mapa: problemas: ${prob.length ? prob.join("; ") : "nenhum"}`);
+  }
+
+  // Coleção com tipos de pergunta: abre a primeira etapa de cada volta e confere o que aparece e se cabe na tela
+  function tipos() {
+    const col = COL, ets = Q.etapas(col), porVolta = ets.length / col.tipos.length, prob = [];
+    ets.slice(0, ets.length - porVolta).flat().forEach(i => Q.marcarAcerto(col, i));
+    q(CARTA).click();
+    if (qa(".casa").length !== ets.length || qa(".volta").length !== col.tipos.length) prob.push(`o mapa deveria ter ${ets.length} etapas e ${col.tipos.length} rótulos de volta`);
+    col.tipos.forEach((tp, v) => {
+      Q.jogarEtapa(col.id, v * porVolta);
+      for (let r = 0; r < 3; r++) {
+        const st = Q.state(), opts = qa(".opt"), art = q("#art").getBoundingClientRect(), ult = opts.at(-1).getBoundingClientRect();
+        if (Q.tipoDe(st.order[st.i]) !== tp) prob.push(`volta ${v + 1}: esperava o tipo ${tp}`);
+        if (opts.length !== 4 || new Set(opts.map(o => o.textContent)).size !== 4) prob.push(`${tp}: as 4 opções deveriam ser diferentes`);
+        if (!!q("#art .recorte") !== (tp === "detalhe")) prob.push(`${tp}: o vitral ${tp === "detalhe" ? "deveria" : "não deveria"} estar recortado`);
+        if (tp === "detalhe") { const c = q("#art .recorte").getBoundingClientRect(); if (Math.abs(c.width / c.height - 0.75) > 0.02 || c.width < 100) prob.push(`detalhe: o quadro do recorte mede ${Math.round(c.width)} x ${Math.round(c.height)}`); }
+        if (w.innerWidth <= 720) {
+          if (art.top < -1) prob.push(`${tp}, rodada ${r + 1}: o quadro começa ${Math.round(-art.top)} px acima da tela`);
+          if (ult.bottom > w.innerHeight + 1) prob.push(`${tp}, rodada ${r + 1}: a última opção termina ${Math.round(ult.bottom - w.innerHeight)} px abaixo da tela`);
+          if (opts.some(o => o.scrollWidth > o.clientWidth + 1)) prob.push(`${tp}, rodada ${r + 1}: há opção com texto cortado`);
+        }
+        opts.find(o => o.dataset.id === st.certa).click();
+        if (!q(".name") || q("#art .recorte")) prob.push(`${tp}: depois do acerto deveria aparecer o nome e o vitral inteiro`);
+        q("#next").click();
+      }
+    });
+    log.push(`tipos de pergunta (${col.id}) ${w.innerWidth}x${w.innerHeight}: problemas: ${prob.length ? prob.join("; ") : "nenhum"}`);
   }
 
   // Segunda fase da ação "etapa": a página do jogo foi recarregada e o progresso tem de estar lá
@@ -177,7 +207,7 @@ f.onload = () => {
   (async () => {
     try {
       // A página abre no início. Os testes do jogo de 10 rodadas entram pelo botão "Jogo livre".
-      if (!["etapa", "mapa", "inicio-mapa"].includes(acao)) d.getElementById("livre").click();
+      if (!["etapa", "mapa", "inicio-mapa", "tipos"].includes(acao)) d.getElementById("livre").click();
       if (acao === "etapa" && fase === 1) {
         await etapa();
         if (erros.length) log.push(`erros de script antes de recarregar: problemas: ${erros.join(" | ")}`);
@@ -185,6 +215,7 @@ f.onload = () => {
         return;
       }
       if (acao === "etapa") depoisDeRecarregar();
+      else if (acao === "tipos") tipos();
       else if (acao === "inicio-mapa") { /* só abre a página, para fotografar a tela inicial */ }
       else if (acao === "mapa") {
         // Para a foto: 34 santos acertados (3 etapas completas e a quarta pela metade) e o mapa aberto

@@ -438,8 +438,14 @@ def prompts() -> None:
 
 
 def index() -> None:
-    itens = [{"id": i, "name": nome, "feast": ref, "bio": resumo, "why": why, "serie": serie}
-             for serie, lista in SERIES.items() for i, nome, _cena, _conf, ref, resumo, why in lista]
+    from biblia_perguntas import PERGUNTAS, RECORTES
+    itens = []
+    for serie, lista in SERIES.items():
+        for i, nome, _cena, _conf, ref, resumo, why in lista:
+            grupo, texto, certa, erradas, onde, frase, versiculo = PERGUNTAS[i]
+            itens.append({"id": i, "name": nome, "feast": ref, "bio": resumo, "why": why, "serie": serie, "grupo": grupo,
+                          "rec": list(RECORTES[i]), "q": {"t": texto, "c": certa, "e": erradas, "ref": onde},
+                          "frase": {"t": frase, "ref": versiculo}})
     linha = "  const PASSAGENS = " + json.dumps(itens, ensure_ascii=False) + ";"
     arq = RAIZ / "index.html"
     with open(arq, encoding="utf-8", newline="") as f:  # newline="" preserva o fim de linha que o arquivo já usa
