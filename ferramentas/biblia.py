@@ -332,7 +332,7 @@ AT = [
      "Na véspera de reencontrar o irmão Esaú, Jacó fica sozinho junto ao rio e luta a noite inteira com um desconhecido, que o fere na coxa. Ao amanhecer, recebe a bênção e um nome novo: Israel.",
      "Jacó e o anjo agarrados na luta, junto ao rio, quando o dia começa a clarear."),
     ("atfarao", "José e os sonhos do faraó",
-     "Joseph interprets Pharaoh's dreams, the young Joseph standing before Pharaoh seated on a throne in an Egyptian palace, above them a dream vision of exactly seven fat cows and seven thin cows beside the Nile",
+     "Joseph interprets Pharaoh's dreams, the young Joseph standing before Pharaoh seated on a throne in an Egyptian palace, in the upper half a dream vision beside the Nile with two rows of large cows all standing side by side in profile facing right, widely spaced, the upper row is a row of 7 fat brown cows, the lower row is a row of 7 thin bony pale cows, both rows have the same number of cows, each thin cow standing directly below one fat cow in 7 aligned columns, 14 cows in total, no other animals",
      "jovem diante do faraó no trono, 7 vacas gordas e 7 magras", "Gn 41,1-36",
      "O faraó sonha com sete vacas gordas devoradas por sete vacas magras, e ninguém sabe explicar. José, tirado da prisão, diz que virão sete anos de fartura e sete de fome. O faraó o põe para governar o Egito.",
      "José explica o sonho ao faraó. No alto aparecem as sete vacas gordas e as sete magras."),
