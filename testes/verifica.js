@@ -356,6 +356,23 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     }
     confere(vistas.size === 2 && mostraSorteada && q.etapas(col).length === 12, "T: com duas frases por passagem, as rodadas deveriam sortear entre elas e mostrar, depois do acerto, a frase sorteada");
   }
+  // Rascunho: frases e perguntas não conferidas só aparecem com ?rascunho=1, e avisam que estão por conferir
+  {
+    const comR = carregar({}, undefined, { location: { search: "?rascunho=1" } }, true).q, semR = carregar({}, undefined, undefined, true).q;
+    const nR = q => q.PASSAGENS.reduce((n, p) => n + p.frases.filter(f => f.rascunho).length + p.qs.filter(x => x.rascunho).length, 0);
+    confere(nR(semR) === 0, "T: sem ?rascunho=1, nenhuma frase ou pergunta de rascunho deveria aparecer");
+    const { q, els } = carregar({}, undefined, { location: { search: "?rascunho=1" } }, true);
+    if (nR(comR) > 0) {
+      let viu = false;
+      for (let k = 0; k < 60 && !viu; k++) {
+        q.jogarEtapa("novotestamento", 8);
+        const st = q.state(), f = q.PASSAGENS.find(x => x.id === st.certa).frases[st.frase[st.certa]];
+        q.pick(st.certa);
+        if (f.rascunho) viu = els.panel.innerHTML.includes(`(${f.ref}, rascunho por conferir)`);
+      }
+      confere(viu, "T: com ?rascunho=1, a frase de rascunho deveria aparecer e avisar que está por conferir");
+    }
+  }
   // Volta da pergunta com mais de uma pergunta por passagem: cada rodada sorteia uma, com as respostas dela
   {
     const { q, els } = carregar({}, undefined, undefined, true);

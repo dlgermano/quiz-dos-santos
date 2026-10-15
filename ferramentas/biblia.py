@@ -439,13 +439,16 @@ def prompts() -> None:
 
 def index() -> None:
     from biblia_perguntas import FRASES_EXTRAS, PERGUNTAS, PERGUNTAS_EXTRAS, RECORTES
+    from biblia_rascunho import FRASES_RASCUNHO, PERGUNTAS_RASCUNHO
     itens = []
     for serie, lista in SERIES.items():
         for i, nome, _cena, _conf, ref, resumo, why in lista:
             grupo, texto, certa, erradas, onde, frase, versiculo = PERGUNTAS[i]
             itens.append({"id": i, "name": nome, "feast": ref, "bio": resumo, "why": why, "serie": serie, "grupo": grupo,
-                          "rec": list(RECORTES[i]), "qs": [{"t": t, "c": c, "e": e, "ref": r} for t, c, e, r in [(texto, certa, erradas, onde), *PERGUNTAS_EXTRAS.get(i, [])]],
-                          "frases": [{"t": t, "ref": r} for t, r in [(frase, versiculo), *FRASES_EXTRAS.get(i, [])]]})
+                          "rec": list(RECORTES[i]), "qs": [{"t": t, "c": c, "e": e, "ref": r} for t, c, e, r in [(texto, certa, erradas, onde), *PERGUNTAS_EXTRAS.get(i, [])]]
+                          + [{"t": t, "c": c, "e": e, "ref": r, "rascunho": True} for t, c, e, r in PERGUNTAS_RASCUNHO.get(i, [])],
+                          "frases": [{"t": t, "ref": r} for t, r in [(frase, versiculo), *FRASES_EXTRAS.get(i, [])]]
+                          + [{"t": t, "ref": r, "rascunho": True} for t, r in FRASES_RASCUNHO.get(i, [])]})
     linha = "  const PASSAGENS = " + json.dumps(itens, ensure_ascii=False) + ";"
     arq = RAIZ / "index.html"
     with open(arq, encoding="utf-8", newline="") as f:  # newline="" preserva o fim de linha que o arquivo já usa

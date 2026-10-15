@@ -263,3 +263,4 @@ FRASES_EXTRAS: dict[str, list[tuple[str, str]]] = {
 # a primeira. Só entra aqui pergunta cuja resposta foi conferida no versículo com ferramentas/avemaria.py.
 PERGUNTAS_EXTRAS: dict[str, list[tuple[str, str, list[str], str]]] = {
 }
+
