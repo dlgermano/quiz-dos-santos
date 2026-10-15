@@ -257,3 +257,9 @@ RECORTES = {
 # palavra por palavra com ferramentas/avemaria.py, e que não traga o nome da passagem.
 FRASES_EXTRAS: dict[str, list[tuple[str, str]]] = {
 }
+
+# Perguntas a mais de cada passagem, para a volta "Pela pergunta" sortear uma a cada rodada (pedido do Daniel em 15/10/2026).
+# id: [(pergunta, resposta certa, [três erradas], versículo que dá a resposta), ...]. A pergunta de PERGUNTAS continua sendo
+# a primeira. Só entra aqui pergunta cuja resposta foi conferida no versículo com ferramentas/avemaria.py.
+PERGUNTAS_EXTRAS: dict[str, list[tuple[str, str, list[str], str]]] = {
+}
