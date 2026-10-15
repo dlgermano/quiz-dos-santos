@@ -277,7 +277,9 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     confere(q.COM_SERIE[id].every(i => fs.existsSync(path.join(__dirname, "..", "img", id, i + ".webp"))), `T: há passagem do ${nome} listada sem arquivo de imagem`);
     // Conteúdo dos tipos
     confere(itens.every(x => x.grupo && itens.filter(y => y.grupo === x.grupo).length >= 3), `T: há passagem do ${nome} sem grupo, ou grupo com menos de 3 cenas`);
-    confere(itens.every(x => Array.isArray(x.rec) && x.rec.length === 3 && x.rec[0] >= 0 && x.rec[1] >= 0 && x.rec[2] >= 0.2 && x.rec[2] <= 0.4 && x.rec[0] + x.rec[2] <= 1.0001 && x.rec[1] + x.rec[2] <= 1.0001), `T: há recorte do ${nome} fora da imagem ou de tamanho estranho`);
+    const recs = itens.flatMap(x => Array.isArray(x.recs) ? x.recs : [[]]);
+    confere(itens.every(x => x.recs?.length >= 1) && recs.every(r => r.length === 3 && r[0] >= 0 && r[1] >= 0 && r[2] >= 0.2 && r[2] <= 0.4 && r[0] + r[2] <= 1.0001 && r[1] + r[2] <= 1.0001), `T: há recorte do ${nome} fora da imagem ou de tamanho estranho`);
+    confere(itens.every(x => new Set(x.recs.map(String)).size === x.recs.length), `T: há recorte repetido num vitral do ${nome}`);
     const perguntas = itens.flatMap(x => Array.isArray(x.qs) ? x.qs : [{}]);
     confere(itens.every(x => x.qs?.length >= 1) && perguntas.every(p => p.t?.endsWith("?") && p.c && p.e?.length === 3 && new Set([p.c, ...p.e]).size === 4 && /\d/.test(p.ref)), `T: há pergunta do ${nome} sem 4 respostas diferentes ou sem versículo`);
     confere(itens.every(x => new Set((x.qs || []).map(p => p.t)).size === (x.qs || []).length), `T: há pergunta repetida numa passagem do ${nome}`);
@@ -372,6 +374,19 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
       }
       confere(viu, "T: com ?rascunho=1, a frase de rascunho deveria aparecer e avisar que está por conferir");
     }
+  }
+  // Volta do detalhe com mais de um recorte por vitral: cada rodada sorteia um, e o quadro mostra o recorte sorteado
+  {
+    const { q, els } = carregar({}, undefined, undefined, true);
+    const vistos = new Set();
+    let mostraSorteado = true;
+    for (let k = 0; k < 40; k++) {
+      q.jogarEtapa("novotestamento", 0);
+      const st = q.state(), p = q.PASSAGENS.find(x => x.id === q.base(st.order[st.i])), [x, y, w] = p.recs[st.recorte];
+      vistos.add(st.recorte);
+      if (!els.art.innerHTML.includes(`width:${100 / w}%;left:${-100 * x / w}%;top:${-100 * y / w}%`)) mostraSorteado = false;
+    }
+    confere(vistos.size === 3 && mostraSorteado, `T: com três recortes por vitral, as rodadas deveriam sortear entre eles e mostrar o sorteado (vistos: ${[...vistos]})`);
   }
   // Volta da pergunta com mais de uma pergunta por passagem: cada rodada sorteia uma, com as respostas dela
   {
