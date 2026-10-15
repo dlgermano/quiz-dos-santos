@@ -356,7 +356,7 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
       q.pick(id);
       if (!els.panel.innerHTML.includes(`“${f.t}” (${f.ref}, Bíblia Ave-Maria)`)) mostraSorteada = false;
     }
-    confere(vistas.size === 2 && mostraSorteada && q.etapas(col).length === 12, "T: com duas frases por passagem, as rodadas deveriam sortear entre elas e mostrar, depois do acerto, a frase sorteada");
+    confere(vistas.size >= 2 && mostraSorteada && q.etapas(col).length === 12, "T: com mais de uma frase por passagem, as rodadas deveriam sortear entre elas e mostrar, depois do acerto, a frase sorteada");
   }
   // Rascunho: frases e perguntas não conferidas só aparecem com ?rascunho=1, e avisam que estão por conferir
   {
@@ -402,7 +402,7 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
       q.pick("c");
       if (!els.panel.innerHTML.includes(`<b>Resposta:</b> ${p.c} (${p.ref}).`)) mostraSorteada = false;
     }
-    confere(vistas.size === 2 && mostraSorteada, "T: com duas perguntas por passagem, as rodadas deveriam sortear entre elas, com as respostas e o versículo da pergunta sorteada");
+    confere(vistas.size >= 2 && mostraSorteada, "T: com mais de uma pergunta por passagem, as rodadas deveriam sortear entre elas, com as respostas e o versículo da pergunta sorteada");
   }
   // Acerto guardado pelo nome (volta que saiu) ou sem tipo não conta, mas também não estraga os santos
   const antigo = carregar({ "quiz-santos-progresso": JSON.stringify({ novotestamento: ["ntanunciacao", "ntcana:nome", "ntcana:frase", "naoexiste"], santos: ["pedro"] }) }, undefined, undefined, true).q;
