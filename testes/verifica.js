@@ -262,7 +262,7 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
   }
 }
 
-// T. Coleções bíblicas: 40 passagens por Testamento, cada uma com 4 tipos de pergunta, em 16 etapas (4 voltas)
+// T. Coleções bíblicas: 40 passagens por Testamento, cada uma com 3 tipos de pergunta, em 12 etapas (3 voltas, cada uma um caminho próprio)
 {
   const fs = require("fs"), path = require("path");
   for (const [id, nome, prefixo, primeira, ultima] of [["novotestamento", "Novo Testamento", "nt", "ntanunciacao", "ntcriancas"], ["antigotestamento", "Antigo Testamento", "at", "atcriacao", "atescrita"]]) {
@@ -281,65 +281,64 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     confere(itens.every(x => x.q && x.q.t.endsWith("?") && x.q.c && x.q.e.length === 3 && new Set([x.q.c, ...x.q.e]).size === 4 && /\d/.test(x.q.ref)), `T: há pergunta do ${nome} sem 4 respostas diferentes ou sem versículo`);
     confere(itens.every(x => x.frase && x.frase.t.length >= 15 && /\d,\d/.test(x.frase.ref)) && new Set(itens.map(x => x.frase.t)).size === 40, `T: há frase do ${nome} vazia, repetida ou sem versículo`);
     confere(itens.every(x => !x.frase.t.toLowerCase().includes(x.name.toLowerCase())), `T: há frase do ${nome} que traz o nome da própria passagem`);
-    // Mapa: 160 itens, 16 etapas, uma volta por tipo
+    // Mapa: 120 itens, 12 etapas, uma volta por tipo (a volta pelo nome saiu em 15/10/2026)
     const ets = q.etapas(col);
-    confere(q.itensDe(col).length === 160 && ets.length === 16 && ets.every(e => e.length === 10), `T: ${nome} deveria ter 16 etapas de 10, achei ${ets.map(e => e.length).join(",")}`);
-    confere(ets[0][0] === primeira + ":nome" && ets[3][9] === ultima + ":nome" && ets[4][0] === primeira + ":detalhe" && ets[8][0] === primeira + ":pergunta" && ets[15][9] === ultima + ":frase", `T: as voltas do ${nome} deveriam ser nome, detalhe, pergunta e frase, com as passagens na mesma ordem`);
-    confere(els.inicio.innerHTML.includes(`id="col-${id}"`) && els.inicio.innerHTML.includes("0 de 160") && q.poolFor("todos").every(i => !ids.includes(i)), `T: ${nome} deveria aparecer no início com 0 de 160 e ficar fora do jogo livre`);
+    confere(q.itensDe(col).length === 120 && ets.length === 12 && ets.every(e => e.length === 10), `T: ${nome} deveria ter 12 etapas de 10, achei ${ets.map(e => e.length).join(",")}`);
+    confere(ets[0][0] === primeira + ":detalhe" && ets[3][9] === ultima + ":detalhe" && ets[4][0] === primeira + ":pergunta" && ets[8][0] === primeira + ":frase" && ets[11][9] === ultima + ":frase" && !q.itensDe(col).some(i => i.endsWith(":nome")), `T: as voltas do ${nome} deveriam ser detalhe, pergunta e frase, com as passagens na mesma ordem e sem a volta pelo nome`);
+    confere(els.inicio.innerHTML.includes(`id="col-${id}"`) && els.inicio.innerHTML.includes("0 de 120") && q.poolFor("todos").every(i => !ids.includes(i)), `T: ${nome} deveria aparecer no início com 0 de 120 e ficar fora do jogo livre`);
+    // Cada volta é um caminho próprio: sem progresso, a primeira etapa de cada volta já está aberta
+    confere([0, 4, 8].every(n => q.situacao(col, n) === "aberta") && [1, 2, 3, 5, 9, 11].every(n => q.situacao(col, n) === "trancada") && q.etapaAberta(col, "pergunta") === 4 && q.etapaAberta(col, "frase") === 8, `T: no ${nome}, a primeira etapa de cada volta deveria estar aberta, e as outras trancadas`);
     q.abrirMapa(id);
     const mapa = els.mapa.innerHTML;
-    confere(mapa.includes(`Caminho do ${nome}`) && mapa.includes("de 160 perguntas") && mapa.includes("id=\"etapa-16\"") && ["Pelo nome", "Pelo detalhe", "Pela pergunta", "Pela frase"].every(v => mapa.split(v).length === 2), `T: o mapa do ${nome} deveria ter 16 etapas e um rótulo por volta`);
-    // Joga uma etapa de cada tipo. Para abrir as etapas de cima, marca como acertadas as anteriores.
+    confere(mapa.includes(`Caminho do ${nome}`) && mapa.includes("de 120 perguntas") && mapa.includes("id=\"etapa-12\"") && !mapa.includes("id=\"etapa-13\"") && !mapa.includes("Pelo nome") && ["Pelo detalhe", "Pela pergunta", "Pela frase"].every(v => mapa.split(v).length === 2), `T: o mapa do ${nome} deveria ter 12 etapas e um rótulo por volta, sem a volta pelo nome`);
+    confere(["detalhe\" data-n=\"0\"", "pergunta\" data-n=\"4\"", "frase\" data-n=\"8\""].every(v => mapa.includes(`<button class="volta" id="volta-${v}`)) && mapa.split("class=\"casa aberta\"").length === 4, `T: no mapa do ${nome}, os rótulos das voltas deveriam ser botões, com as 3 etapas iniciais abertas`);
+    // Joga uma etapa de cada tipo, sem precisar fechar as voltas anteriores
     const joga = (n, aCada) => {
-      ets.slice(0, n).flat().forEach(i => q.marcarAcerto(col, i));
       q.jogarEtapa(id, n);
       const st = q.state();
       for (let g = 0; g < 60 && st.i < st.order.length; g++) { aCada(st, g); if (!st.picked) q.pick(st.certa); q.next(); }
       return st;
     };
-    // Volta 1: nome, com opções de cenas parecidas
-    q.jogarEtapa(id, 0);
-    let st = q.state();
-    const p0 = por[q.base(st.order[0])];
-    confere(st.mode === "imagem" && els.modes.innerHTML === "" && st.certa === p0.id && st.opts.length === 4 && new Set(st.opts).size === 4 && st.opts.every(i => ids.includes(i)), `T: na volta do nome do ${nome}, as 4 opções deveriam ser passagens diferentes`);
-    const doGrupo = itens.filter(x => x.grupo === p0.grupo && x.id !== p0.id).length;
-    confere(st.opts.filter(i => i !== p0.id && por[i].grupo === p0.grupo).length === Math.min(3, doGrupo), `T: as opções erradas do ${nome} deveriam sair primeiro das cenas parecidas`);
-    confere(els.panel.innerHTML.includes(`Que passagem do ${nome} é esta?`) && els.art.innerHTML.includes(`img/${id}/${p0.id}.webp`) && !els.art.innerHTML.includes("recorte") && !els.panel.innerHTML.includes("opts longas"), `T: a rodada do nome do ${nome} deveria ter a pergunta da coleção e o vitral inteiro`);
-    q.pick(st.opts.find(i => i !== st.certa));
-    confere(els.panel.innerHTML.includes("Esta passagem volta") && !els.panel.innerHTML.includes("class=\"name\"") && st.order.length === 11, `T: errar no ${nome} não deveria mostrar a resposta, e a pergunta deveria voltar`);
-    q.next();
-    for (let g = 0; g < 40 && st.i < st.order.length; g++) { q.pick(st.certa); if (st.i === 1) confere(els.panel.innerHTML.includes("Onde está: ") && !els.panel.innerHTML.includes("Festa:"), `T: acertar no ${nome} deveria mostrar a referência bíblica`); q.next(); }
-    confere(q.situacao(col, 0) === "completa" && els.panel.innerHTML.includes("Você acertou as 10 em 11 respostas.") && JSON.parse(s["quiz-santos-progresso"])[id].every(i => i.endsWith(":nome")), `T: a etapa 1 do ${nome} deveria fechar, com os acertos guardados como tipo nome`);
-    // Volta 2: detalhe
-    let recortes = 0, inteiros = 0;
-    st = joga(4, (st, g) => {
-      if (els.art.innerHTML.includes("class=\"recorte\"") && els.art.innerHTML.includes("left:-")) recortes++;
-      if (g === 0) {
-        confere(els.panel.innerHTML.includes(`De que passagem do ${nome} é este detalhe?`) && st.opts.every(i => ids.includes(i)), `T: a volta do detalhe do ${nome} deveria perguntar pelo detalhe`);
-        q.pick(st.certa);
-        if (!els.art.innerHTML.includes("recorte")) inteiros++;
-      }
-    });
-    confere(recortes === 10 && inteiros === 1 && q.situacao(col, 4) === "completa", `T: na volta do detalhe do ${nome}, o vitral deveria aparecer recortado antes da resposta e inteiro depois (recortes: ${recortes}, inteiros: ${inteiros})`);
-    // Volta 3: pergunta própria
-    let okPerg = true;
-    st = joga(8, (st) => {
-      const p = por[q.base(st.order[st.i])], h = els.panel.innerHTML;
-      if (st.certa !== "c" || st.opts.slice().sort().join() !== "0,1,2,c" || !h.includes(p.q.t) || ![p.q.c, ...p.q.e].every(r => h.includes(`<span>${r}</span>`)) || !h.includes("opts longas") || els.art.innerHTML.includes("recorte")) okPerg = false;
-    });
-    confere(okPerg && q.situacao(col, 8) === "completa", `T: na volta da pergunta do ${nome}, cada rodada deveria trazer a pergunta e as 4 respostas da passagem`);
-    // Volta 4: frase
+    // Começa pela frase: a volta da frase abre sem ter jogado o detalhe e a pergunta
     let okFrase = true, viuFrase = false;
-    st = joga(12, (st, g) => {
+    let st = joga(8, (st, g) => {
       const p = por[q.base(st.order[st.i])], h = els.panel.innerHTML;
       if (st.certa !== p.id || new Set(st.opts).size !== 4 || !st.opts.every(i => h.includes(`<span>“${por[i].frase.t}”</span>`)) || !h.includes("Qual destas frases é desta passagem?") || h.includes(`<span>${p.name}</span>`)) okFrase = false;
       if (g === 0) { q.pick(st.certa); viuFrase = els.panel.innerHTML.includes(`(${p.frase.ref}, Bíblia Ave-Maria)`); }
     });
-    confere(okFrase && viuFrase && q.situacao(col, 12) === "completa", `T: na volta da frase do ${nome}, as opções deveriam ser 4 frases de passagens diferentes, com o versículo depois do acerto`);
+    confere(okFrase && viuFrase && q.situacao(col, 8) === "completa" && q.situacao(col, 9) === "aberta" && q.situacao(col, 0) === "aberta", `T: na volta da frase do ${nome}, as opções deveriam ser 4 frases de passagens diferentes, com o versículo depois do acerto, e a etapa 2 da frase abriria sem mexer no detalhe`);
+    confere(els.panel.innerHTML.includes("Próxima etapa") && !els.panel.innerHTML.includes("Você completou"), `T: fechar a etapa 1 da frase do ${nome} deveria oferecer a próxima, sem dizer que o mapa acabou`);
+    // Volta do detalhe: opções de cenas parecidas, erro que volta, vitral recortado
+    q.jogarEtapa(id, 0);
+    st = q.state();
+    const p0 = por[q.base(st.order[0])];
+    confere(st.mode === "imagem" && els.modes.innerHTML === "" && st.certa === p0.id && st.opts.length === 4 && new Set(st.opts).size === 4 && st.opts.every(i => ids.includes(i)), `T: na volta do detalhe do ${nome}, as 4 opções deveriam ser passagens diferentes`);
+    const doGrupo = itens.filter(x => x.grupo === p0.grupo && x.id !== p0.id).length;
+    confere(st.opts.filter(i => i !== p0.id && por[i].grupo === p0.grupo).length === Math.min(3, doGrupo), `T: as opções erradas do ${nome} deveriam sair primeiro das cenas parecidas`);
+    confere(els.panel.innerHTML.includes(`De que passagem do ${nome} é este detalhe?`) && els.art.innerHTML.includes("class=\"recorte\"") && els.art.innerHTML.includes(`img/${id}/${p0.id}.webp`), `T: a volta do detalhe do ${nome} deveria perguntar pelo detalhe, com o vitral recortado`);
+    q.pick(st.opts.find(i => i !== st.certa));
+    confere(els.panel.innerHTML.includes("Esta passagem volta") && !els.panel.innerHTML.includes("class=\"name\"") && st.order.length === 11, `T: errar no ${nome} não deveria mostrar a resposta, e a pergunta deveria voltar`);
+    q.next();
+    let recortes = 0, inteiros = 0;
+    for (let g = 0; g < 40 && st.i < st.order.length; g++) {
+      if (els.art.innerHTML.includes("class=\"recorte\"") && els.art.innerHTML.includes("left:-")) recortes++;
+      q.pick(st.certa);
+      if (g === 0) { if (!els.art.innerHTML.includes("recorte")) inteiros++; confere(els.panel.innerHTML.includes("Onde está: ") && !els.panel.innerHTML.includes("Festa:"), `T: acertar no ${nome} deveria mostrar a referência bíblica`); }
+      q.next();
+    }
+    confere(recortes === 10 && inteiros === 1, `T: na volta do detalhe do ${nome}, o vitral deveria aparecer recortado antes da resposta e inteiro depois (recortes: ${recortes}, inteiros: ${inteiros})`);
+    confere(q.situacao(col, 0) === "completa" && els.panel.innerHTML.includes("Você acertou as 10 em 11 respostas.") && JSON.parse(s["quiz-santos-progresso"])[id].filter(i => i.endsWith(":detalhe")).length === 10, `T: a etapa 1 do ${nome} deveria fechar, com os acertos guardados como tipo detalhe`);
+    // Volta 3: pergunta própria
+    let okPerg = true;
+    st = joga(4, (st) => {
+      const p = por[q.base(st.order[st.i])], h = els.panel.innerHTML;
+      if (st.certa !== "c" || st.opts.slice().sort().join() !== "0,1,2,c" || !h.includes(p.q.t) || ![p.q.c, ...p.q.e].every(r => h.includes(`<span>${r}</span>`)) || !h.includes("opts longas") || els.art.innerHTML.includes("recorte")) okPerg = false;
+    });
+    confere(okPerg && q.situacao(col, 4) === "completa", `T: na volta da pergunta do ${nome}, cada rodada deveria trazer a pergunta e as 4 respostas da passagem`);
   }
-  // Progresso guardado antes dos tipos (id sem tipo) vale como acerto pelo nome
-  const antigo = carregar({ "quiz-santos-progresso": JSON.stringify({ novotestamento: ["ntanunciacao", "ntcana", "naoexiste"], santos: ["pedro"] }) }, undefined, undefined, true).q;
-  confere(antigo.acertados(antigo.colecao("novotestamento")).join() === "ntanunciacao:nome,ntcana:nome" && antigo.acertados(antigo.colecao("santos")).join() === "pedro", "T: acerto antigo de passagem deveria valer como tipo nome, sem mexer nos santos");
+  // Acerto guardado pelo nome (volta que saiu) ou sem tipo não conta, mas também não estraga os santos
+  const antigo = carregar({ "quiz-santos-progresso": JSON.stringify({ novotestamento: ["ntanunciacao", "ntcana:nome", "ntcana:frase", "naoexiste"], santos: ["pedro"] }) }, undefined, undefined, true).q;
+  confere(antigo.acertados(antigo.colecao("novotestamento")).join() === "ntcana:frase" && antigo.acertados(antigo.colecao("santos")).join() === "pedro", "T: acerto antigo pelo nome não deveria contar, e o da frase sim, sem mexer nos santos");
 }
 
 // P. Santos preparados: ficam escondidos até terem as duas imagens aprovadas

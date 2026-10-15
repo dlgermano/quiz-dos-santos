@@ -111,7 +111,10 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
 /* o número fica sob a imagem só como reserva; com a imagem translúcida ele apareceria por cima do vitral */
 .casa.aberta .arco:has(img) { color: transparent; }
 .casa.trancada { cursor: default; }
-.volta { position: absolute; right: 0; font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+.volta {
+  position: absolute; right: 0; font: inherit; font-size: .74rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 700;
+  background: none; border: 1.5px solid var(--accent); border-radius: 999px; padding: 0 12px; min-height: 36px; cursor: pointer;
+}
 .casa.trancada .arco { border-color: var(--muted); opacity: .7; }
 /* Tela larga e deitada: vitral à esquerda, do tamanho que couber na altura da tela */
 .stage { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 32px; align-items: start; }
@@ -1394,8 +1397,9 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     ...[["novotestamento", "Novo Testamento"], ["antigotestamento", "Antigo Testamento"]].map(([id, nome]) => ({
       id, nome, nomeMapa: "Caminho do " + nome, unidade: "perguntas", modos: ["imagem"],
       // Cada passagem gera uma pergunta de cada tipo. O mapa dá uma volta inteira pelas passagens em cada tipo, do mais fácil ao mais difícil.
-      tipos: ["nome", "detalhe", "pergunta", "frase"],
-      ordem: ["nome", "detalhe", "pergunta", "frase"].flatMap(tp => PASSAGENS.filter(p => p.serie === id).map(p => p.id + ":" + tp)),
+      // A volta pelo nome saiu a pedido do Daniel (15/10/2026); o tipo "nome" continua existindo para as coleções sem tipos.
+      tipos: ["detalhe", "pergunta", "frase"],
+      ordem: ["detalhe", "pergunta", "frase"].flatMap(tp => PASSAGENS.filter(p => p.serie === id).map(p => p.id + ":" + tp)),
       perguntaDetalhe: `De que passagem do ${nome} é este detalhe?`,
       pergunta: `Que passagem do ${nome} é esta?`, legenda: `Vitral de uma passagem do ${nome}`, rotulo: "Onde está",
       dica: "Repare em quem aparece na cena, no que está fazendo e nos objetos em volta.",
@@ -1417,8 +1421,8 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
   const PROGRESSO = "quiz-santos-progresso";
   const lerProgresso = () => { try { const v = JSON.parse(localStorage.getItem(PROGRESSO)); return v && typeof v === "object" && !Array.isArray(v) ? v : {}; } catch (e) { return {}; } };
   let progressoMem = lerProgresso(); // cópia em memória, para funcionar mesmo com o localStorage bloqueado
-  // Acerto guardado antes de existirem os tipos (id sem tipo) vale como acerto pelo nome
-  const acertados = col => { let v = progressoMem[col.id]; if (!Array.isArray(v)) return []; if (col.tipos) v = v.map(x => String(x).includes(":") ? x : x + ":nome"); return itensDe(col).filter(id => v.includes(id)); };
+  // Acerto de um tipo que saiu do mapa (pelo nome, ou id antigo sem tipo) fica guardado, mas não conta
+  const acertados = col => { const v = progressoMem[col.id]; if (!Array.isArray(v)) return []; return itensDe(col).filter(id => v.includes(id)); };
   function marcarAcerto(col, id) {
     const v = Array.isArray(progressoMem[col.id]) ? progressoMem[col.id] : [];
     if (!v.includes(id)) v.push(id);
@@ -1431,9 +1435,12 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     try { localStorage.setItem(PROGRESSO, JSON.stringify(progressoMem)); } catch (e) {}
   }
   const completa = (col, n) => { const ok = acertados(col); return etapas(col)[n].every(id => ok.includes(id)); };
-  // A etapa aberta é a primeira com santo por acertar; -1 quando a coleção está completa
-  const etapaAberta = col => etapas(col).findIndex((e, n) => !completa(col, n));
-  const situacao = (col, n) => completa(col, n) ? "completa" : n === etapaAberta(col) ? "aberta" : "trancada";
+  // Nas coleções com tipos de pergunta, cada volta é um caminho próprio: o jogador começa por qualquer uma.
+  // Dentro de cada caminho, as etapas continuam em ordem. Nas outras coleções, o caminho é um só.
+  const caminho = et => et[0].split(":")[1] || "";
+  // A etapa aberta é a primeira com santo por acertar (no caminho dado, ou em qualquer um); -1 quando não há
+  const etapaAberta = (col, cam) => etapas(col).findIndex((e, n) => (cam === undefined || caminho(e) === cam) && !completa(col, n));
+  const situacao = (col, n) => completa(col, n) ? "completa" : n === etapaAberta(col, caminho(etapas(col)[n])) ? "aberta" : "trancada";
   // Baralho por nível: guarda quem já saiu como resposta neste ciclo. Só repete santo depois que todos do nível apareceram.
   const VISTOS = "quiz-santos-vistos";
   const lerVistos = () => { try { const v = JSON.parse(localStorage.getItem(VISTOS)); return v && typeof v === "object" ? v : {}; } catch (e) { return {}; } };
@@ -1468,7 +1475,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     const ok = acertados(col), falta = itens.filter(id => !ok.includes(id));
     // Etapa já completa pode ser jogada de novo, com todos os santos, sem mexer no progresso
     st = { tipo: "etapa", colecao: colId, etapa: n, itens, certos: falta.length ? itens.filter(id => ok.includes(id)) : [],
-      base: etapas(col).slice(0, n + 1).flat(), order: shuffle(falta.length ? falta : itens), mode: col.modos.includes(mode) ? mode : col.modos[0], i: 0, hits: 0, results: [], picked: null, opts: [] };
+      refeita: !falta.length, base: etapas(col).slice(0, n + 1).flat(), order: shuffle(falta.length ? falta : itens), mode: col.modos.includes(mode) ? mode : col.modos[0], i: 0, hits: 0, results: [], picked: null, opts: [] };
     $("art").dataset.id = "";
     mostrar("jogo");
     setupRound();
@@ -1511,7 +1518,8 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     }).join("");
     const linha = ets.map((_, n) => `${n ? "L" : "M"}${XS[n % 4]} ${n * PASSO + 42}`).join(" ");
     // Nas coleções com tipos de pergunta, um rótulo marca onde começa cada volta
-    const voltas = col.tipos ? ets.map((et, n) => n && tipoDe(et[0]) === tipoDe(ets[n - 1][0]) ? "" : `<span class="volta" style="top:${n * PASSO + 4}px">${VOLTAS[tipoDe(et[0])]}</span>`).join("") : "";
+    // e leva direto à etapa aberta daquela volta (ou à primeira, se a volta já está completa)
+    const voltas = col.tipos ? ets.map((et, n) => n && tipoDe(et[0]) === tipoDe(ets[n - 1][0]) ? "" : `<button class="volta" id="volta-${tipoDe(et[0])}" data-n="${n}" style="top:${n * PASSO + 4}px">${VOLTAS[tipoDe(et[0])]} ›</button>`).join("") : "";
     $("mapa").innerHTML = `<div class="topo"><button class="lvl" id="ao-inicio">‹ Início</button><span class="muted"><b>${ok.length}</b> de ${itensDe(col).length} ${col.unidade}</span></div>
       <h2>${col.nomeMapa}</h2>
       <div class="trilha" style="height:${alto}px"><svg viewBox="0 0 100 ${alto}" preserveAspectRatio="none" aria-hidden="true"><path d="${linha}"/></svg>${casas}${voltas}</div>
@@ -1523,6 +1531,10 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
     };
     $("ao-inicio").onclick = () => volta(abrirInicio);
     $("mapa").querySelectorAll(".casa").forEach(b => b.onclick = () => { empilha({ quiz: "jogo" }); jogarEtapa(colId, +b.dataset.n); });
+    $("mapa").querySelectorAll(".volta").forEach(b => b.onclick = () => {
+      const n = etapaAberta(col, caminho(ets[+b.dataset.n]));
+      empilha({ quiz: "jogo" }); jogarEtapa(colId, n < 0 ? +b.dataset.n : n);
+    });
     mostrar("mapa");
     // O mapa é comprido: começa com a etapa aberta no meio da tela
     $("mapa").querySelector(".casa.aberta")?.scrollIntoView?.({ block: "center" });
@@ -1651,7 +1663,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2rem; margin: 0; 
       <div class="eyebrow">Etapa ${n + 1} completa</div>
       <div class="big">${st.itens.length}/${st.itens.length}</div>
       <p class="q">${errados.length ? `Você acertou ${quem} em ${st.results.length} respostas.` : todos ? `${col.todos} de primeira. ${col.elogio}` : `Você acertou ${quem} de primeira.`}</p>
-      ${n + 1 === total && etapaAberta(col) === -1 ? `<p class="why">Você completou o ${col.nomeMapa}.</p>` : ""}
+      ${!st.refeita && etapaAberta(col) === -1 ? `<p class="why">Você completou o ${col.nomeMapa}.</p>` : ""}
       ${errados.length ? `<div><div class="eyebrow" style="margin-bottom:6px">Para rever</div><ul class="missed">${[...new Set(errados.map(base))].map(id =>
         `<li><b>${byId[id].name}</b>: ${byId[id].why}</li>`).join("")}</ul></div>` : ""}
       <div class="acoes">${temProxima ? `<button class="btn" id="proxima">Próxima etapa</button>` : ""}<button class="btn" id="vermapa">Ver o mapa</button>
