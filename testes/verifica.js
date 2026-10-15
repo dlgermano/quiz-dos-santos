@@ -278,9 +278,12 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     // Conteúdo dos tipos
     confere(itens.every(x => x.grupo && itens.filter(y => y.grupo === x.grupo).length >= 3), `T: há passagem do ${nome} sem grupo, ou grupo com menos de 3 cenas`);
     confere(itens.every(x => Array.isArray(x.rec) && x.rec.length === 3 && x.rec[0] >= 0 && x.rec[1] >= 0 && x.rec[2] >= 0.2 && x.rec[2] <= 0.4 && x.rec[0] + x.rec[2] <= 1.0001 && x.rec[1] + x.rec[2] <= 1.0001), `T: há recorte do ${nome} fora da imagem ou de tamanho estranho`);
-    confere(itens.every(x => x.q && x.q.t.endsWith("?") && x.q.c && x.q.e.length === 3 && new Set([x.q.c, ...x.q.e]).size === 4 && /\d/.test(x.q.ref)), `T: há pergunta do ${nome} sem 4 respostas diferentes ou sem versículo`);
-    confere(itens.every(x => x.frase && x.frase.t.length >= 15 && /\d,\d/.test(x.frase.ref)) && new Set(itens.map(x => x.frase.t)).size === 40, `T: há frase do ${nome} vazia, repetida ou sem versículo`);
-    confere(itens.every(x => !x.frase.t.toLowerCase().includes(x.name.toLowerCase())), `T: há frase do ${nome} que traz o nome da própria passagem`);
+    const perguntas = itens.flatMap(x => Array.isArray(x.qs) ? x.qs : [{}]);
+    confere(itens.every(x => x.qs?.length >= 1) && perguntas.every(p => p.t?.endsWith("?") && p.c && p.e?.length === 3 && new Set([p.c, ...p.e]).size === 4 && /\d/.test(p.ref)), `T: há pergunta do ${nome} sem 4 respostas diferentes ou sem versículo`);
+    confere(itens.every(x => new Set((x.qs || []).map(p => p.t)).size === (x.qs || []).length), `T: há pergunta repetida numa passagem do ${nome}`);
+    const frases = itens.flatMap(x => Array.isArray(x.frases) ? x.frases : [{}]);
+    confere(itens.every(x => x.frases?.length >= 1) && frases.every(f => f.t?.length >= 15 && /\d,\d/.test(f.ref)) && new Set(frases.map(f => f.t)).size === frases.length, `T: há frase do ${nome} vazia, repetida ou sem versículo`);
+    confere(itens.every(x => (x.frases || []).every(f => !f.t.toLowerCase().includes(x.name.toLowerCase()))), `T: há frase do ${nome} que traz o nome da própria passagem`);
     // Mapa: 120 itens, 12 etapas, uma volta por tipo (a volta pelo nome saiu em 15/10/2026)
     const ets = q.etapas(col);
     confere(q.itensDe(col).length === 120 && ets.length === 12 && ets.every(e => e.length === 10), `T: ${nome} deveria ter 12 etapas de 10, achei ${ets.map(e => e.length).join(",")}`);
@@ -303,8 +306,8 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     let okFrase = true, viuFrase = false;
     let st = joga(8, (st, g) => {
       const p = por[q.base(st.order[st.i])], h = els.panel.innerHTML;
-      if (st.certa !== p.id || new Set(st.opts).size !== 4 || !st.opts.every(i => h.includes(`<span>“${por[i].frase.t}”</span>`)) || !h.includes("Qual destas frases é desta passagem?") || h.includes(`<span>${p.name}</span>`)) okFrase = false;
-      if (g === 0) { q.pick(st.certa); viuFrase = els.panel.innerHTML.includes(`(${p.frase.ref}, Bíblia Ave-Maria)`); }
+      if (st.certa !== p.id || new Set(st.opts).size !== 4 || !st.opts.every(i => h.includes(`<span>“${por[i].frases[st.frase[i]].t}”</span>`)) || !h.includes("Qual destas frases é desta passagem?") || h.includes(`<span>${p.name}</span>`)) okFrase = false;
+      if (g === 0) { q.pick(st.certa); viuFrase = els.panel.innerHTML.includes(`“${p.frases[st.frase[p.id]].t}” (${p.frases[st.frase[p.id]].ref}, Bíblia Ave-Maria)`); }
     });
     confere(okFrase && viuFrase && q.situacao(col, 8) === "completa" && q.situacao(col, 9) === "aberta" && q.situacao(col, 0) === "aberta", `T: na volta da frase do ${nome}, as opções deveriam ser 4 frases de passagens diferentes, com o versículo depois do acerto, e a etapa 2 da frase abriria sem mexer no detalhe`);
     confere(els.panel.innerHTML.includes("Próxima etapa") && !els.panel.innerHTML.includes("Você completou"), `T: fechar a etapa 1 da frase do ${nome} deveria oferecer a próxima, sem dizer que o mapa acabou`);
@@ -332,9 +335,59 @@ const MULHERES = "teresinha luzia catarina barbara clara rita cecilia apolonia h
     let okPerg = true;
     st = joga(4, (st) => {
       const p = por[q.base(st.order[st.i])], h = els.panel.innerHTML;
-      if (st.certa !== "c" || st.opts.slice().sort().join() !== "0,1,2,c" || !h.includes(p.q.t) || ![p.q.c, ...p.q.e].every(r => h.includes(`<span>${r}</span>`)) || !h.includes("opts longas") || els.art.innerHTML.includes("recorte")) okPerg = false;
+      if (st.certa !== "c" || st.opts.slice().sort().join() !== "0,1,2,c" || !h.includes(p.qs[st.pergunta].t) || ![p.qs[st.pergunta].c, ...p.qs[st.pergunta].e].every(r => h.includes(`<span>${r}</span>`)) || !h.includes("opts longas") || els.art.innerHTML.includes("recorte")) okPerg = false;
     });
     confere(okPerg && q.situacao(col, 4) === "completa", `T: na volta da pergunta do ${nome}, cada rodada deveria trazer a pergunta e as 4 respostas da passagem`);
+  }
+  // Volta da frase com mais de uma frase por passagem: cada rodada sorteia uma, para a certa e para as erradas
+  {
+    const { q, els } = carregar({}, undefined, undefined, true), col = q.colecao("novotestamento");
+    const extra = { t: "Frase de teste, só para conferir o sorteio.", ref: "Jo 99,1" };
+    q.PASSAGENS.filter(x => x.serie === "novotestamento").forEach(x => x.frases.push({ ...extra, t: extra.t + " " + x.id }));
+    const vistas = new Set();
+    let mostraSorteada = true;
+    for (let k = 0; k < 30; k++) {
+      q.jogarEtapa("novotestamento", 8);
+      const st = q.state(), id = st.certa, f = q.PASSAGENS.find(x => x.id === id).frases[st.frase[id]];
+      vistas.add(st.frase[id]);
+      if (!els.panel.innerHTML.includes(`<span>“${f.t}”</span>`)) mostraSorteada = false;
+      q.pick(id);
+      if (!els.panel.innerHTML.includes(`“${f.t}” (${f.ref}, Bíblia Ave-Maria)`)) mostraSorteada = false;
+    }
+    confere(vistas.size === 2 && mostraSorteada && q.etapas(col).length === 12, "T: com duas frases por passagem, as rodadas deveriam sortear entre elas e mostrar, depois do acerto, a frase sorteada");
+  }
+  // Rascunho: frases e perguntas não conferidas só aparecem com ?rascunho=1, e avisam que estão por conferir
+  {
+    const comR = carregar({}, undefined, { location: { search: "?rascunho=1" } }, true).q, semR = carregar({}, undefined, undefined, true).q;
+    const nR = q => q.PASSAGENS.reduce((n, p) => n + p.frases.filter(f => f.rascunho).length + p.qs.filter(x => x.rascunho).length, 0);
+    confere(nR(semR) === 0, "T: sem ?rascunho=1, nenhuma frase ou pergunta de rascunho deveria aparecer");
+    const { q, els } = carregar({}, undefined, { location: { search: "?rascunho=1" } }, true);
+    if (nR(comR) > 0) {
+      let viu = false;
+      for (let k = 0; k < 60 && !viu; k++) {
+        q.jogarEtapa("novotestamento", 8);
+        const st = q.state(), f = q.PASSAGENS.find(x => x.id === st.certa).frases[st.frase[st.certa]];
+        q.pick(st.certa);
+        if (f.rascunho) viu = els.panel.innerHTML.includes(`(${f.ref}, rascunho por conferir)`);
+      }
+      confere(viu, "T: com ?rascunho=1, a frase de rascunho deveria aparecer e avisar que está por conferir");
+    }
+  }
+  // Volta da pergunta com mais de uma pergunta por passagem: cada rodada sorteia uma, com as respostas dela
+  {
+    const { q, els } = carregar({}, undefined, undefined, true);
+    q.PASSAGENS.filter(x => x.serie === "novotestamento").forEach(x => x.qs.push({ t: "Pergunta de teste " + x.id + "?", c: "Certa " + x.id, e: ["Errada A", "Errada B", "Errada C"], ref: "Jo 99,1" }));
+    const vistas = new Set();
+    let mostraSorteada = true;
+    for (let k = 0; k < 30; k++) {
+      q.jogarEtapa("novotestamento", 4);
+      const st = q.state(), p = q.PASSAGENS.find(x => x.id === q.base(st.order[st.i])).qs[st.pergunta];
+      vistas.add(st.pergunta);
+      if (!els.panel.innerHTML.includes(p.t) || ![p.c, ...p.e].every(r => els.panel.innerHTML.includes(`<span>${r}</span>`))) mostraSorteada = false;
+      q.pick("c");
+      if (!els.panel.innerHTML.includes(`<b>Resposta:</b> ${p.c} (${p.ref}).`)) mostraSorteada = false;
+    }
+    confere(vistas.size === 2 && mostraSorteada, "T: com duas perguntas por passagem, as rodadas deveriam sortear entre elas, com as respostas e o versículo da pergunta sorteada");
   }
   // Acerto guardado pelo nome (volta que saiu) ou sem tipo não conta, mas também não estraga os santos
   const antigo = carregar({ "quiz-santos-progresso": JSON.stringify({ novotestamento: ["ntanunciacao", "ntcana:nome", "ntcana:frase", "naoexiste"], santos: ["pedro"] }) }, undefined, undefined, true).q;
