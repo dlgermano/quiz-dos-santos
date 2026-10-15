@@ -251,3 +251,9 @@ RECORTES = {
     "atbalaao": (0.3, 0.36, 0.3),
     "atescrita": (0.28, 0.6, 0.32),
 }
+
+# Frases a mais de cada passagem, para a volta "Pela frase" sortear uma a cada rodada (pedido do Daniel em 15/10/2026).
+# id: [(frase, versículo), ...]. A frase de PERGUNTAS continua sendo a primeira. Só entra aqui frase conferida
+# palavra por palavra com ferramentas/avemaria.py, e que não traga o nome da passagem.
+FRASES_EXTRAS: dict[str, list[tuple[str, str]]] = {
+}
