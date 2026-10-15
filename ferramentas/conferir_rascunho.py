@@ -37,7 +37,8 @@ def versos(ref: str) -> str:
 
 
 def limpo(t: str) -> str:
-    return re.sub(r"\s+", " ", t.replace("“", "").replace("”", "").replace("\"", "")).strip()
+    """Tira aspas e o hífen invisível (\u00ad) que o site põe no meio das palavras, e junta os espaços."""
+    return re.sub(r"\s+", " ", t.replace("\u00ad", "").replace("“", "").replace("”", "").replace("\"", "")).strip()
 
 
 def main() -> None:
@@ -48,8 +49,9 @@ def main() -> None:
                 v = limpo(versos(ref))
             except LookupError as e:
                 falhas += 1; linhas.append(f"FALHA frase {pid} ({ref}): {e}"); continue
-            partes = [limpo(p).strip(" .") for p in frase.split("[...]")]
-            if all(p and p in v for p in partes):
+            # Maiúscula ou minúscula não conta: a frase pode começar onde o versículo tem letra minúscula
+            partes = [limpo(p).strip(" .!?").lower() for p in frase.split("[...]")]
+            if all(p and p in v.lower() for p in partes):
                 linhas.append(f"ok    frase {pid} ({ref})")
             else:
                 falhas += 1; linhas.append(f"FALHA frase {pid} ({ref})\n      rascunho: {frase}\n      site:     {v}")

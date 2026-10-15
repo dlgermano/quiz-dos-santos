@@ -254,14 +254,415 @@ RECORTES = {
 
 # Frases a mais de cada passagem, para a volta "Pela frase" sortear uma a cada rodada (pedido do Daniel em 15/10/2026).
 # id: [(frase, versículo), ...]. A frase de PERGUNTAS continua sendo a primeira. Só entra aqui frase conferida
-# palavra por palavra com ferramentas/avemaria.py, e que não traga o nome da passagem.
+# palavra por palavra com ferramentas/avemaria.py, e que não traga o nome da passagem. As de 15/10/2026 vieram do
+# rascunho, conferidas com ferramentas/conferir_rascunho.py no computador do Daniel e corrigidas pelo texto do site.
 FRASES_EXTRAS: dict[str, list[tuple[str, str]]] = {
+    "ntanunciacao": [("Não temas, Maria, pois encontraste graça diante de Deus.", "Lc 1,30"), ("Porque a Deus nenhuma coisa é impossível.", "Lc 1,37")],
+    "ntnascimento": [("Glória a Deus no mais alto dos céus e na terra paz aos homens", "Lc 2,14"), ("Não temais, eis que vos anuncio uma Boa-Nova que será alegria para todo o povo.", "Lc 2,10")],
+    "ntreismagos": [("E tu, Belém, terra de Judá, não és de modo algum a menor entre as cidades de Judá.", "Mt 2,6"), ("Ide e informai-vos bem a respeito do menino.", "Mt 2,8")],
+    "ntbatismo": [("Eis meu Filho muito amado em quem ponho minha afeição.", "Mt 3,17"), ("Deixa por agora, pois convém cumpramos a justiça completa.", "Mt 3,15")],
+    "ntcana": [("Enchei as talhas de água.", "Jo 2,7"), ("Tu guardaste o vinho melhor até agora.", "Jo 2,10")],
+    "ntpaes": [("Recolhei os pedaços que sobraram, para que nada se perca.", "Jo 6,12"), ("Fazei-os assentar.", "Jo 6,10")],
+    "ntceia": [("Este cálice é a Nova Aliança em meu sangue, que é derramado por vós.", "Lc 22,20"), ("Tenho desejado ardentemente comer convosco esta Páscoa, antes de sofrer.", "Lc 22,15")],
+    "ntcrucificacao": [("Mulher, eis aí teu filho.", "Jo 19,26"), ("O que escrevi, escrevi.", "Jo 19,22")],
+    "ntressurreicao": [("Não está aqui: ressuscitou como disse.", "Mt 28,6"), ("Ide dizer aos meus irmãos que se dirijam à Galileia, pois é lá que eles me verão.", "Mt 28,10")],
+    "ntpentecostes": [("Apareceu-lhes então uma espécie de línguas de fogo, que se repartiram e pousaram sobre cada um deles.", "At 2,3"), ("Como então todos nós os ouvimos falar, cada um em nossa própria língua materna?", "At 2,8")],
+    "ntvisitacao": [("Minha alma glorifica ao Senhor.", "Lc 1,46"), ("Donde me vem esta honra de vir a mim a mãe de meu Senhor?", "Lc 1,43")],
+    "ntapresentacao": [("Porque os meus olhos viram a vossa salvação.", "Lc 2,30"), ("Como luz para iluminar as nações, e para a glória de vosso povo de Israel.", "Lc 2,32")],
+    "ntfuga": [("Do Egito chamei meu filho.", "Mt 2,15"), ("José levantou-se durante a noite, tomou o menino e sua mãe e partiu para o Egito.", "Mt 2,14")],
+    "ntdoutores": [("Meu filho, que nos fizeste?! Eis que teu pai e eu andávamos à tua procura, cheios de aflição.", "Lc 2,48"), ("E Jesus crescia em estatura, em sabedoria e graça, diante de Deus e dos homens.", "Lc 2,52")],
+    "nttentacao": [("Para trás, Satanás, pois está escrito: Adorarás o Senhor, teu Deus, e só a ele servirás.", "Mt 4,10"), ("Não tentarás o Senhor teu Deus.", "Mt 4,7")],
+    "ntpesca": [("Não temas; doravante serás pescador de homens.", "Lc 5,10"), ("Faze-te ao largo, e lançai as vossas redes para pescar.", "Lc 5,4")],
+    "nttempestade": [("Mestre, não te importa que pereçamos?", "Mc 4,38"), ("Silêncio! Cala-te!", "Mc 4,39")],
+    "ntaguas": [("Tranquilizai-vos, sou eu. Não tenhais medo!", "Mt 14,27"), ("Senhor, salva-me!", "Mt 14,30")],
+    "nttransfiguracao": [("Levantai-vos e não temais.", "Mt 17,7"), ("Não conteis a ninguém o que vistes, até que o Filho do Homem ressuscite dos mortos.", "Mt 17,9")],
+    "ntramos": [("Dizei à filha de Sião: Eis que teu rei vem a ti, cheio de doçura.", "Mt 21,5"), ("É Jesus, o profeta de Nazaré da Galileia.", "Mt 21,11")],
+    "ntsamaritano": [("Amarás o Senhor, teu Deus, de todo o teu coração.", "Lc 10,27"), ("E quem é o meu próximo?", "Lc 10,29")],
+    "ntprodigo": [("Este meu filho estava morto, e reviveu; tinha se perdido, e foi achado.", "Lc 15,24"), ("Meu pai, dá-me a parte da herança que me toca.", "Lc 15,12")],
+    "ntovelha": [("Regozijai-vos comigo, achei a minha ovelha que se havia perdido.", "Lc 15,6"), ("Este homem recebe e come com pessoas de má vida!", "Lc 15,2")],
+    "ntzaqueu": [("Hoje entrou a salvação nesta casa.", "Lc 19,9"), ("Senhor, vou dar a metade dos meus bens aos pobres.", "Lc 19,8")],
+    "ntsamaritana": [("Deus é espírito, e os seus adoradores devem adorá-lo em espírito e verdade.", "Jo 4,24"), ("Senhor, dá-me desta água, para eu já não ter sede.", "Jo 4,15")],
+    "ntlazaro": [("Eu sou a ressurreição e a vida.", "Jo 11,25"), ("Senhor, se tivesses estado aqui, meu irmão não teria morrido!", "Jo 11,21")],
+    "ntcego": [("Vai, a tua fé te salvou.", "Mc 10,52"), ("Que queres que te faça?", "Mc 10,51")],
+    "ntparalitico": [("Levanta-te, toma o teu leito e vai para casa.", "Mc 2,11"), ("Nunca vimos coisa semelhante.", "Mc 2,12")],
+    "ntlavapes": [("O que faço não compreendes agora, mas irás compreendê-lo em breve.", "Jo 13,7"), ("Se eu, vosso Senhor e Mestre, vos lavei os pés, também vós deveis lavar-vos os pés uns dos outros.", "Jo 13,14")],
+    "nthorto": [("Orai para que não caiais em tentação.", "Lc 22,40"), ("Apareceu-lhe então um anjo do céu para confortá-lo.", "Lc 22,43")],
+    "ntadultera": [("Nem eu te condeno. Vai e não tornes a pecar.", "Jo 8,11"), ("Mulher, onde estão os que te acusavam?", "Jo 8,10")],
+    "ntvendilhoes": [("O zelo da tua casa me consome.", "Jo 2,17"), ("Destruí vós este templo, e eu o reerguerei em três dias.", "Jo 2,19")],
+    "ntnegacao": [("Mulher, não o conheço.", "Lc 22,57"), ("Também tu és um deles.", "Lc 22,58")],
+    "nttome": [("Se não vir nas suas mãos o sinal dos pregos [...] não acreditarei!", "Jo 20,25"), ("Felizes aqueles que creem sem ter visto!", "Jo 20,29")],
+    "ntemaus": [("Fica conosco, já é tarde e já declina o dia.", "Lc 24,29"), ("Ó gente sem inteligência! Como sois tardos de coração para crerdes em tudo o que anunciaram os profetas!", "Lc 24,25")],
+    "ntascensao": [("Descerá sobre vós o Espírito Santo e vos dará força; e sereis minhas testemunhas.", "At 1,8"), ("Senhor, é porventura agora que ides instaurar o reino de Israel?", "At 1,6")],
+    "ntpaulo": [("Quem és, Senhor?", "At 9,5"), ("Este homem é para mim um instrumento escolhido.", "At 9,15")],
+    "ntestevao": [("Eis que vejo [...] os céus abertos e o Filho do Homem, de pé, à direita de Deus.", "At 7,56"), ("Senhor Jesus, recebe o meu espírito.", "At 7,59")],
+    "ntpedroprisao": [("Levanta-te depressa.", "At 12,7"), ("Cinge-te e calça as tuas sandálias.", "At 12,8")],
+    "ntcriancas": [("Todo o que não receber o Reino de Deus com a mentalidade de uma criança, nele não entrará.", "Mc 10,15"), ("Em seguida, ele as abraçou e as abençoou, impondo-lhes as mãos.", "Mc 10,16")],
+    "atcriacao": [("Não existia ainda sobre a terra nenhum arbusto nos campos.", "Gn 2,5"), ("O Senhor Deus tinha plantado um jardim no Éden, do lado do oriente.", "Gn 2,8")],
+    "atadaoeva": [("É verdade que Deus vos proibiu comer do fruto de toda árvore do jardim?", "Gn 3,1"), ("Oh, não! [...] vós não morrereis!", "Gn 3,4")],
+    "atcaimabel": [("Eis que a voz do sangue do teu irmão clama por mim desde a terra.", "Gn 4,10"), ("Meu castigo é grande demais para que eu o possa suportar.", "Gn 4,13")],
+    "atarca": [("Faze para ti uma arca de madeira resinosa.", "Gn 6,14"), ("Sai da arca, com tua mulher, teus filhos e as mulheres de teus filhos.", "Gn 8,16")],
+    "atbabel": [("Vamos, façamos para nós uma cidade e uma torre cujo cimo atinja os céus.", "Gn 11,4"), ("Toda a terra tinha uma só língua, e servia-se das mesmas palavras.", "Gn 11,1")],
+    "atisaac": [("Toma teu filho, teu único filho a quem tanto amas.", "Gn 22,2"), ("Não estendas a tua mão contra o menino.", "Gn 22,12")],
+    "atsarca": [("Eu sou [...] o Deus de teu pai, o Deus de Abraão, o Deus de Isaac e o Deus de Jacó.", "Ex 3,6"), ("Eu estarei contigo.", "Ex 3,12")],
+    "atmarvermelho": [("Estende tua mão sobre o mar.", "Ex 14,26"), ("Os israelitas desceram a pé enxuto no meio do mar.", "Ex 14,22")],
+    "atmandamentos": [("Não terás outros deuses diante de minha face.", "Ex 20,3"), ("Honra teu pai e tua mãe.", "Ex 20,12")],
+    "atdavi": [("Hoje mesmo, o Senhor te entregará nas minhas mãos.", "1Sm 17,46"), ("Não passas de um menino e ele é um homem de guerra desde a sua mocidade.", "1Sm 17,33")],
+    "atexpulsao": [("Eis que o homem se tornou como um de nós, conhecedor do bem e do mal.", "Gn 3,22"), ("Adão pôs à sua mulher o nome de Eva, porque ela era a mãe de todos os viventes.", "Gn 3,20")],
+    "atjonas": [("Levanta-te, vai a Nínive, a grande cidade.", "Jn 1,2")],
+    "atdaniel": [("Meu Deus enviou seu anjo e fechou a boca dos leões.", "Dn 6,23"), ("Teu Deus que tu adoras com tanta fidelidade terá podido salvar-te dos leões?!", "Dn 6,21")],
+    "atsansao": [("Senhor Javé, rogo-vos que vos lembreis de mim.", "Jz 16,28"), ("Mandai vir Sansão para nos divertir!", "Jz 16,25")],
+    "atjose": [("Não derrameis sangue. Jogai-o naquela cisterna, no deserto.", "Gn 37,22"), ("É a túnica de meu filho! Uma fera o devorou!", "Gn 37,33")],
+    "atmoisescesto": [("Eu o salvei das águas.", "Ex 2,10"), ("Toma este menino [...] amamenta-o; te darei o teu salário.", "Ex 2,9")],
+    "atjaco": [("Estou contigo, para te guardar aonde quer que fores.", "Gn 28,15"), ("Quão terrível é este lugar! É nada menos que a casa de Deus; é aqui, a porta do céu.", "Gn 28,17")],
+    "atbezerro": [("Eis, ó Israel, o teu Deus que te tirou do Egito.", "Ex 32,4"), ("Venham a mim todos aqueles que são pelo Senhor!", "Ex 32,26")],
+    "atjerico": [("Vê, entreguei-te Jericó, seu rei e seus valentes guerreiros.", "Js 6,2"), ("Não griteis, nem façais ouvir a vossa voz.", "Js 6,10")],
+    "atsalomao": [("Cortai pelo meio o menino vivo [...] e dai metade a uma e metade à outra.", "1Rs 3,25"), ("Dai [...] o menino vivo a essa mulher! Não o mateis, pois é ela a sua mãe.", "1Rs 3,27")],
+    "atvisitantes": [("Meu Senhor [...] se encontrei graça diante de vossos olhos, não passeis avante sem vos deterdes em casa de vosso servo.", "Gn 18,3"), ("Onde está Sara, tua mulher?", "Gn 18,9")],
+    "atlo": [("Levanta-te, toma tua mulher e tuas duas filhas que estão em tua casa.", "Gn 19,15"), ("O Senhor fez então cair sobre Sodoma e Gomorra uma chuva de enxofre e de fogo.", "Gn 19,24")],
+    "atjacoanjo": [("Eu vi a Deus face a face, e minha vida foi poupada.", "Gn 32,31"), ("Qual é o teu nome?", "Gn 32,28")],
+    "atfarao": [("Não sou eu [...] mas é Deus quem dará ao faraó uma explicação favorável.", "Gn 41,16"), ("Tu mesmo serás posto à frente de toda a minha casa.", "Gn 41,40")],
+    "atpragas": [("Isso é o dedo de Deus.", "Ex 8,15"), ("Nisto reconhecerás que eu sou o Senhor.", "Ex 7,17")],
+    "atmana": [("Este é o pão que o Senhor vos manda para comer.", "Ex 16,15"), ("Ninguém reserve dele para o dia seguinte.", "Ex 16,19")],
+    "atserpente": [("Faze para ti uma serpente ardente e mete-a sobre um poste.", "Nm 21,8"), ("Pecamos, murmurando contra o Senhor e contra ti.", "Nm 21,7")],
+    "atrocha": [("Por que nos fizeste sair do Egito? Para nos fazer morrer de sede.", "Ex 17,3"), ("Ferirás o rochedo e a água jorrará dele: assim o povo poderá beber.", "Ex 17,6")],
+    "atrute": [("De onde me vem a dita [...] de que te interesses por mim, uma estrangeira?", "Rt 2,10"), ("O Senhor te remunere pelo bem que fizeste.", "Rt 2,12")],
+    "atsamuel": [("Eis-me aqui: chamaste-me.", "1Sm 3,5"), ("Samuel ainda não conhecia o Senhor.", "1Sm 3,7")],
+    "atharpa": [("Davi tomava a harpa e tocava. Saul acalmava-se.", "1Sm 16,23"), ("Procurai-me um bom músico e trazei-mo.", "1Sm 16,17")],
+    "atcorvos": [("Beberás da torrente; dei ordens aos corvos que te alimentem.", "1Rs 17,4"), ("Os corvos traziam-lhe pão e carne, pela manhã e pela tarde.", "1Rs 17,6")],
+    "atcarro": [("Meu pai, meu pai! Carro e cavalaria de Israel!", "2Rs 2,12"), ("Onde está o Senhor, o Deus de Elias?", "2Rs 2,14")],
+    "atfornalha": [("Não foram três homens amarrados que jogamos no fogo?", "Dn 3,91"), ("Eu vejo quatro homens soltos, que passeiam impunemente no meio do fogo.", "Dn 3,92")],
+    "attobias": [("Pega-o pelas guelras e puxa-o para ti.", "Tb 6,4"), ("Abre o peixe e tira-lhe o coração, o fel e o fígado.", "Tb 6,5")],
+    "atester": [("Que tens, rainha Ester e que queres? Mesmo a metade de meu reino eu te daria.", "Est 5,3"), ("Se parecer bem ao rei [...] venha hoje com Amã ao banquete que lhe preparo.", "Est 5,4")],
+    "atjo": [("Se aceitamos de Deus a felicidade, não deveríamos também aceitar a infelicidade?", "Jó 2,10"), ("Ficaram sentados no chão ao lado dele durante sete dias e sete noites.", "Jó 2,13")],
+    "atossos": [("Filho do homem, poderiam esses ossos retornar à vida?", "Ez 37,3"), ("Ossos dessecados [...] escutai a palavra do Senhor.", "Ez 37,4")],
+    "atbalaao": [("Ah, se eu tivesse uma espada na mão! Já o teria matado!", "Nm 22,29"), ("Pequei. Eu não sabia que estavas postado no caminho para deter-me.", "Nm 22,34")],
+    "atescrita": [("Deus contou os anos de teu reinado e nele põe um fim.", "Dn 5,26"), ("Eis que surgiram dedos de mão humana a escrever.", "Dn 5,5")],
 }
 
 # Perguntas a mais de cada passagem, para a volta "Pela pergunta" sortear uma a cada rodada (pedido do Daniel em 15/10/2026).
 # id: [(pergunta, resposta certa, [três erradas], versículo que dá a resposta), ...]. A pergunta de PERGUNTAS continua sendo
 # a primeira. Só entra aqui pergunta cuja resposta foi conferida no versículo com ferramentas/avemaria.py.
 PERGUNTAS_EXTRAS: dict[str, list[tuple[str, str, list[str], str]]] = {
+    "ntanunciacao": [
+        ("Que nome o anjo disse que Maria daria ao filho?", "Jesus", ["Emanuel", "João", "Davi"], "Lc 1,31"),
+        ("Que parenta de Maria, já idosa, também esperava um filho?", "Isabel", ["Ana", "Sara", "Rute"], "Lc 1,36"),
+    ],
+    "ntnascimento": [
+        ("Que sinal o anjo deu aos pastores?", "Um recém-nascido envolto em faixas, numa manjedoura", ["Uma estrela parada sobre a casa", "Um anjo à porta da cidade", "Uma luz sobre o Templo"], "Lc 2,12"),
+        ("Quem governava a Síria no tempo do recenseamento?", "Quirino", ["Pilatos", "Herodes", "Augusto"], "Lc 2,2"),
+    ],
+    "ntreismagos": [
+        ("Que presentes os magos ofereceram ao menino?", "Ouro, incenso e mirra", ["Ouro, prata e incenso", "Mirra, linho e óleo", "Pão, vinho e incenso"], "Mt 2,11"),
+        ("Onde os sacerdotes disseram que o Cristo devia nascer?", "Em Belém, na Judeia", ["Em Nazaré", "Em Jerusalém", "Em Cafarnaum"], "Mt 2,5"),
+    ],
+    "ntbatismo": [
+        ("De onde Jesus veio para ser batizado?", "Da Galileia", ["Da Judeia", "De Belém", "Do Egito"], "Mt 3,13"),
+        ("Em que rio Jesus foi batizado?", "No Jordão", ["No Nilo", "No Eufrates", "No Cedron"], "Mt 3,13"),
+    ],
+    "ntcana": [
+        ("Quantas talhas de pedra havia ali?", "Seis", ["Três", "Doze", "Sete"], "Jo 2,6"),
+        ("A quem os serventes levaram a água feita vinho?", "Ao chefe dos serventes", ["Ao noivo", "A Maria", "Aos convidados"], "Jo 2,8"),
+    ],
+    "ntpaes": [
+        ("A que apóstolo Jesus perguntou onde comprar pão?", "Filipe", ["Pedro", "André", "Judas"], "Jo 6,5"),
+        ("Quantos homens havia, mais ou menos?", "Cerca de cinco mil", ["Cerca de mil", "Cerca de quatro mil", "Cerca de doze mil"], "Jo 6,10"),
+    ],
+    "ntceia": [
+        ("O que Jesus fez antes de partir o pão?", "Deu graças", ["Lavou as mãos", "Cantou um salmo", "Abençoou o vinho"], "Lc 22,19"),
+        ("Que apóstolos Jesus mandou preparar a Páscoa?", "Pedro e João", ["Tiago e André", "Filipe e Tomé", "Judas e Mateus"], "Lc 22,8"),
+    ],
+    "ntcrucificacao": [
+        ("Em que línguas estava escrito o letreiro da cruz?", "Hebraico, latim e grego", ["Hebraico, árabe e grego", "Latim, grego e egípcio", "Aramaico, latim e persa"], "Jo 19,20"),
+        ("Como se chamava o lugar onde Jesus foi crucificado?", "Gólgota", ["Getsêmani", "Betânia", "Siloé"], "Jo 19,17"),
+    ],
+    "ntressurreicao": [
+        ("Como era a veste do anjo?", "Branca como a neve", ["Vermelha como o fogo", "Dourada como o sol", "Azul como o céu"], "Mt 28,3"),
+        ("Para onde os discípulos deviam ir para ver Jesus?", "Para a Galileia", ["Para Betânia", "Para Emaús", "Para o Egito"], "Mt 28,7"),
+    ],
+    "ntpentecostes": [
+        ("De onde veio o ruído, como de um vento impetuoso?", "Do céu", ["Do mar", "Do deserto", "Do Templo"], "At 2,2"),
+        ("O que alguns, escarnecendo, diziam dos apóstolos?", "Que estavam embriagados de vinho doce", ["Que estavam doentes", "Que eram estrangeiros", "Que estavam com medo"], "At 2,13"),
+    ],
+    "ntvisitacao": [
+        ("O que aconteceu quando Isabel ouviu a saudação de Maria?", "A criança estremeceu no seu seio", ["Ela começou a chorar", "Zacarias voltou a falar", "Ela caiu de joelhos"], "Lc 1,41"),
+        ("Para onde Maria foi apressadamente?", "Às montanhas, a uma cidade de Judá", ["À Galileia, a Cafarnaum", "Ao Egito, a Mênfis", "A Jerusalém, ao Templo"], "Lc 1,39"),
+    ],
+    "ntapresentacao": [
+        ("Que oferta Maria e José levaram, conforme a Lei?", "Um par de rolas ou dois pombinhos", ["Um cordeiro sem defeito", "Dois cabritos", "Uma medida de farinha"], "Lc 2,24"),
+        ("Que profetisa idosa também falou do menino?", "Ana", ["Isabel", "Débora", "Miriam"], "Lc 2,36"),
+    ],
+    "ntfuga": [
+        ("Como José foi avisado de que devia fugir?", "Um anjo lhe apareceu em sonho", ["Maria teve uma visão", "Os magos o avisaram", "Um pastor veio à noite"], "Mt 2,13"),
+        ("Quando José partiu para o Egito?", "Durante a noite", ["Ao meio-dia", "Ao raiar do sol", "No sábado"], "Mt 2,14"),
+    ],
+    "ntdoutores": [
+        ("Que idade Jesus tinha?", "Doze anos", ["Sete anos", "Dez anos", "Quinze anos"], "Lc 2,42"),
+        ("Que festa a família tinha ido celebrar em Jerusalém?", "A Páscoa", ["Pentecostes", "A festa das Tendas", "A Dedicação do Templo"], "Lc 2,41"),
+    ],
+    "nttentacao": [
+        ("Para onde o demônio levou Jesus na Cidade Santa?", "Ao ponto mais alto do templo", ["Ao monte das Oliveiras", "Ao rio Jordão", "Ao mar da Galileia"], "Mt 4,5"),
+        ("O que o demônio pediu que Jesus transformasse em pão?", "Pedras", ["Areia", "Folhas", "Água"], "Mt 4,3"),
+    ],
+    "ntpesca": [
+        ("De que barca Jesus ensinou o povo?", "Da barca de Simão", ["Da barca de Zebedeu", "Da barca de André", "De uma barca de Jairo"], "Lc 5,3"),
+        ("Junto a que lago Jesus estava?", "O lago de Genesaré", ["O mar Morto", "O tanque de Siloé", "O lago de Merom"], "Lc 5,1"),
+    ],
+    "nttempestade": [
+        ("Para onde Jesus quis passar?", "Para o outro lado", ["Para Jerusalém", "Para Cafarnaum", "Para o deserto"], "Mc 4,35"),
+        ("Em que parte do dia isso aconteceu?", "À tarde", ["De manhã cedo", "Ao meio-dia", "À meia-noite"], "Mc 4,35"),
+    ],
+    "ntaguas": [
+        ("O que Pedro pediu a Jesus?", "Que o mandasse ir até ele sobre as águas", ["Que acalmasse o vento", "Que subisse logo à barca", "Que lhe mostrasse as mãos"], "Mt 14,28"),
+        ("Por que Pedro começou a afundar?", "Teve medo do vento", ["Olhou para trás", "A barca se afastou", "Soltou a mão de João"], "Mt 14,30"),
+    ],
+    "nttransfiguracao": [
+        ("Quem apareceu conversando com Jesus?", "Moisés e Elias", ["Abraão e Davi", "Isaías e Jeremias", "Noé e Jonas"], "Mt 17,3"),
+        ("Como ficaram as vestes de Jesus?", "Resplandecentes de brancura", ["Vermelhas como o sangue", "Escuras como a noite", "Cinzentas como o pó"], "Mt 17,2"),
+    ],
+    "ntramos": [
+        ("Em que Jesus entrou em Jerusalém?", "Numa jumenta, com o seu jumentinho", ["Num cavalo branco", "Num camelo", "Numa carruagem"], "Mt 21,7"),
+        ("O que a multidão estendia pelo caminho?", "Seus mantos e ramos de árvores", ["Tapetes e flores", "Feixes de trigo", "Pedras e areia"], "Mt 21,8"),
+    ],
+    "ntsamaritano": [
+        ("Quem passou pelo homem ferido e seguiu adiante?", "Um sacerdote e um levita", ["Um soldado e um mercador", "Dois fariseus", "Um pastor e seu filho"], "Lc 10,31-32"),
+        ("Quanto o samaritano deu ao hospedeiro?", "Dois denários", ["Uma moeda de ouro", "Trinta siclos", "Cinco talentos"], "Lc 10,35"),
+    ],
+    "ntprodigo": [
+        ("O que o pai mandou matar para a festa?", "O novilho gordo", ["Um cordeiro", "Um cabrito", "Duas pombas"], "Lc 15,23"),
+        ("O que o pai mandou trazer para o filho?", "A melhor veste, um anel e calçado", ["Uma túnica e um cajado", "Uma bolsa com moedas", "Um manto e uma coroa"], "Lc 15,22"),
+    ],
+    "ntovelha": [
+        ("Onde o homem deixa as noventa e nove?", "No deserto", ["No curral", "Na cidade", "No monte Sião"], "Lc 15,4"),
+        ("Onde o homem põe a ovelha achada?", "Nos ombros", ["Nos braços", "Num cesto", "Num jumento"], "Lc 15,5"),
+    ],
+    "ntzaqueu": [
+        ("Em que árvore ele subiu?", "Num sicômoro", ["Numa figueira", "Numa oliveira", "Numa palmeira"], "Lc 19,4"),
+        ("Por que ele subiu na árvore?", "Porque era de baixa estatura", ["Para fugir da multidão", "Para colher frutos", "Para ver o Templo"], "Lc 19,3"),
+    ],
+    "ntsamaritana": [
+        ("Quantos maridos a mulher já tinha tido?", "Cinco", ["Dois", "Três", "Sete"], "Jo 4,18"),
+        ("Que horas eram quando Jesus se sentou junto ao poço?", "Por volta do meio-dia", ["Ao romper do dia", "Ao cair da tarde", "À meia-noite"], "Jo 4,6"),
+    ],
+    "ntlazaro": [
+        ("Em que aldeia morava a família de Lázaro?", "Betânia", ["Naim", "Caná", "Betsaida"], "Jo 11,1"),
+        ("Como se chamavam as irmãs de Lázaro?", "Marta e Maria", ["Ana e Isabel", "Raquel e Lia", "Joana e Susana"], "Jo 11,1"),
+    ],
+    "ntcego": [
+        ("De quem o cego era filho?", "De Timeu", ["De Zebedeu", "De Alfeu", "De Jonas"], "Mc 10,46"),
+        ("O que o cego fez ao ser chamado por Jesus?", "Lançou fora a capa e foi ter com ele", ["Pediu que o levassem", "Ajoelhou-se onde estava", "Ficou em silêncio"], "Mc 10,50"),
+    ],
+    "ntparalitico": [
+        ("Quantos homens carregavam o paralítico?", "Quatro", ["Dois", "Três", "Seis"], "Mc 2,3"),
+        ("O que os escribas pensaram quando Jesus perdoou os pecados?", "Que ele blasfemava", ["Que ele era Elias", "Que ele estava cansado", "Que ele era um anjo"], "Mc 2,7"),
+    ],
+    "ntlavapes": [
+        ("O que Jesus cingiu antes de lavar os pés dos discípulos?", "Uma toalha", ["Um cinto de couro", "Um manto de linho", "Uma corda"], "Jo 13,4"),
+        ("O que Pedro pediu depois de ouvir Jesus?", "Que lavasse também as mãos e a cabeça", ["Que lavasse primeiro os outros", "Que lhe ensinasse a lavar", "Que o deixasse servir a mesa"], "Jo 13,9"),
+    ],
+    "nthorto": [
+        ("Como Jesus achou os discípulos ao voltar da oração?", "Dormindo, por causa da tristeza", ["Rezando de joelhos", "Conversando com Judas", "Acendendo uma fogueira"], "Lc 22,45"),
+        ("O que caía de Jesus como gotas de sangue?", "O suor", ["As lágrimas", "A chuva", "O orvalho"], "Lc 22,44"),
+    ],
+    "ntadultera": [
+        ("O que Jesus fazia enquanto o interrogavam?", "Escrevia com o dedo na terra", ["Rezava em silêncio", "Lia o rolo da Lei", "Olhava para o céu"], "Jo 8,6"),
+        ("Onde Jesus estava ensinando?", "No Templo", ["Na sinagoga de Nazaré", "À beira do lago", "No alto de um monte"], "Jo 8,2"),
+    ],
+    "ntvendilhoes": [
+        ("Com que Jesus expulsou os vendilhões?", "Um chicote de cordas", ["Uma vara de pastor", "Uma espada", "As próprias mãos"], "Jo 2,15"),
+        ("Que animais eram vendidos no Templo?", "Bois, ovelhas e pombas", ["Cavalos, camelos e cabras", "Peixes e galinhas", "Jumentos e porcos"], "Jo 2,14"),
+    ],
+    "ntnegacao": [
+        ("O que Pedro fez depois que o Senhor olhou para ele?", "Saiu e chorou amargamente", ["Fugiu para a Galileia", "Negou outra vez", "Correu até o Templo"], "Lc 22,62"),
+        ("Onde Pedro estava sentado quando foi reconhecido?", "Junto ao fogo, no pátio", ["À porta do Templo", "À mesa da ceia", "Num barco"], "Lc 22,55-56"),
+    ],
+    "nttome": [
+        ("Que outro nome tinha Tomé?", "Dídimo", ["Cefas", "Boanerges", "Tadeu"], "Jo 20,24"),
+        ("O que Jesus disse ao entrar com as portas fechadas?", "A paz esteja convosco!", ["Não temais!", "Alegrai-vos!", "Levantai-vos!"], "Jo 20,26"),
+    ],
+    "ntemaus": [
+        ("Quando os discípulos reconheceram Jesus?", "Ao partir o pão", ["Ao ver suas chagas", "Ao ouvir seu nome", "Ao chegar a Jerusalém"], "Lc 24,30-31"),
+        ("A que distância de Jerusalém ficava a aldeia?", "Sessenta estádios", ["Doze estádios", "Três dias de caminho", "Cem estádios"], "Lc 24,13"),
+    ],
+    "ntascensao": [
+        ("O que encobriu Jesus aos olhos dos apóstolos?", "Uma nuvem", ["Uma luz forte", "Um anjo", "A escuridão"], "At 1,9"),
+        ("Quantos homens vestidos de branco apareceram?", "Dois", ["Um", "Três", "Doze"], "At 1,10"),
+    ],
+    "ntpaulo": [
+        ("Para que cidade Saulo ia?", "Damasco", ["Antioquia", "Tarso", "Roma"], "At 9,2"),
+        ("Por quantos dias Saulo ficou sem ver?", "Três dias", ["Sete dias", "Um dia", "Quarenta dias"], "At 9,9"),
+    ],
+    "ntestevao": [
+        ("Como Estêvão foi morto?", "Apedrejado", ["Crucificado", "Pela espada", "Na fogueira"], "At 7,58"),
+        ("O que fizeram os que o ouviram falar dos céus abertos?", "Taparam os ouvidos e gritaram", ["Ajoelharam-se", "Choraram arrependidos", "Saíram em silêncio"], "At 7,57"),
+    ],
+    "ntpedroprisao": [
+        ("Que rei mandou prender Pedro?", "Herodes", ["Pilatos", "Félix", "Augusto"], "At 12,1-3"),
+        ("Entre quantos soldados Pedro dormia, preso com correntes?", "Dois", ["Quatro", "Seis", "Doze"], "At 12,6"),
+    ],
+    "ntcriancas": [
+        ("O que Jesus fez com as crianças?", "Abraçou-as e abençoou-as, impondo-lhes as mãos", ["Ensinou-lhes um salmo", "Deu-lhes pão", "Mandou-as de volta às mães"], "Mc 10,16"),
+        ("Para que traziam as crianças a Jesus?", "Para que as tocasse", ["Para que as curasse", "Para que lhes desse nome", "Para que as batizasse"], "Mc 10,13"),
+    ],
+    "atcriacao": [
+        ("O que o Senhor Deus inspirou nas narinas do homem?", "O sopro da vida", ["Fogo do céu", "Água do rio", "Pó de ouro"], "Gn 2,7"),
+        ("O que subia da terra e regava o solo?", "Um vapor", ["Um rio", "A chuva", "O orvalho"], "Gn 2,6"),
+    ],
+    "atadaoeva": [
+        ("Como a serpente é descrita?", "O mais astuto de todos os animais", ["O mais belo dos animais", "O mais forte dos animais", "O menor dos animais"], "Gn 3,1"),
+        ("A quem a mulher deu também do fruto?", "Ao seu marido", ["À serpente", "Aos animais", "A ninguém"], "Gn 3,6"),
+    ],
+    "atcaimabel": [
+        ("Qual era o trabalho de Abel?", "Pastor de ovelhas", ["Lavrador", "Ferreiro", "Pescador"], "Gn 4,2"),
+        ("Para onde Caim foi morar?", "Na terra de Nod, ao oriente do Éden", ["No Egito", "Em Ur dos caldeus", "Em Canaã"], "Gn 4,16"),
+    ],
+    "atarca": [
+        ("Que ave Noé soltou primeiro?", "Um corvo", ["Uma pomba", "Uma águia", "Um pardal"], "Gn 8,7"),
+        ("Sobre que montes a arca parou?", "Os montes de Ararat", ["O monte Sinai", "O monte Carmelo", "O monte Sião"], "Gn 8,4"),
+    ],
+    "atbabel": [
+        ("Em que terra os homens se estabeleceram?", "Na planície de Senaar", ["No vale do Jordão", "Na terra de Gessen", "No monte Seir"], "Gn 11,2"),
+        ("O que usaram em vez de argamassa?", "Betume", ["Barro", "Cal", "Areia"], "Gn 11,3"),
+    ],
+    "atisaac": [
+        ("O que Abraão viu preso pelos chifres entre os espinhos?", "Um cordeiro", ["Um bode", "Um novilho", "Um cabrito"], "Gn 22,13"),
+        ("Quem carregou a lenha do holocausto?", "Isaac", ["Abraão", "Os servos", "O jumento"], "Gn 22,6"),
+    ],
+    "atsarca": [
+        ("Junto a que monte Moisés viu a sarça?", "Horeb, a montanha de Deus", ["O monte Nebo", "O monte Carmelo", "O monte Tabor"], "Ex 3,1"),
+        ("Por que Moisés escondeu o rosto?", "Não ousava olhar para Deus", ["O fogo era forte demais", "Havia muita fumaça", "Estava cansado"], "Ex 3,6"),
+    ],
+    "atmarvermelho": [
+        ("O que as águas formavam à direita e à esquerda?", "Uma muralha", ["Um rio", "Uma ponte", "Uma nuvem"], "Ex 14,22"),
+        ("O que aconteceu aos carros e cavaleiros do faraó?", "As águas os cobriram", ["Fugiram para o deserto", "Pararam na margem", "Voltaram ao Egito"], "Ex 14,28"),
+    ],
+    "atmandamentos": [
+        ("Em que dia da semana não se deve trabalhar?", "No sétimo dia", ["No primeiro dia", "No terceiro dia", "No sexto dia"], "Ex 20,10"),
+        ("Em quantos dias o Senhor fez o céu e a terra?", "Seis dias", ["Sete dias", "Três dias", "Quarenta dias"], "Ex 20,11"),
+    ],
+    "atdavi": [
+        ("De que cidade era Golias?", "Gat", ["Gaza", "Ascalon", "Acaron"], "1Sm 17,4"),
+        ("O que Davi levou para a luta, em vez da armadura de Saul?", "Seu cajado, cinco pedras e a funda", ["Uma lança e um escudo", "Uma espada pequena", "Um arco e flechas"], "1Sm 17,40"),
+    ],
+    "atexpulsao": [
+        ("O que o Senhor colocou ao oriente do jardim?", "Querubins com uma espada flamejante", ["Um muro de pedra", "Um rio de fogo", "Um anjo com uma trombeta"], "Gn 3,24"),
+        ("De que árvore o homem não podia mais comer?", "Da árvore da vida", ["Da figueira", "Da oliveira", "Da videira"], "Gn 3,22"),
+    ],
+    "atjonas": [
+        ("Para onde Jonas tentou fugir?", "Para Társis", ["Para o Egito", "Para Damasco", "Para a Babilônia"], "Jn 1,3"),
+        ("Quanto tempo Jonas ficou no ventre do peixe?", "Três dias e três noites", ["Sete dias", "Um dia e uma noite", "Quarenta dias"], "Jn 2,1"),
+    ],
+    "atdaniel": [
+        ("O que o rei desejou a Daniel ao mandá-lo para a cova?", "Que o seu Deus o salvasse", ["Que pedisse perdão ao rei", "Que deixasse de orar", "Que adorasse os ídolos"], "Dn 6,17"),
+        ("Com que o rei lacrou a pedra da cova?", "Com o seu sinete e com o dos grandes", ["Com cera e barro", "Com correntes de ferro", "Com o selo do Templo"], "Dn 6,18"),
+    ],
+    "atsansao": [
+        ("Em honra de que deus os filisteus faziam festa?", "Dagon", ["Baal", "Moloc", "Astarte"], "Jz 16,23"),
+        ("Quantas pessoas havia no terraço do templo?", "Cerca de três mil", ["Cerca de trezentas", "Cerca de mil", "Cerca de dez mil"], "Jz 16,27"),
+    ],
+    "atjose": [
+        ("Que irmão quis salvar José?", "Rúben", ["Judá", "Simeão", "Benjamim"], "Gn 37,21"),
+        ("Com que mancharam a túnica de José?", "Com sangue de um cabrito", ["Com vinho", "Com barro", "Com sangue de um cordeiro"], "Gn 37,31"),
+    ],
+    "atmoisescesto": [
+        ("Quem achou o cesto?", "A filha do faraó", ["A irmã do menino", "Uma escrava hebreia", "A mulher do faraó"], "Ex 2,5"),
+        ("Por quanto tempo a mãe escondeu o menino?", "Três meses", ["Três semanas", "Um ano", "Quarenta dias"], "Ex 2,2"),
+    ],
+    "atjaco": [
+        ("O que Jacó usou como travesseiro?", "Uma pedra", ["Seu manto", "Um feixe de lenha", "Sua bolsa"], "Gn 28,11"),
+        ("O que Jacó prometeu dar a Deus?", "O dízimo de tudo", ["Seu primeiro filho", "Um cordeiro por ano", "Metade do rebanho"], "Gn 28,22"),
+    ],
+    "atbezerro": [
+        ("O que Moisés fez com as tábuas ao ver o bezerro?", "Quebrou-as ao pé da montanha", ["Escondeu-as numa gruta", "Entregou-as a Aarão", "Levou-as de volta ao monte"], "Ex 32,19"),
+        ("O que Moisés fez com o bezerro?", "Queimou-o e reduziu-o a pó", ["Enterrou-o no deserto", "Lançou-o ao mar", "Guardou-o na tenda"], "Ex 32,20"),
+    ],
+    "atjerico": [
+        ("Quantos sacerdotes tocavam trombetas diante da arca?", "Sete", ["Doze", "Três", "Quarenta"], "Js 6,4"),
+        ("Quem foi poupada com sua família?", "Raab", ["Rute", "Débora", "Miriam"], "Js 6,17"),
+    ],
+    "atsalomao": [
+        ("O que Salomão mandou trazer?", "Uma espada", ["Uma balança", "Um rolo da Lei", "Um cálice"], "1Rs 3,24"),
+        ("Quantas mulheres vieram ao rei?", "Duas", ["Três", "Uma", "Quatro"], "1Rs 3,16"),
+    ],
+    "atvisitantes": [
+        ("Onde Abraão estava sentado quando os três chegaram?", "À entrada da tenda", ["Debaixo de uma figueira", "Junto a um poço", "No alto de um monte"], "Gn 18,1"),
+        ("Junto aos carvalhos de que lugar o Senhor apareceu a Abraão?", "Mambré", ["Betel", "Siquém", "Bersabeia"], "Gn 18,1"),
+    ],
+    "atlo": [
+        ("Em que a mulher de Ló se transformou?", "Numa estátua de sal", ["Numa pedra", "Num monte de areia", "Numa árvore seca"], "Gn 19,26"),
+        ("Para que cidade Ló fugiu?", "Segor", ["Gomorra", "Hebron", "Betel"], "Gn 19,22-23"),
+    ],
+    "atjacoanjo": [
+        ("Que nome Jacó deu àquele lugar?", "Fanuel", ["Betel", "Galaad", "Maanaim"], "Gn 32,31"),
+        ("Onde o homem tocou Jacó?", "Na articulação da coxa", ["No ombro", "Na cabeça", "No pé"], "Gn 32,26"),
+    ],
+    "atfarao": [
+        ("Onde as vacas gordas se puseram a pastar?", "No capinzal", ["No deserto", "Na beira do mar", "No pátio do palácio"], "Gn 41,2"),
+        ("O que o faraó viu no segundo sonho?", "Sete espigas grossas e sete magras", ["Sete pães e sete peixes", "Sete estrelas e a lua", "Sete videiras secas"], "Gn 41,5-7"),
+    ],
+    "atpragas": [
+        ("Em que se transformaram as águas do Nilo?", "Em sangue", ["Em vinho", "Em lama", "Em gelo"], "Ex 7,20"),
+        ("Em que terra os israelitas não sofreram com as moscas?", "Gessen", ["Ramsés", "Madiã", "Edom"], "Ex 8,18"),
+    ],
+    "atmana": [
+        ("Com que se parecia o maná?", "Com semente de coentro, branca", ["Com grãos de trigo", "Com flocos de neve", "Com pedrinhas de sal"], "Ex 16,31"),
+        ("Que aves cobriram o acampamento à tarde?", "Codornizes", ["Pombas", "Corvos", "Pardais"], "Ex 16,13"),
+    ],
+    "atserpente": [
+        ("O que acontecia a quem, mordido, olhava para a serpente?", "Conservava a vida", ["Morria logo", "Ficava cego", "Perdia a voz"], "Nm 21,9"),
+        ("Em volta de que terra o povo caminhava?", "Edom", ["Moab", "Egito", "Canaã"], "Nm 21,4"),
+    ],
+    "atrocha": [
+        ("Com que Moisés feriu a rocha?", "Com a vara", ["Com a mão", "Com uma pedra", "Com o pé"], "Ex 17,5-6"),
+        ("Em que monte ficava a rocha?", "Horeb", ["Nebo", "Carmelo", "Tabor"], "Ex 17,6"),
+    ],
+    "atrute": [
+        ("Em que campo Rute foi respigar?", "No campo de Booz", ["No campo de Elimelec", "No campo de Obed", "No campo de Jessé"], "Rt 2,3"),
+        ("De que povo Rute era?", "Moabita", ["Edomita", "Egípcia", "Amonita"], "Rt 2,2"),
+    ],
+    "atsamuel": [
+        ("Onde Samuel dormia?", "No templo do Senhor, onde estava a arca", ["Na casa de seus pais", "No campo, com o rebanho", "Às portas da cidade"], "1Sm 3,3"),
+        ("Como estavam os olhos de Heli?", "Tinham se enfraquecido", ["Eram perfeitos", "Eram cegos de nascença", "Tinham sido curados"], "1Sm 3,2"),
+    ],
+    "atharpa": [
+        ("O que Jessé mandou a Saul junto com Davi?", "Um jumento com pão, um odre de vinho e um cabrito", ["Ouro e prata", "Uma harpa nova", "Dez ovelhas"], "1Sm 16,20"),
+        ("Que cargo Saul deu a Davi?", "Seu escudeiro", ["Seu copeiro", "Chefe do exército", "Guarda do palácio"], "1Sm 16,21"),
+    ],
+    "atcorvos": [
+        ("O que Elias anunciou ao rei Acab?", "Que não haveria orvalho nem chuva", ["Que viria uma grande enchente", "Que o rei morreria", "Que haveria guerra"], "1Rs 17,1"),
+        ("Como o texto descreve Elias?", "O tesbita, um habitante de Galaad", ["Um sacerdote de Jerusalém", "Um pastor de Belém", "Um príncipe de Samaria"], "1Rs 17,1"),
+    ],
+    "atcarro": [
+        ("Com que Elias dividiu as águas do Jordão?", "Com o seu manto", ["Com o seu cajado", "Com uma pedra", "Com as mãos"], "2Rs 2,8"),
+        ("O que Eliseu apanhou depois que Elias subiu?", "O manto de Elias", ["A vara de Elias", "A sandália de Elias", "Uma brasa do carro"], "2Rs 2,13"),
+    ],
+    "atfornalha": [
+        ("O que o rei tinha mandado erguer?", "Uma estátua de ouro", ["Uma torre de pedra", "Um altar de bronze", "Um templo de prata"], "Dn 3,1"),
+        ("Como se chamavam os três jovens?", "Sidrac, Misac e Abdênago", ["Elias, Eliseu e Jonas", "Tobias, Rafael e Raguel", "Davi, Jônatas e Saul"], "Dn 3,12"),
+    ],
+    "attobias": [
+        ("Em que rio Tobias foi lavar os pés?", "O Tigre", ["O Jordão", "O Nilo", "O Eufrates"], "Tb 6,1"),
+        ("Como se chamava o anjo que acompanhava Tobias?", "Rafael", ["Gabriel", "Miguel", "Uriel"], "Tb 12,15"),
+    ],
+    "atester": [
+        ("O que o rei estendeu para Ester?", "O cetro de ouro", ["A mão direita", "Uma coroa", "Um anel"], "Est 5,2"),
+        ("Quem Ester convidou ao banquete com o rei?", "Amã", ["Mardoqueu", "Zeres", "Vasti"], "Est 5,4"),
+    ],
+    "atjo": [
+        ("Quantos filhos ele tinha?", "Sete filhos e três filhas", ["Doze filhos", "Dois filhos e uma filha", "Dez filhos e uma filha"], "Jó 1,2"),
+        ("Quantos amigos vieram consolá-lo?", "Três", ["Dois", "Sete", "Doze"], "Jó 2,11"),
+    ],
+    "atossos": [
+        ("Como estavam os ossos?", "Numerosos e inteiramente secos", ["Poucos e enterrados", "Brancos e partidos", "Espalhados no mar"], "Ez 37,2"),
+        ("O que o Senhor disse que faria aos túmulos?", "Abri-los e fazer o povo sair deles", ["Fechá-los para sempre", "Enchê-los de flores", "Transformá-los em altares"], "Ez 37,12"),
+    ],
+    "atbalaao": [
+        ("O que a jumenta viu no caminho?", "O anjo do Senhor com uma espada", ["Uma serpente", "Um leão", "Um abismo"], "Nm 22,23"),
+        ("Contra o que a jumenta apertou o pé de Balaão?", "Contra o muro", ["Contra uma árvore", "Contra uma pedra", "Contra a porta"], "Nm 22,25"),
+    ],
+    "atescrita": [
+        ("Quem decifrou a escrita?", "Daniel", ["José", "Esdras", "Mardoqueu"], "Dn 5,17"),
+        ("Que rei dava o banquete?", "Baltazar", ["Nabucodonosor", "Dario", "Ciro"], "Dn 5,1"),
+    ],
 }
 
 
